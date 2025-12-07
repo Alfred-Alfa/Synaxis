@@ -44,10 +44,14 @@ cd backend
 node scripts/seed_test_users.js
 ```
 
+**Important:** The script will automatically use the same database as your backend (configured in `backend/.env` via `MONGODB_URI` or `MONGO_URI`). This ensures test users are created in the correct database.
+
 The script will:
+- Connect to the database specified in your environment variables
 - Skip existing users (won't create duplicates)
 - Create missing users
 - Display all test credentials upon completion
+- Show which database it connected to
 
 ## 🔒 Security Recommendations
 

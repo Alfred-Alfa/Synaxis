@@ -47,9 +47,10 @@ const TEST_USERS = {
 
 async function connectDB() {
     try {
-        const mongoURI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/hrms';
+        const mongoURI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/hrms';
         await mongoose.connect(mongoURI);
         console.log('✅ MongoDB Connected');
+        console.log(`   Database: ${mongoURI.split('@')[1] || mongoURI}`);
     } catch (error) {
         console.error('❌ MongoDB Connection Failed:', error.message);
         process.exit(1);
