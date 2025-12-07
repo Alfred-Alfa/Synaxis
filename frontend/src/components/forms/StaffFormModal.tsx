@@ -13,7 +13,8 @@ import {
     Lock,
     MapPin,
     Building2,
-    Clock
+    Clock,
+    CreditCard
 } from 'lucide-react';
 import './StaffFormModal.css';
 
@@ -36,6 +37,10 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
         startDate: staff?.startDate ? new Date(staff.startDate).toISOString().split('T')[0] : '',
         password: '',
         otRate: staff?.otRate?.toString() || '',
+        bankName: staff?.bankDetails?.bankName || '',
+        accountNumber: staff?.bankDetails?.accountNumber || '',
+        ifscCode: staff?.bankDetails?.ifscCode || '',
+        accountHolderName: staff?.bankDetails?.accountHolderName || '',
     });
 
     const [loading, setLoading] = useState(false);
@@ -65,6 +70,12 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                 startDate: formData.startDate || undefined,
                 password: formData.password || 'password123',
                 otRate: formData.otRate ? parseFloat(formData.otRate) : undefined,
+                bankDetails: (formData.bankName || formData.accountNumber) ? {
+                    bankName: formData.bankName,
+                    accountNumber: formData.accountNumber,
+                    ifscCode: formData.ifscCode,
+                    accountHolderName: formData.accountHolderName,
+                } : undefined,
             };
 
             if (isEdit) {
@@ -272,6 +283,74 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                                         />
                                     </div>
                                     <p className="input-hint">Standard is 1.5x hourly rate</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Bank Details Section */}
+                        <div className="form-section">
+                            <h3 className="section-title">
+                                <CreditCard size={18} />
+                                Bank Details
+                            </h3>
+                            <div className="grid-2">
+                                <div className="input-group">
+                                    <label htmlFor="bankName">Bank Name</label>
+                                    <div className="input-wrapper">
+                                        <Building2 className="input-icon" size={18} />
+                                        <input
+                                            id="bankName"
+                                            name="bankName"
+                                            type="text"
+                                            placeholder="e.g. Chase Bank"
+                                            value={formData.bankName}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="input-group">
+                                    <label htmlFor="accountNumber">Account Number</label>
+                                    <div className="input-wrapper">
+                                        <CreditCard className="input-icon" size={18} />
+                                        <input
+                                            id="accountNumber"
+                                            name="accountNumber"
+                                            type="text"
+                                            placeholder="Account / IBAN"
+                                            value={formData.accountNumber}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid-2">
+                                <div className="input-group">
+                                    <label htmlFor="ifscCode">BSB / Sort Code / IFSC</label>
+                                    <div className="input-wrapper">
+                                        <MapPin className="input-icon" size={18} />
+                                        <input
+                                            id="ifscCode"
+                                            name="ifscCode"
+                                            type="text"
+                                            placeholder="Branch Code"
+                                            value={formData.ifscCode}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="input-group">
+                                    <label htmlFor="accountHolderName">Account Name</label>
+                                    <div className="input-wrapper">
+                                        <User className="input-icon" size={18} />
+                                        <input
+                                            id="accountHolderName"
+                                            name="accountHolderName"
+                                            type="text"
+                                            placeholder="e.g. John Doe"
+                                            value={formData.accountHolderName}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>

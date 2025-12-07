@@ -96,6 +96,12 @@ export const generatePayslipPDF = async (payroll, staff, settings, outputPath) =
             leftY = drawLabelValue('Designation:', staff.designation || 'N/A', leftX, leftY);
             leftY = drawLabelValue('Department:', 'General', leftX, leftY);
 
+            if (staff.bankDetails && staff.bankDetails.bankName) {
+                leftY += 5; // Spacing
+                leftY = drawLabelValue('Bank:', staff.bankDetails.bankName, leftX, leftY);
+                leftY = drawLabelValue('Acc No:', staff.bankDetails.accountNumber || 'N/A', leftX, leftY);
+            }
+
             // Right Column: Pay Info
             let rightY = y + 15;
             const rightX = MARGIN + (CONTENT_WIDTH / 2) + 15;
