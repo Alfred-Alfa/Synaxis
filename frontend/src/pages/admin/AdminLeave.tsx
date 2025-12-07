@@ -67,7 +67,7 @@ export const AdminLeave: React.FC = () => {
         }
     };
 
-    const handleReject = async (reason: string, comment?: string) => {
+    const handleReject = async (reason: string) => {
         try {
             // Reason passed as first arg, but backend expects 'comment' as reason in reject body
             // Frontend modal sends reason as required field for reject.

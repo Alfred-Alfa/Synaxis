@@ -37,7 +37,7 @@ export const Navbar: React.FC = () => {
     const loadNotifications = async () => {
         try {
             const response = await notificationService.getAll();
-            const unread = response.data?.filter(n => !n.isRead).length || 0;
+            const unread = response.data?.filter((n: any) => !n.isRead).length || 0;
             setUnreadCount(unread);
         } catch (error) {
             console.error('Failed to load notifications', error);

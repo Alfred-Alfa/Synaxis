@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { timeEntryService } from '../../services/timeEntryService';
 import { overtimeService } from '../../services/overtimeService';
 import { leaveService } from '../../services/leaveService';
-import type { TimeEntry, Overtime, Leave } from '../../types';
+// Imports removed
 
 export const StaffDashboard: React.FC = () => {
     const { user } = useAuth();
