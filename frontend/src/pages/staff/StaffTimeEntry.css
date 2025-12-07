@@ -1,0 +1,32 @@
+.time-entry-page {
+    max-width: 1400px;
+}
+
+.entry-filters {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.entry-count {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.entry-date {
+    font-weight: 500;
+}
+
+.entry-description {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .entry-description {
+        max-width: 200px;
+    }
+}
