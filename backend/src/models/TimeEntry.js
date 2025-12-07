@@ -92,7 +92,8 @@ timeEntrySchema.pre('save', function (next) {
 
 // Prevent modification of approved entries
 timeEntrySchema.pre('save', function (next) {
-    if (!this.isNew && this.status === 'Approved') {
+    // Allow saving if status is being changed (e.g. Pending -> Approved)
+    if (!this.isNew && this.status === 'Approved' && !this.isModified('status')) {
         const error = new Error('Cannot modify approved time entries');
         return next(error);
     }

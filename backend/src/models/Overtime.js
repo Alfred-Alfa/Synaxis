@@ -76,7 +76,8 @@ overtimeSchema.pre('save', function (next) {
 
 // Prevent modification of approved OT entries
 overtimeSchema.pre('save', function (next) {
-    if (!this.isNew && this.status === 'Approved') {
+    // Allow saving if status is being changed (e.g. Pending -> Approved)
+    if (!this.isNew && this.status === 'Approved' && !this.isModified('status')) {
         const error = new Error('Cannot modify approved overtime entries');
         return next(error);
     }

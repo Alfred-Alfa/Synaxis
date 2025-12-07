@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'; // Added import for jsonwebtoken
-import Staff from '../models/Staff.js'; // Changed User to Staff and updated import
+import User from '../models/User.js';
 
 export const protect = async (req, res, next) => {
     let token;
@@ -10,16 +10,14 @@ export const protect = async (req, res, next) => {
             token = req.headers.authorization.split(' ')[1];
 
             // Verify token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET); // Changed from verifyToken to jwt.verify
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-            // The original code had checks for decoded and req.user, which are good practice.
-            // Re-adding them based on the original structure, assuming the user's intent was to modify the verification method and model, not remove these checks.
             if (!decoded) {
                 return res.status(401).json({ message: 'Not authorized, token invalid' });
             }
 
             // Get user from token
-            req.user = await Staff.findById(decoded.id).select('-password'); // Changed User to Staff
+            req.user = await User.findById(decoded.id).select('-password');
 
             if (!req.user) {
                 return res.status(401).json({ message: 'User not found' });
