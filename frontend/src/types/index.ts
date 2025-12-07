@@ -22,6 +22,7 @@ export interface Staff {
     _id: string;
     fullName: string;
     email: string;
+    employeeId?: string;
     phone?: string;
     hourlyRate: number;
     hourlyRateHistory: {

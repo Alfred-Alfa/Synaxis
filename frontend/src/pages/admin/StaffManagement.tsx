@@ -146,6 +146,7 @@ export const StaffManagement: React.FC = () => {
                         <table className="table">
                             <thead>
                                 <tr>
+                                    <th>ID</th>
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Designation</th>
@@ -157,6 +158,11 @@ export const StaffManagement: React.FC = () => {
                             <tbody>
                                 {filteredStaff.map((staffMember) => (
                                     <tr key={staffMember._id}>
+                                        <td>
+                                            <span style={{ fontFamily: 'monospace', fontWeight: 500 }}>
+                                                {staffMember.employeeId || '-'}
+                                            </span>
+                                        </td>
                                         <td>
                                             <div className="staff-name">{staffMember.fullName}</div>
                                             {staffMember.phone && (

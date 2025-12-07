@@ -14,6 +14,12 @@ const staffSchema = new mongoose.Schema(
             lowercase: true,
             trim: true,
         },
+        employeeId: {
+            type: String,
+            trim: true,
+            unique: true,
+            sparse: true, // Allows null/undefined for existing records
+        },
         phone: {
             type: String,
             trim: true,

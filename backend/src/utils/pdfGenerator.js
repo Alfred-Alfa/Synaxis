@@ -92,7 +92,7 @@ export const generatePayslipPDF = async (payroll, staff, settings, outputPath) =
             };
 
             leftY = drawLabelValue('Name:', staff.fullName, leftX, leftY);
-            leftY = drawLabelValue('ID:', staff._id.toString().substring(18).toUpperCase(), leftX, leftY); // Short ID
+            leftY = drawLabelValue('ID:', staff.employeeId || staff._id.toString().substring(18).toUpperCase(), leftX, leftY);
             leftY = drawLabelValue('Designation:', staff.designation || 'N/A', leftX, leftY);
             leftY = drawLabelValue('Department:', 'General', leftX, leftY);
 

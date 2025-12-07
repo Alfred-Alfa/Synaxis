@@ -28,6 +28,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
     const [formData, setFormData] = useState({
         fullName: staff?.fullName || '',
         email: staff?.email || '',
+        employeeId: staff?.employeeId || '',
         phone: staff?.phone || '',
         hourlyRate: staff?.hourlyRate?.toString() || '',
         designation: staff?.designation || '',
@@ -56,6 +57,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
             const data = {
                 fullName: formData.fullName,
                 email: formData.email,
+                employeeId: formData.employeeId || undefined,
                 phone: formData.phone || undefined,
                 hourlyRate: parseFloat(formData.hourlyRate),
                 designation: formData.designation || undefined,
@@ -189,6 +191,21 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                             </h3>
                             <div className="grid-2">
                                 <div className="input-group">
+                                    <label htmlFor="employeeId">Employee ID</label>
+                                    <div className="input-wrapper">
+                                        <Briefcase className="input-icon" size={18} />
+                                        <input
+                                            id="employeeId"
+                                            name="employeeId"
+                                            type="text"
+                                            placeholder="e.g. EMP001"
+                                            value={formData.employeeId}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="input-group">
                                     <label htmlFor="designation">Designation</label>
                                     <div className="input-wrapper">
                                         <Building2 className="input-icon" size={18} />
@@ -202,7 +219,9 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                                         />
                                     </div>
                                 </div>
+                            </div>
 
+                            <div className="grid-2">
                                 <div className="input-group">
                                     <label htmlFor="startDate">Start Date</label>
                                     <div className="input-wrapper">
