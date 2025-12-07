@@ -20,6 +20,7 @@ import payrollRoutes from './routes/payroll.js';
 import settingsRoutes from './routes/settings.js';
 import auditLogRoutes from './routes/auditLog.js';
 import reportRoutes from './routes/reportRoutes.js';
+import notificationRoutes from './routes/notifications.js';
 
 // Initialize Express
 const app = express();
@@ -50,6 +51,7 @@ app.use('/api/payroll', payrollRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

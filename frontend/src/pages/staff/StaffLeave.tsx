@@ -140,8 +140,8 @@ export const StaffLeave: React.FC = () => {
                                     <tr key={leave._id}>
                                         <td>
                                             <span className={`badge badge-${leave.leaveType === 'Paid' ? 'success' :
-                                                    leave.leaveType === 'Sick' ? 'warning' :
-                                                        leave.leaveType === 'Casual' ? 'primary' : 'secondary'
+                                                leave.leaveType === 'Sick' ? 'warning' :
+                                                    leave.leaveType === 'Casual' ? 'primary' : 'secondary'
                                                 }`}>
                                                 {leave.leaveType}
                                             </span>
@@ -164,13 +164,18 @@ export const StaffLeave: React.FC = () => {
                                         </td>
                                         <td>
                                             <span className={`badge badge-${leave.status === 'Approved' ? 'success' :
-                                                    leave.status === 'Rejected' ? 'danger' : 'warning'
+                                                leave.status === 'Rejected' ? 'danger' : 'warning'
                                                 }`}>
                                                 {leave.status}
                                             </span>
                                             {leave.status === 'Rejected' && leave.rejectionComment && (
                                                 <div className="text-sm text-danger mt-1">
                                                     {leave.rejectionComment}
+                                                </div>
+                                            )}
+                                            {leave.status === 'Approved' && leave.approvalComment && (
+                                                <div className="text-sm text-success mt-1">
+                                                    {leave.approvalComment}
                                                 </div>
                                             )}
                                         </td>

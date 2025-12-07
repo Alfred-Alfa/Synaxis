@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { leaveService } from '../../services/leaveService';
 import type { Leave, Staff } from '../../types';
 import { LeaveCalendar } from '../../components/LeaveCalendar';
+import { ApprovalModal } from '../../components/common/ApprovalModal';
 import './AdminTimeEntry.css';
 
 export const AdminLeave: React.FC = () => {
@@ -10,6 +11,18 @@ export const AdminLeave: React.FC = () => {
     const [error, setError] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'Approved' | 'Rejected'>('Pending');
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'approve' | 'reject';
+        itemId: string;
+        title: string;
+    }>({
+        isOpen: false,
+        type: 'approve',
+        itemId: '',
+        title: '',
+    });
 
     useEffect(() => {
         loadData();
@@ -27,25 +40,40 @@ export const AdminLeave: React.FC = () => {
         }
     };
 
-    const handleApprove = async (id: string) => {
-        if (!window.confirm('Approve this leave application?')) {
-            return;
-        }
+    const openApproveModal = (id: string) => {
+        setModalConfig({
+            isOpen: true,
+            type: 'approve',
+            itemId: id,
+            title: 'Approve Leave Application',
+        });
+    };
 
+    const openRejectModal = (id: string) => {
+        setModalConfig({
+            isOpen: true,
+            type: 'reject',
+            itemId: id,
+            title: 'Reject Leave Application',
+        });
+    };
+
+    const handleApprove = async (comment?: string) => {
         try {
-            await leaveService.approve(id);
+            await leaveService.approve(modalConfig.itemId, comment);
             loadData();
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to approve leave');
         }
     };
 
-    const handleReject = async (id: string) => {
-        const comment = prompt('Enter rejection comment:');
-        if (!comment) return;
-
+    const handleReject = async (reason: string, comment?: string) => {
         try {
-            await leaveService.reject(id, comment);
+            // Reason passed as first arg, but backend expects 'comment' as reason in reject body
+            // Frontend modal sends reason as required field for reject.
+            // Leave service reject expects (id, comment).
+            // We should use 'reason' as the main rejection message.
+            await leaveService.reject(modalConfig.itemId, reason);
             loadData();
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to reject leave');
@@ -202,13 +230,13 @@ export const AdminLeave: React.FC = () => {
                                                 {leave.status === 'Pending' && (
                                                     <div className="action-buttons">
                                                         <button
-                                                            onClick={() => handleApprove(leave._id)}
+                                                            onClick={() => openApproveModal(leave._id)}
                                                             className="btn btn-success btn-sm"
                                                         >
                                                             ✓ Approve
                                                         </button>
                                                         <button
-                                                            onClick={() => handleReject(leave._id)}
+                                                            onClick={() => openRejectModal(leave._id)}
                                                             className="btn btn-danger btn-sm"
                                                         >
                                                             ✗ Reject
@@ -225,6 +253,15 @@ export const AdminLeave: React.FC = () => {
                     }
                 </div >
             )}
+
+            <ApprovalModal
+                isOpen={modalConfig.isOpen}
+                onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                type={modalConfig.type}
+                title={modalConfig.title}
+            />
         </div>
     );
 };

@@ -4,6 +4,7 @@ import { protect } from '../middleware/auth.js';
 import { isAdmin } from '../middleware/rbac.js';
 import upload from '../config/multer.js';
 import logAudit from '../utils/auditLogger.js';
+import { sendNotification, notifyAdmins } from '../utils/notification.js';
 
 const router = express.Router();
 
@@ -104,6 +105,14 @@ router.post('/', protect, upload.single('attachment'), async (req, res) => {
             description: 'Submitted overtime request',
             newValue: overtime,
             req,
+        });
+
+        // Notify Admins
+        await notifyAdmins({
+            title: 'New Overtime Request',
+            message: `New overtime request for ${otHours} hours`,
+            link: '/admin/overtime',
+            type: 'INFO',
         });
 
         res.status(201).json({
@@ -214,9 +223,12 @@ router.post('/:id/approve', protect, isAdmin, async (req, res) => {
             return res.status(400).json({ message: 'Only Pending overtime can be approved' });
         }
 
+        const { comment } = req.body;
+
         overtime.status = 'Approved';
         overtime.approvedBy = req.user._id;
         overtime.approvedAt = new Date();
+        if (comment) overtime.approvalComment = comment;
 
         await overtime.save();
 
@@ -227,6 +239,15 @@ router.post('/:id/approve', protect, isAdmin, async (req, res) => {
             resourceId: overtime._id,
             description: 'Approved overtime request',
             req,
+        });
+
+        // Notify Staff
+        await sendNotification({
+            staffId: overtime.staffId,
+            title: 'Overtime Approved',
+            message: `Your overtime request for ${new Date(overtime.date).toLocaleDateString()} has been approved.${comment ? ` Remark: ${comment}` : ''}`,
+            type: 'SUCCESS',
+            link: '/staff/overtime',
         });
 
         res.json({
@@ -267,6 +288,7 @@ router.post('/:id/reject', protect, isAdmin, async (req, res) => {
 
         await overtime.save();
 
+        // Log audit
         await logAudit({
             userId: req.user._id,
             action: 'REJECT',
@@ -274,6 +296,15 @@ router.post('/:id/reject', protect, isAdmin, async (req, res) => {
             resourceId: overtime._id,
             description: `Rejected overtime: ${reason}`,
             req,
+        });
+
+        // Notify Staff
+        await sendNotification({
+            staffId: overtime.staffId,
+            title: 'Overtime Rejected',
+            message: `Your overtime request for ${new Date(overtime.date).toLocaleDateString()} has been rejected. Reason: ${reason}`,
+            type: 'ERROR',
+            link: '/staff/overtime',
         });
 
         res.json({

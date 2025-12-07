@@ -179,9 +179,14 @@ export const StaffTimeEntry: React.FC = () => {
                                                 }`}>
                                                 {entry.status}
                                             </span>
-                                            {entry.status === 'Rejected' && entry.rejectionReason && (
+                                            {entry.status === 'Rejected' && (entry.rejectionReason || entry.rejectionComment) && (
                                                 <div className="text-sm text-danger mt-1">
-                                                    {entry.rejectionReason}
+                                                    {entry.rejectionReason || entry.rejectionComment}
+                                                </div>
+                                            )}
+                                            {entry.status === 'Approved' && entry.approvalComment && (
+                                                <div className="text-sm text-success mt-1">
+                                                    {entry.approvalComment}
                                                 </div>
                                             )}
                                         </td>

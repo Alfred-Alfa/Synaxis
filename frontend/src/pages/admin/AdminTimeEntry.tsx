@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { timeEntryService } from '../../services/timeEntryService';
 import { siteService } from '../../services/siteService';
 import type { TimeEntry, Site, Staff } from '../../types';
+import { ApprovalModal } from '../../components/common/ApprovalModal';
 import './AdminTimeEntry.css';
 
 export const AdminTimeEntry: React.FC = () => {
@@ -180,7 +181,7 @@ export const AdminTimeEntry: React.FC = () => {
                                         </td>
                                         <td>
                                             <span className={`badge badge-${entry.status === 'Approved' ? 'success' :
-                                                    entry.status === 'Rejected' ? 'danger' : 'warning'
+                                                entry.status === 'Rejected' ? 'danger' : 'warning'
                                                 }`}>
                                                 {entry.status}
                                             </span>
@@ -199,13 +200,13 @@ export const AdminTimeEntry: React.FC = () => {
                                             {entry.status === 'Pending' && (
                                                 <div className="action-buttons">
                                                     <button
-                                                        onClick={() => handleApprove(entry._id)}
+                                                        onClick={() => openApproveModal(entry._id)}
                                                         className="btn btn-success btn-sm"
                                                     >
                                                         ✓ Approve
                                                     </button>
                                                     <button
-                                                        onClick={() => handleReject(entry._id)}
+                                                        onClick={() => openRejectModal(entry._id)}
                                                         className="btn btn-danger btn-sm"
                                                     >
                                                         ✗ Reject
@@ -220,6 +221,15 @@ export const AdminTimeEntry: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <ApprovalModal
+                isOpen={modalConfig.isOpen}
+                onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                type={modalConfig.type}
+                title={modalConfig.title}
+            />
         </div>
     );
 };

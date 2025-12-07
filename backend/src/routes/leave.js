@@ -4,6 +4,7 @@ import { protect } from '../middleware/auth.js';
 import { isAdmin } from '../middleware/rbac.js';
 import upload from '../config/multer.js';
 import logAudit from '../utils/auditLogger.js';
+import { sendNotification, notifyAdmins } from '../utils/notification.js';
 
 const router = express.Router();
 
@@ -98,6 +99,14 @@ router.post('/', protect, upload.single('attachment'), async (req, res) => {
             description: `Submitted ${leaveType} leave application`,
             newValue: leave,
             req,
+        });
+
+        // Notify Admins
+        await notifyAdmins({
+            title: 'New Leave Application',
+            message: `New ${leaveType} leave application for ${leave.totalDays} days`,
+            link: '/admin/leave',
+            type: 'INFO',
         });
 
         res.status(201).json({
@@ -208,9 +217,12 @@ router.post('/:id/approve', protect, isAdmin, async (req, res) => {
             return res.status(400).json({ message: 'Only Pending leave can be approved' });
         }
 
+        const { comment } = req.body;
+
         leave.status = 'Approved';
         leave.approvedBy = req.user._id;
         leave.approvedAt = new Date();
+        if (comment) leave.approvalComment = comment;
 
         await leave.save();
 
@@ -221,6 +233,15 @@ router.post('/:id/approve', protect, isAdmin, async (req, res) => {
             resourceId: leave._id,
             description: 'Approved leave application',
             req,
+        });
+
+        // Notify Staff
+        await sendNotification({
+            staffId: leave.staffId,
+            title: 'Leave Application Approved',
+            message: `Your leave application for ${leave.totalDays} days starting ${new Date(leave.startDate).toLocaleDateString()} has been approved.${comment ? ` Remark: ${comment}` : ''}`,
+            type: 'SUCCESS',
+            link: '/staff/leave',
         });
 
         res.json({
@@ -267,6 +288,15 @@ router.post('/:id/reject', protect, isAdmin, async (req, res) => {
             resourceId: leave._id,
             description: `Rejected leave: ${comment}`,
             req,
+        });
+
+        // Notify Staff
+        await sendNotification({
+            staffId: leave.staffId,
+            title: 'Leave Application Rejected',
+            message: `Your leave application has been rejected. Reason: ${comment}`,
+            type: 'ERROR',
+            link: '/staff/leave',
         });
 
         res.json({

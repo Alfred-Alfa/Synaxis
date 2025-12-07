@@ -51,6 +51,9 @@ const overtimeSchema = new mongoose.Schema(
         approvedAt: {
             type: Date,
         },
+        approvalComment: {
+            type: String,
+        },
         rejectionReason: {
             type: String,
         },

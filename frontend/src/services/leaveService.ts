@@ -40,8 +40,8 @@ export const leaveService = {
     },
 
     // Approve leave
-    approve: async (id: string): Promise<ApiResponse<Leave>> => {
-        const response = await api.post(`/leave/${id}/approve`);
+    approve: async (id: string, comment?: string): Promise<ApiResponse<Leave>> => {
+        const response = await api.post(`/leave/${id}/approve`, { comment });
         return response.data;
     },
 

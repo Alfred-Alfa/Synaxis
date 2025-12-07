@@ -4,6 +4,7 @@ import { protect } from '../middleware/auth.js';
 import { isAdmin } from '../middleware/rbac.js';
 import upload from '../config/multer.js';
 import logAudit from '../utils/auditLogger.js';
+import { sendNotification, notifyAdmins } from '../utils/notification.js';
 
 const router = express.Router();
 
@@ -122,6 +123,14 @@ router.post('/', protect, upload.array('attachments', 5), async (req, res) => {
             req,
         });
 
+        // Notify Admins
+        await notifyAdmins({
+            title: 'New Time Entry',
+            message: `New time entry submitted by user`,
+            link: '/admin/time-entries',
+            type: 'INFO',
+        });
+
         res.status(201).json({
             success: true,
             data: timeEntry,
@@ -237,9 +246,12 @@ router.post('/:id/approve', protect, isAdmin, async (req, res) => {
             return res.status(400).json({ message: 'Only Pending entries can be approved' });
         }
 
+        const { comment } = req.body;
+
         timeEntry.status = 'Approved';
         timeEntry.approvedBy = req.user._id;
         timeEntry.approvedAt = new Date();
+        if (comment) timeEntry.approvalComment = comment;
 
         await timeEntry.save();
 
@@ -251,6 +263,15 @@ router.post('/:id/approve', protect, isAdmin, async (req, res) => {
             resourceId: timeEntry._id,
             description: 'Approved time entry',
             req,
+        });
+
+        // Notify Staff
+        await sendNotification({
+            staffId: timeEntry.staffId,
+            title: 'Time Entry Approved',
+            message: `Your time entry for ${new Date(timeEntry.date).toLocaleDateString()} has been approved.${comment ? ` Remark: ${comment}` : ''}`,
+            type: 'SUCCESS',
+            link: '/staff/time-entries',
         });
 
         res.json({
@@ -299,6 +320,15 @@ router.post('/:id/reject', protect, isAdmin, async (req, res) => {
             resourceId: timeEntry._id,
             description: `Rejected time entry: ${reason}`,
             req,
+        });
+
+        // Notify Staff
+        await sendNotification({
+            staffId: timeEntry.staffId,
+            title: 'Time Entry Rejected',
+            message: `Your time entry for ${new Date(timeEntry.date).toLocaleDateString()} has been rejected. Reason: ${reason}`,
+            type: 'ERROR',
+            link: '/staff/time-entries',
         });
 
         res.json({

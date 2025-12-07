@@ -84,6 +84,7 @@ export interface TimeEntry {
     status: 'Pending' | 'Approved' | 'Rejected';
     approvedBy?: string;
     approvedAt?: string;
+    approvalComment?: string;
     rejectionReason?: string;
     rejectionComment?: string;
     createdAt: string;
@@ -107,6 +108,7 @@ export interface Overtime {
     status: 'Pending' | 'Approved' | 'Rejected';
     approvedBy?: string;
     approvedAt?: string;
+    approvalComment?: string;
     rejectionReason?: string;
     rejectionComment?: string;
     createdAt: string;
@@ -129,6 +131,7 @@ export interface Leave {
     status: 'Pending' | 'Approved' | 'Rejected';
     approvedBy?: string;
     approvedAt?: string;
+    approvalComment?: string;
     rejectionComment?: string;
     totalDays: number;
     createdAt: string;

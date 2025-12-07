@@ -41,8 +41,8 @@ export const timeEntryService = {
     },
 
     // Approve time entry
-    approve: async (id: string): Promise<ApiResponse<TimeEntry>> => {
-        const response = await api.post(`/time-entries/${id}/approve`);
+    approve: async (id: string, comment?: string): Promise<ApiResponse<TimeEntry>> => {
+        const response = await api.post(`/time-entries/${id}/approve`, { comment });
         return response.data;
     },
 

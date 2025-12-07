@@ -41,8 +41,8 @@ export const overtimeService = {
     },
 
     // Approve overtime
-    approve: async (id: string): Promise<ApiResponse<Overtime>> => {
-        const response = await api.post(`/overtime/${id}/approve`);
+    approve: async (id: string, comment?: string): Promise<ApiResponse<Overtime>> => {
+        const response = await api.post(`/overtime/${id}/approve`, { comment });
         return response.data;
     },
 

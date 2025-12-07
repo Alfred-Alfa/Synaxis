@@ -19,6 +19,7 @@ import { StaffTimeEntry } from './pages/staff/StaffTimeEntry';
 import { StaffOvertime } from './pages/staff/StaffOvertime';
 import { StaffLeave } from './pages/staff/StaffLeave';
 import { StaffReports } from './pages/staff/StaffReports';
+import { NotificationsPage } from './pages/common/NotificationsPage';
 import './index.css';
 
 // Placeholder components for routes
@@ -53,6 +54,7 @@ function App() {
                   <Route path="reports" element={<Reports />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="audit-logs" element={<AuditLogs />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
                   <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
                 </Routes>
               </Layout>
@@ -69,6 +71,7 @@ function App() {
                   <Route path="overtime" element={<StaffOvertime />} />
                   <Route path="leave" element={<StaffLeave />} />
                   <Route path="reports" element={<StaffReports />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
                   <Route path="*" element={<Navigate to="/staff/dashboard" replace />} />
                 </Routes>
               </Layout>

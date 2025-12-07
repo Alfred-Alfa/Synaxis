@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { overtimeService } from '../../services/overtimeService';
 import { siteService } from '../../services/siteService';
 import type { Overtime, Site, Staff } from '../../types';
+import { ApprovalModal } from '../../components/common/ApprovalModal';
 import './AdminTimeEntry.css';
 
 export const AdminOvertime: React.FC = () => {
@@ -10,6 +11,18 @@ export const AdminOvertime: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'Approved' | 'Rejected'>('Pending');
+
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'approve' | 'reject';
+        itemId: string;
+        title: string;
+    }>({
+        isOpen: false,
+        type: 'approve',
+        itemId: '',
+        title: '',
+    });
 
     useEffect(() => {
         loadData();
@@ -31,27 +44,36 @@ export const AdminOvertime: React.FC = () => {
         }
     };
 
-    const handleApprove = async (id: string) => {
-        if (!window.confirm('Approve this overtime request?')) {
-            return;
-        }
+    const openApproveModal = (id: string) => {
+        setModalConfig({
+            isOpen: true,
+            type: 'approve',
+            itemId: id,
+            title: 'Approve Overtime Request',
+        });
+    };
 
+    const openRejectModal = (id: string) => {
+        setModalConfig({
+            isOpen: true,
+            type: 'reject',
+            itemId: id,
+            title: 'Reject Overtime Request',
+        });
+    };
+
+    const handleApprove = async (comment?: string) => {
         try {
-            await overtimeService.approve(id);
+            await overtimeService.approve(modalConfig.itemId, comment);
             loadData();
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to approve overtime');
         }
     };
 
-    const handleReject = async (id: string) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
-
-        const comment = prompt('Additional comments (optional):');
-
+    const handleReject = async (reason: string, comment?: string) => {
         try {
-            await overtimeService.reject(id, reason, comment || undefined);
+            await overtimeService.reject(modalConfig.itemId, reason, comment);
             loadData();
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to reject overtime');
@@ -165,7 +187,7 @@ export const AdminOvertime: React.FC = () => {
                                         </td>
                                         <td>
                                             <span className={`badge badge-${ot.status === 'Approved' ? 'success' :
-                                                    ot.status === 'Rejected' ? 'danger' : 'warning'
+                                                ot.status === 'Rejected' ? 'danger' : 'warning'
                                                 }`}>
                                                 {ot.status}
                                             </span>
@@ -184,13 +206,13 @@ export const AdminOvertime: React.FC = () => {
                                             {ot.status === 'Pending' && (
                                                 <div className="action-buttons">
                                                     <button
-                                                        onClick={() => handleApprove(ot._id)}
+                                                        onClick={() => openApproveModal(ot._id)}
                                                         className="btn btn-success btn-sm"
                                                     >
                                                         ✓ Approve
                                                     </button>
                                                     <button
-                                                        onClick={() => handleReject(ot._id)}
+                                                        onClick={() => openRejectModal(ot._id)}
                                                         className="btn btn-danger btn-sm"
                                                     >
                                                         ✗ Reject
@@ -205,6 +227,15 @@ export const AdminOvertime: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <ApprovalModal
+                isOpen={modalConfig.isOpen}
+                onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                type={modalConfig.type}
+                title={modalConfig.title}
+            />
         </div>
     );
 };

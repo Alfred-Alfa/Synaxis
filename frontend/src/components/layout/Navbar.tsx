@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
-// import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { settingsService } from '../../services/settingsService';
+import { notificationService } from '../../services/notificationService';
 import './Navbar.css';
 
 export const Navbar: React.FC = () => {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [companyName, setCompanyName] = useState('HRMS');
     const [companyLogo, setCompanyLogo] = useState('');
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
         loadSettings();
+        // Initial load
+        loadNotifications();
+
+        // Poll for notifications every minute
+        const interval = setInterval(loadNotifications, 60000);
+        return () => clearInterval(interval);
     }, []);
 
     const loadSettings = async () => {
@@ -25,10 +34,28 @@ export const Navbar: React.FC = () => {
         }
     };
 
+    const loadNotifications = async () => {
+        try {
+            const response = await notificationService.getAll();
+            const unread = response.data?.filter(n => !n.isRead).length || 0;
+            setUnreadCount(unread);
+        } catch (error) {
+            console.error('Failed to load notifications', error);
+        }
+    };
+
     const handleLogout = () => {
         if (window.confirm('Are you sure you want to logout?')) {
             logout();
             window.location.href = '/login';
+        }
+    };
+
+    const goToNotifications = () => {
+        if (user?.role === 'Staff') {
+            navigate('/staff/notifications');
+        } else {
+            navigate('/admin/notifications');
         }
     };
 
@@ -51,6 +78,17 @@ export const Navbar: React.FC = () => {
 
             <div className="navbar-menu">
                 <div className="navbar-user">
+                    <button
+                        className="btn-icon notification-btn"
+                        onClick={goToNotifications}
+                        title="Notifications"
+                    >
+                        🔔
+                        {unreadCount > 0 && (
+                            <span className="notification-badge">{unreadCount}</span>
+                        )}
+                    </button>
+
                     <div className="user-info">
                         <span className="user-email">{user?.email}</span>
                         <span className={`user-role badge badge-${user?.role === 'SuperAdmin' || user?.role === 'Admin' ? 'primary' : 'secondary'}`}>

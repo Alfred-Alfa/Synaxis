@@ -48,6 +48,9 @@ const leaveSchema = new mongoose.Schema(
         approvedAt: {
             type: Date,
         },
+        approvalComment: {
+            type: String,
+        },
         rejectionComment: {
             type: String,
         },

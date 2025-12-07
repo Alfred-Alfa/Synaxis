@@ -169,13 +169,18 @@ export const StaffOvertime: React.FC = () => {
                                         </td>
                                         <td>
                                             <span className={`badge badge-${ot.status === 'Approved' ? 'success' :
-                                                    ot.status === 'Rejected' ? 'danger' : 'warning'
+                                                ot.status === 'Rejected' ? 'danger' : 'warning'
                                                 }`}>
                                                 {ot.status}
                                             </span>
-                                            {ot.status === 'Rejected' && ot.rejectionReason && (
+                                            {ot.status === 'Rejected' && (ot.rejectionReason || ot.rejectionComment) && (
                                                 <div className="text-sm text-danger mt-1">
-                                                    {ot.rejectionReason}
+                                                    {ot.rejectionReason || ot.rejectionComment}
+                                                </div>
+                                            )}
+                                            {ot.status === 'Approved' && ot.approvalComment && (
+                                                <div className="text-sm text-success mt-1">
+                                                    {ot.approvalComment}
                                                 </div>
                                             )}
                                         </td>
