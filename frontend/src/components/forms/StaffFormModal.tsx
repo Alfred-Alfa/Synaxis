@@ -2,6 +2,19 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { staffService } from '../../services/staffService';
 import type { Staff } from '../../types';
+import {
+    X,
+    User,
+    Mail,
+    Phone,
+    Briefcase,
+    Calendar,
+    DollarSign,
+    Lock,
+    MapPin,
+    Building2,
+    Clock
+} from 'lucide-react';
 import './StaffFormModal.css';
 
 interface StaffFormModalProps {
@@ -68,176 +81,223 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
 
     return createPortal(
         <div className="modal-overlay" onClick={() => onClose()}>
-            <div className="modal-content slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-container fade-in" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>{isEdit ? 'Edit Staff Member' : 'Add New Staff Member'}</h2>
-                    <button onClick={() => onClose()} className="modal-close">×</button>
+                    <div className="modal-header-content">
+                        <div className="icon-badge">
+                            <User size={24} />
+                        </div>
+                        <div>
+                            <h2>{isEdit ? 'Edit Staff Profile' : 'New Staff Member'}</h2>
+                            <p className="subtitle">
+                                {isEdit ? 'Update employee details and compensation' : 'Add a new employee to your organization'}
+                            </p>
+                        </div>
+                    </div>
+                    <button onClick={() => onClose()} className="close-button" aria-label="Close">
+                        <X size={20} />
+                    </button>
                 </div>
 
                 {error && (
-                    <div className="error-alert mb-3">
+                    <div className="error-banner">
+                        <span className="error-icon">⚠️</span>
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="modal-body">
-                    <div className="form-grid">
-                        <div className="form-group">
-                            <label htmlFor="fullName" className="form-label">
-                                Full Name *
-                            </label>
-                            <input
-                                id="fullName"
-                                name="fullName"
-                                type="text"
-                                className="input"
-                                value={formData.fullName}
-                                onChange={handleChange}
-                                required
-                            />
+                <form onSubmit={handleSubmit} className="modal-form">
+                    <div className="form-scroll-area">
+                        {/* Personal Information Section */}
+                        <div className="form-section">
+                            <h3 className="section-title">
+                                <User size={18} />
+                                Personal Information
+                            </h3>
+                            <div className="grid-2">
+                                <div className="input-group">
+                                    <label htmlFor="fullName">Full Name <span className="required">*</span></label>
+                                    <div className="input-wrapper">
+                                        <User className="input-icon" size={18} />
+                                        <input
+                                            id="fullName"
+                                            name="fullName"
+                                            type="text"
+                                            placeholder="e.g. John Doe"
+                                            value={formData.fullName}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="input-group">
+                                    <label htmlFor="email">Email Address <span className="required">*</span></label>
+                                    <div className="input-wrapper">
+                                        <Mail className="input-icon" size={18} />
+                                        <input
+                                            id="email"
+                                            name="email"
+                                            type="email"
+                                            placeholder="john@company.com"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            required
+                                            disabled={isEdit}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid-2">
+                                <div className="input-group">
+                                    <label htmlFor="phone">Phone Number</label>
+                                    <div className="input-wrapper">
+                                        <Phone className="input-icon" size={18} />
+                                        <input
+                                            id="phone"
+                                            name="phone"
+                                            type="tel"
+                                            placeholder="+1 (555) 000-0000"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="input-group">
+                                    <label htmlFor="address">Address</label>
+                                    <div className="input-wrapper">
+                                        <MapPin className="input-icon" size={18} />
+                                        <input
+                                            id="address"
+                                            name="address"
+                                            type="text"
+                                            placeholder="123 Business St"
+                                            value={formData.address}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="email" className="form-label">
-                                Email *
-                            </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                className="input"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                                disabled={isEdit}
-                            />
+                        {/* Professional Details Section */}
+                        <div className="form-section">
+                            <h3 className="section-title">
+                                <Briefcase size={18} />
+                                Employment Details
+                            </h3>
+                            <div className="grid-2">
+                                <div className="input-group">
+                                    <label htmlFor="designation">Designation</label>
+                                    <div className="input-wrapper">
+                                        <Building2 className="input-icon" size={18} />
+                                        <input
+                                            id="designation"
+                                            name="designation"
+                                            type="text"
+                                            placeholder="e.g. Senior Developer"
+                                            value={formData.designation}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="input-group">
+                                    <label htmlFor="startDate">Start Date</label>
+                                    <div className="input-wrapper">
+                                        <Calendar className="input-icon" size={18} />
+                                        <input
+                                            id="startDate"
+                                            name="startDate"
+                                            type="date"
+                                            value={formData.startDate}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid-2">
+                                <div className="input-group">
+                                    <label htmlFor="hourlyRate">Hourly Rate ($) <span className="required">*</span></label>
+                                    <div className="input-wrapper">
+                                        <DollarSign className="input-icon" size={18} />
+                                        <input
+                                            id="hourlyRate"
+                                            name="hourlyRate"
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            placeholder="0.00"
+                                            value={formData.hourlyRate}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="input-group">
+                                    <label htmlFor="otRate">Overtime Multiplier</label>
+                                    <div className="input-wrapper">
+                                        <Clock className="input-icon" size={18} />
+                                        <input
+                                            id="otRate"
+                                            name="otRate"
+                                            type="number"
+                                            step="0.1"
+                                            min="1"
+                                            placeholder="e.g. 1.5"
+                                            value={formData.otRate}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    <p className="input-hint">Standard is 1.5x hourly rate</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="phone" className="form-label">
-                                Phone
-                            </label>
-                            <input
-                                id="phone"
-                                name="phone"
-                                type="tel"
-                                className="input"
-                                value={formData.phone}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="designation" className="form-label">
-                                Designation
-                            </label>
-                            <input
-                                id="designation"
-                                name="designation"
-                                type="text"
-                                className="input"
-                                value={formData.designation}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="hourlyRate" className="form-label">
-                                Hourly Rate ($) *
-                            </label>
-                            <input
-                                id="hourlyRate"
-                                name="hourlyRate"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                className="input"
-                                value={formData.hourlyRate}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="otRate" className="form-label">
-                                OT Rate Multiplier
-                            </label>
-                            <input
-                                id="otRate"
-                                name="otRate"
-                                type="number"
-                                step="0.1"
-                                min="1"
-                                className="input"
-                                value={formData.otRate}
-                                onChange={handleChange}
-                                placeholder="Leave empty for default"
-                            />
-                            <small className="text-muted">Staff-specific OT rate (e.g., 1.5 for 1.5x hourly rate)</small>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="startDate" className="form-label">
-                                Start Date
-                            </label>
-                            <input
-                                id="startDate"
-                                name="startDate"
-                                type="date"
-                                className="input"
-                                value={formData.startDate}
-                                onChange={handleChange}
-                            />
-                        </div>
-
+                        {/* Account Section */}
                         {!isEdit && (
-                            <div className="form-group">
-                                <label htmlFor="password" className="form-label">
-                                    Password
-                                </label>
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    className="input"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    placeholder="Default: password123"
-                                />
-                                <small className="text-muted">User can change this after first login</small>
+                            <div className="form-section">
+                                <h3 className="section-title">
+                                    <Lock size={18} />
+                                    Account Security
+                                </h3>
+                                <div className="input-group">
+                                    <label htmlFor="password">Initial Password</label>
+                                    <div className="input-wrapper">
+                                        <Lock className="input-icon" size={18} />
+                                        <input
+                                            id="password"
+                                            name="password"
+                                            type="password"
+                                            placeholder="Default: password123"
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    <p className="input-hint">The employee can change this after their first login</p>
+                                </div>
                             </div>
                         )}
-
-                        <div className="form-group form-group-full">
-                            <label htmlFor="address" className="form-label">
-                                Address
-                            </label>
-                            <textarea
-                                id="address"
-                                name="address"
-                                className="textarea"
-                                rows={3}
-                                value={formData.address}
-                                onChange={handleChange}
-                            />
-                        </div>
                     </div>
 
                     <div className="modal-footer">
                         <button
                             type="button"
                             onClick={() => onClose()}
-                            className="btn btn-secondary"
+                            className="btn-cancel"
                             disabled={loading}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="btn btn-primary"
+                            className="btn-submit"
                             disabled={loading}
                         >
-                            {loading ? 'Saving...' : isEdit ? 'Update Staff' : 'Add Staff'}
+                            {loading ? 'Creating Profile...' : (isEdit ? 'Save Changes' : 'Create Profile')}
                         </button>
                     </div>
                 </form>

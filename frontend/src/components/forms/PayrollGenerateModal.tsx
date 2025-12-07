@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { payrollService } from '../../services/payrollService';
 import type { Staff } from '../../types';
-import '../forms/StaffFormModal.css';
+import {
+    X,
+    Banknote,
+    Calendar,
+    User,
+    FileText,
+    Calculator
+} from 'lucide-react';
+import './StaffFormModal.css';
 
 interface PayrollGenerateModalProps {
     staff: Staff[];
@@ -47,124 +56,168 @@ export const PayrollGenerateModal: React.FC<PayrollGenerateModalProps> = ({ staf
         }
     };
 
-    return (
+    return createPortal(
         <div className="modal-overlay" onClick={() => onClose()}>
-            <div className="modal-content slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-container fade-in" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Generate Payroll</h2>
-                    <button onClick={() => onClose()} className="modal-close">×</button>
+                    <div className="modal-header-content">
+                        <div className="icon-badge">
+                            <Banknote size={24} />
+                        </div>
+                        <div>
+                            <h2>Generate Payroll</h2>
+                            <p className="subtitle">Calculates payments based on approved time & overtime</p>
+                        </div>
+                    </div>
+                    <button onClick={() => onClose()} className="close-button" aria-label="Close">
+                        <X size={20} />
+                    </button>
                 </div>
 
                 {error && (
-                    <div className="error-alert mb-3">
+                    <div className="error-banner">
+                        <span className="error-icon">⚠️</span>
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="modal-body">
-                    <div className="form-grid">
-                        <div className="form-group form-group-full">
-                            <label htmlFor="staffId" className="form-label">
-                                Staff Member *
-                            </label>
-                            <select
-                                id="staffId"
-                                name="staffId"
-                                className="select"
-                                value={formData.staffId}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">Select a staff member</option>
-                                {staff.map((s) => (
-                                    <option key={s._id} value={s._id}>
-                                        {s.fullName} - ${s.hourlyRate}/hr
-                                    </option>
-                                ))}
-                            </select>
+                <form onSubmit={handleSubmit} className="modal-form">
+                    <div className="form-scroll-area">
+                        {/* Staff & Period Section */}
+                        <div className="form-section">
+                            <h3 className="section-title">
+                                <User size={18} />
+                                Employee Selection
+                            </h3>
+                            <div className="input-group">
+                                <label htmlFor="staffId">Staff Member <span className="required">*</span></label>
+                                <div className="input-wrapper">
+                                    <User className="input-icon" size={18} />
+                                    <select
+                                        id="staffId"
+                                        name="staffId"
+                                        value={formData.staffId}
+                                        onChange={handleChange}
+                                        required
+                                        className="input" // Reusing input class for consistent styling
+                                        style={{ paddingLeft: '2.5rem', width: '100%' }}
+                                    >
+                                        <option value="">Select an employee...</option>
+                                        {staff.map((s) => (
+                                            <option key={s._id} value={s._id}>
+                                                {s.fullName} — ${s.hourlyRate}/hr
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="periodStart" className="form-label">
-                                Period Start Date *
-                            </label>
-                            <input
-                                id="periodStart"
-                                name="periodStart"
-                                type="date"
-                                className="input"
-                                value={formData.periodStart}
-                                onChange={handleChange}
-                                required
-                            />
+                        <div className="form-section">
+                            <h3 className="section-title">
+                                <Calendar size={18} />
+                                Pay Period
+                            </h3>
+                            <div className="grid-2">
+                                <div className="input-group">
+                                    <label htmlFor="periodStart">Start Date <span className="required">*</span></label>
+                                    <div className="input-wrapper">
+                                        <Calendar className="input-icon" size={18} />
+                                        <input
+                                            id="periodStart"
+                                            name="periodStart"
+                                            type="date"
+                                            value={formData.periodStart}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="input-group">
+                                    <label htmlFor="periodEnd">End Date <span className="required">*</span></label>
+                                    <div className="input-wrapper">
+                                        <Calendar className="input-icon" size={18} />
+                                        <input
+                                            id="periodEnd"
+                                            name="periodEnd"
+                                            type="date"
+                                            value={formData.periodEnd}
+                                            onChange={handleChange}
+                                            required
+                                            min={formData.periodStart}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="periodEnd" className="form-label">
-                                Period End Date *
-                            </label>
-                            <input
-                                id="periodEnd"
-                                name="periodEnd"
-                                type="date"
-                                className="input"
-                                value={formData.periodEnd}
-                                onChange={handleChange}
-                                required
-                                min={formData.periodStart}
-                            />
+                        {/* Additional Info Section */}
+                        <div className="form-section">
+                            <h3 className="section-title">
+                                <FileText size={18} />
+                                Additional Details
+                            </h3>
+                            <div className="input-group">
+                                <label htmlFor="notes">Notes</label>
+                                <div className="input-wrapper">
+                                    <FileText className="input-icon" size={18} style={{ top: '12px' }} />
+                                    <textarea
+                                        id="notes"
+                                        name="notes"
+                                        rows={3}
+                                        value={formData.notes}
+                                        onChange={handleChange}
+                                        placeholder="Add any internal notes regarding this payroll..."
+                                        style={{ paddingLeft: '2.5rem', width: '100%', padding: '0.625rem 1rem 0.625rem 2.5rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.95rem' }}
+                                    />
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="form-group form-group-full">
-                            <label htmlFor="notes" className="form-label">
-                                Notes (optional)
-                            </label>
-                            <textarea
-                                id="notes"
-                                name="notes"
-                                className="textarea"
-                                rows={3}
-                                value={formData.notes}
-                                onChange={handleChange}
-                                placeholder="Any additional notes for this payroll..."
-                            />
+                        {/* Info Box */}
+                        <div style={{
+                            backgroundColor: '#eff6ff',
+                            borderRadius: '12px',
+                            padding: '1rem',
+                            border: '1px solid #dbeafe',
+                            display: 'flex',
+                            gap: '0.75rem'
+                        }}>
+                            <div style={{ color: '#2563eb', marginTop: '2px' }}>
+                                <Calculator size={20} />
+                            </div>
+                            <div>
+                                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#1e40af', fontWeight: 600 }}>Expected Calculation</h4>
+                                <ul style={{ margin: 0, paddingLeft: '1rem', color: '#334155', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                                    <li>Regular Hours × Base Rate</li>
+                                    <li>Overtime Hours × (Base Rate × OT Multiplier)</li>
+                                    <li>Approved Travel Expenses included</li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="alert-info" style={{
-                        padding: 'var(--spacing-md)',
-                        backgroundColor: '#dbeafe',
-                        borderRadius: 'var(--radius-md)',
-                        marginTop: 'var(--spacing-lg)'
-                    }}>
-                        <strong>ℹ️ Calculation Details:</strong>
-                        <ul style={{ marginTop: 'var(--spacing-sm)', marginBottom: 0, paddingLeft: '1.5rem' }}>
-                            <li>Normal hours from approved time entries × hourly rate</li>
-                            <li>OT hours from approved overtime × (hourly rate × OT rate)</li>
-                            <li>Travel expenses from approved time entries</li>
-                            <li>Unpaid leave deductions calculated automatically</li>
-                        </ul>
                     </div>
 
                     <div className="modal-footer">
                         <button
                             type="button"
                             onClick={() => onClose()}
-                            className="btn btn-secondary"
+                            className="btn-cancel"
                             disabled={loading}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="btn btn-primary"
+                            className="btn-submit"
                             disabled={loading}
                         >
-                            {loading ? 'Generating...' : 'Generate Payroll'}
+                            {loading ? 'Processing...' : 'Generate Payroll'}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

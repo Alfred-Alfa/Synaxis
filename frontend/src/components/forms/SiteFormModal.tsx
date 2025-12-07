@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { siteService } from '../../services/siteService';
 import type { Site } from '../../types';
+import {
+    X,
+    Building2,
+    MapPin,
+    User,
+    Clock,
+    Building
+} from 'lucide-react';
 import './StaffFormModal.css';
 
 interface SiteFormModalProps {
@@ -55,86 +64,115 @@ export const SiteFormModal: React.FC<SiteFormModalProps> = ({ site, onClose }) =
         }
     };
 
-    return (
+    return createPortal(
         <div className="modal-overlay" onClick={() => onClose()}>
-            <div className="modal-content slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-container fade-in" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>{isEdit ? 'Edit Site' : 'Add New Site'}</h2>
-                    <button onClick={() => onClose()} className="modal-close">×</button>
+                    <div className="modal-header-content">
+                        <div className="icon-badge">
+                            <Building2 size={24} />
+                        </div>
+                        <div>
+                            <h2>{isEdit ? 'Edit Site' : 'New Site Project'}</h2>
+                            <p className="subtitle">
+                                {isEdit ? 'Update site details and configuration' : 'Add a new work site or project location'}
+                            </p>
+                        </div>
+                    </div>
+                    <button onClick={() => onClose()} className="close-button" aria-label="Close">
+                        <X size={20} />
+                    </button>
                 </div>
 
                 {error && (
-                    <div className="error-alert mb-3">
+                    <div className="error-banner">
+                        <span className="error-icon">⚠️</span>
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="modal-body">
-                    <div className="form-grid">
-                        <div className="form-group form-group-full">
-                            <label htmlFor="name" className="form-label">
-                                Site/Project Name *
-                            </label>
-                            <input
-                                id="name"
-                                name="name"
-                                type="text"
-                                className="input"
-                                value={formData.name}
-                                onChange={handleChange}
-                                required
-                                placeholder="e.g., Downtown Office"
-                            />
+                <form onSubmit={handleSubmit} className="modal-form">
+                    <div className="form-scroll-area">
+                        {/* Project Details Section */}
+                        <div className="form-section">
+                            <h3 className="section-title">
+                                <Building size={18} />
+                                Project Details
+                            </h3>
+
+                            <div className="input-group">
+                                <label htmlFor="name">Site/Project Name <span className="required">*</span></label>
+                                <div className="input-wrapper">
+                                    <Building2 className="input-icon" size={18} />
+                                    <input
+                                        id="name"
+                                        name="name"
+                                        type="text"
+                                        className="input"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="e.g., Downtown Office Complex"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-grid"> {/* Using existing grid class from css file if available or grid-2 */}
+                                <div className="input-group">
+                                    <label htmlFor="client">Client Name</label>
+                                    <div className="input-wrapper">
+                                        <User className="input-icon" size={18} />
+                                        <input
+                                            id="client"
+                                            name="client"
+                                            type="text"
+                                            value={formData.client}
+                                            onChange={handleChange}
+                                            placeholder="e.g., ACME Corp"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="input-group">
+                                    <label htmlFor="otRate">Site OT Multiplier</label>
+                                    <div className="input-wrapper">
+                                        <Clock className="input-icon" size={18} />
+                                        <input
+                                            id="otRate"
+                                            name="otRate"
+                                            type="number"
+                                            step="0.1"
+                                            min="1"
+                                            value={formData.otRate}
+                                            onChange={handleChange}
+                                            placeholder="Default (1.5)"
+                                        />
+                                    </div>
+                                    <p className="input-hint">Overrides global/staff OT rates if set</p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="form-group">
-                            <label htmlFor="location" className="form-label">
+                        {/* Location Section */}
+                        <div className="form-section">
+                            <h3 className="section-title">
+                                <MapPin size={18} />
                                 Location
-                            </label>
-                            <input
-                                id="location"
-                                name="location"
-                                type="text"
-                                className="input"
-                                value={formData.location}
-                                onChange={handleChange}
-                                placeholder="e.g., 123 Main St"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="client" className="form-label">
-                                Client
-                            </label>
-                            <input
-                                id="client"
-                                name="client"
-                                type="text"
-                                className="input"
-                                value={formData.client}
-                                onChange={handleChange}
-                                placeholder="e.g., ACME Corp"
-                            />
-                        </div>
-
-                        <div className="form-group form-group-full">
-                            <label htmlFor="otRate" className="form-label">
-                                OT Rate Multiplier (Site-Specific)
-                            </label>
-                            <input
-                                id="otRate"
-                                name="otRate"
-                                type="number"
-                                step="0.1"
-                                min="1"
-                                className="input"
-                                value={formData.otRate}
-                                onChange={handleChange}
-                                placeholder="Leave empty for default"
-                            />
-                            <small className="text-muted">
-                                Site-specific OT rate (e.g., 1.5 for 1.5x). Leave empty to use global or staff-specific rate.
-                            </small>
+                            </h3>
+                            <div className="input-group">
+                                <label htmlFor="location">Site Address</label>
+                                <div className="input-wrapper">
+                                    <MapPin className="input-icon" size={18} />
+                                    <input
+                                        id="location"
+                                        name="location"
+                                        type="text"
+                                        value={formData.location}
+                                        onChange={handleChange}
+                                        placeholder="e.g., 123 Main St, City, Country"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -142,21 +180,22 @@ export const SiteFormModal: React.FC<SiteFormModalProps> = ({ site, onClose }) =
                         <button
                             type="button"
                             onClick={() => onClose()}
-                            className="btn btn-secondary"
+                            className="btn-cancel"
                             disabled={loading}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="btn btn-primary"
+                            className="btn-submit"
                             disabled={loading}
                         >
-                            {loading ? 'Saving...' : isEdit ? 'Update Site' : 'Add Site'}
+                            {loading ? 'Saving...' : (isEdit ? 'Update Site' : 'Create Site')}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
