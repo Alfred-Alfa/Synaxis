@@ -44,4 +44,16 @@ export const payrollService = {
         const response = await api.post(`/payroll/${id}/mark-paid`);
         return response.data;
     },
+
+    // Update payroll
+    update: async (id: string, data: Partial<Payroll>): Promise<ApiResponse<Payroll>> => {
+        const response = await api.put(`/payroll/${id}`, data);
+        return response.data;
+    },
+
+    // Delete payroll
+    delete: async (id: string): Promise<ApiResponse<void>> => {
+        const response = await api.delete(`/payroll/${id}`);
+        return response.data;
+    },
 };

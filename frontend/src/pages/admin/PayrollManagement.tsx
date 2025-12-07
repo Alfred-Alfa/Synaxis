@@ -3,7 +3,8 @@ import { payrollService } from '../../services/payrollService';
 import { staffService } from '../../services/staffService';
 import type { Payroll, Staff } from '../../types';
 import { PayrollGenerateModal } from '../../components/forms/PayrollGenerateModal';
-import { Filter, Calendar, X, Download, CheckCircle, FileText, Clock } from 'lucide-react';
+import { EditPayrollModal } from '../../components/forms/EditPayrollModal';
+import { Filter, Calendar, X, Download, CheckCircle, FileText, Clock, Trash2, Edit } from 'lucide-react';
 import './AdminTimeEntry.css';
 
 export const PayrollManagement: React.FC = () => {
@@ -12,6 +13,7 @@ export const PayrollManagement: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [editingPayroll, setEditingPayroll] = useState<Payroll | null>(null);
 
     // Filter states
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -74,8 +76,28 @@ export const PayrollManagement: React.FC = () => {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this payroll record? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            await payrollService.delete(id);
+            loadData();
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Failed to delete payroll record');
+        }
+    };
+
     const handleModalClose = (success?: boolean) => {
         setShowModal(false);
+        if (success) {
+            loadData();
+        }
+    };
+
+    const handleEditClose = (success?: boolean) => {
+        setEditingPayroll(null);
         if (success) {
             loadData();
         }
@@ -105,6 +127,10 @@ export const PayrollManagement: React.FC = () => {
         { value: 11, label: 'November' },
         { value: 12, label: 'December' },
     ];
+
+    if (loading && !payrollRecords.length) {
+        return <div className="loading">Loading payroll records...</div>;
+    }
 
     return (
         <div className="admin-time-entry fade-in">
@@ -188,9 +214,7 @@ export const PayrollManagement: React.FC = () => {
                     {selectedMonth && ` for ${months.find(m => m.value === selectedMonth)?.label}`} {selectedYear}
                 </div>
 
-                {loading ? (
-                    <div className="loading" style={{ textAlign: 'center', padding: '2rem' }}>Loading payroll records...</div>
-                ) : payrollRecords.length === 0 ? (
+                {payrollRecords.length === 0 ? (
                     <div className="empty-state">
                         <p>No payroll records found for this period</p>
                         <button onClick={handleGenerate} className="btn btn-primary mt-2">
@@ -258,19 +282,37 @@ export const PayrollManagement: React.FC = () => {
                                             )}
                                         </td>
                                         <td>
-                                            <div className="action-buttons" style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <div className="action-buttons" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                                                 <button
                                                     onClick={() => handleDownloadPayslip(payroll._id)}
                                                     className="btn btn-secondary btn-sm"
                                                     title="Download Payslip"
                                                     style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
                                                 >
-                                                    <Download size={14} /> Payslip
+                                                    <Download size={14} />
                                                 </button>
+
+                                                <button
+                                                    onClick={() => setEditingPayroll(payroll)}
+                                                    className="btn btn-secondary btn-sm"
+                                                    title="Edit Record"
+                                                >
+                                                    <Edit size={14} />
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleDelete(payroll._id)}
+                                                    className="btn btn-danger btn-sm"
+                                                    title="Delete Record"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+
                                                 {!payroll.isPaid && (
                                                     <button
                                                         onClick={() => handleMarkAsPaid(payroll._id)}
                                                         className="btn btn-success btn-sm"
+                                                        title="Mark as Paid"
                                                     >
                                                         Mark Paid
                                                     </button>
@@ -289,6 +331,14 @@ export const PayrollManagement: React.FC = () => {
                 <PayrollGenerateModal
                     staff={staff}
                     onClose={handleModalClose}
+                />
+            )}
+
+            {editingPayroll && (
+                <EditPayrollModal
+                    payroll={editingPayroll}
+                    staffName={getStaffName(editingPayroll.staffId)}
+                    onClose={handleEditClose}
                 />
             )}
         </div>

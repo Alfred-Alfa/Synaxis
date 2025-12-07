@@ -245,4 +245,79 @@ router.post('/:id/mark-paid', protect, isAdmin, async (req, res) => {
     }
 });
 
+// @route   PUT /api/payroll/:id
+// @desc    Update payroll record
+// @access  Private (Admin only)
+router.put('/:id', protect, isAdmin, async (req, res) => {
+    try {
+        const payroll = await Payroll.findById(req.params.id);
+
+        if (!payroll) {
+            return res.status(404).json({ message: 'Payroll not found' });
+        }
+
+        const fieldsToUpdate = [
+            'normalHours', 'normalPay', 'otHours', 'otPay',
+            'travelExpenses', 'leaveDeductions', 'totalPay', 'notes', 'isPaid'
+        ];
+
+        fieldsToUpdate.forEach(field => {
+            if (req.body[field] !== undefined) {
+                payroll[field] = req.body[field];
+            }
+        });
+
+        // Ensure manual update updates the record
+        const updatedPayroll = await payroll.save();
+
+        await logAudit({
+            userId: req.user._id,
+            action: 'UPDATE',
+            resource: 'Payroll',
+            resourceId: payroll._id,
+            description: 'Updated payroll record manually',
+            newValue: updatedPayroll,
+            req,
+        });
+
+        res.json({
+            success: true,
+            data: updatedPayroll,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   DELETE /api/payroll/:id
+// @desc    Delete payroll record
+// @access  Private (Admin only)
+router.delete('/:id', protect, isAdmin, async (req, res) => {
+    try {
+        const payroll = await Payroll.findById(req.params.id);
+
+        if (!payroll) {
+            return res.status(404).json({ message: 'Payroll not found' });
+        }
+
+        await payroll.deleteOne();
+
+        await logAudit({
+            userId: req.user._id,
+            action: 'DELETE',
+            resource: 'Payroll',
+            resourceId: req.params.id,
+            description: 'Deleted payroll record',
+            req,
+        });
+
+        res.json({
+            success: true,
+            message: 'Payroll record removed',
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 export default router;
