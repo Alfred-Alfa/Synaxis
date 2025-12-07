@@ -105,6 +105,7 @@ export const generatePayslipPDF = async (payroll, staff, settings, outputPath) =
 
             rightY = drawLabelValue('Pay Period:', `${formatDate(payroll.periodStart)} - ${formatDate(payroll.periodEnd)}`, rightX, rightY);
             rightY = drawLabelValue('Pay Date:', formatDate(new Date()), rightX, rightY);
+            rightY = drawLabelValue('Currency:', settings.currency, rightX, rightY);
             rightY = drawLabelValue('Status:', payroll.isPaid ? 'PAID' : 'PENDING', rightX, rightY);
 
             y += infoBoxHeight + 30;

@@ -175,7 +175,7 @@ router.post('/generate', protect, isAdmin, async (req, res) => {
 router.get('/:id/payslip', protect, async (req, res) => {
     try {
         const payroll = await Payroll.findById(req.params.id)
-            .populate('staffId', 'fullName email designation hourlyRate');
+            .populate('staffId', 'fullName email designation hourlyRate employeeId');
 
         if (!payroll) {
             return res.status(404).json({ message: 'Payroll not found' });
