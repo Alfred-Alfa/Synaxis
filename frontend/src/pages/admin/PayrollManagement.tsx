@@ -6,6 +6,7 @@ import { PayrollGenerateModal } from '../../components/forms/PayrollGenerateModa
 import { EditPayrollModal } from '../../components/forms/EditPayrollModal';
 import { Filter, Calendar, X, Download, CheckCircle, FileText, Clock, Trash2, Edit } from 'lucide-react';
 import './AdminTimeEntry.css';
+import { settingsService } from '../../services/settingsService';
 
 export const PayrollManagement: React.FC = () => {
     const [payrollRecords, setPayrollRecords] = useState<Payroll[]>([]);
@@ -14,6 +15,7 @@ export const PayrollManagement: React.FC = () => {
     const [error, setError] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editingPayroll, setEditingPayroll] = useState<Payroll | null>(null);
+    const [currencySymbol, setCurrencySymbol] = useState('$');
 
     // Filter states
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -23,6 +25,13 @@ export const PayrollManagement: React.FC = () => {
         loadData();
     }, [selectedYear, selectedMonth]);
 
+    const getCurrencySymbol = (currencyCode: string) => {
+        const symbols: Record<string, string> = {
+            USD: '$', GBP: '£', EUR: '€', INR: '₹', SGD: 'S$', AUD: 'A$', CAD: 'C$', AED: 'AED '
+        };
+        return symbols[currencyCode] || currencyCode;
+    };
+
     const loadData = async () => {
         try {
             setLoading(true);
@@ -30,12 +39,16 @@ export const PayrollManagement: React.FC = () => {
             if (selectedYear) params.year = selectedYear;
             if (selectedMonth) params.month = selectedMonth;
 
-            const [payrollRes, staffRes] = await Promise.all([
+            const [payrollRes, staffRes, settingsRes] = await Promise.all([
                 payrollService.getAll(params),
                 staffService.getAll({ status: 'Active' }),
+                settingsService.get(),
             ]);
             setPayrollRecords(payrollRes.data || []);
             setStaff(staffRes.data || []);
+            if (settingsRes.data?.currency) {
+                setCurrencySymbol(getCurrencySymbol(settingsRes.data.currency));
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to load payroll data');
         } finally {
@@ -255,19 +268,19 @@ export const PayrollManagement: React.FC = () => {
                                             <div className="text-sm">
                                                 <div>Normal: {payroll.normalHours.toFixed(1)}h</div>
                                                 {payroll.otHours > 0 && (
-                                                    <div style={{ color: '#d97706' }}>OT: {payroll.otHours.toFixed(1)}h (${payroll.otPay.toFixed(2)})</div>
+                                                    <div style={{ color: '#d97706' }}>OT: {payroll.otHours.toFixed(1)}h ({currencySymbol}{payroll.otPay.toFixed(2)})</div>
                                                 )}
                                                 {payroll.travelExpenses > 0 && (
-                                                    <div style={{ color: '#059669' }}>Travel: +${payroll.travelExpenses.toFixed(2)}</div>
+                                                    <div style={{ color: '#059669' }}>Travel: +{currencySymbol}{payroll.travelExpenses.toFixed(2)}</div>
                                                 )}
                                             </div>
                                         </td>
                                         <td>
                                             <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#0f172a' }}>
-                                                ${payroll.totalPay.toFixed(2)}
+                                                {currencySymbol}{payroll.totalPay.toFixed(2)}
                                             </div>
                                             {payroll.leaveDeductions > 0 && (
-                                                <div className="text-danger text-sm">-${payroll.leaveDeductions.toFixed(2)} deductions</div>
+                                                <div className="text-danger text-sm">-{currencySymbol}{payroll.leaveDeductions.toFixed(2)} deductions</div>
                                             )}
                                         </td>
                                         <td>

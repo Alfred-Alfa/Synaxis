@@ -192,7 +192,7 @@ export const AuditLogs: React.FC = () => {
                                         </td>
                                         <td>
                                             <div className="staff-name">
-                                                {typeof log.userId === 'object' ? (log.userId as any).email : 'System'}
+                                                {log.userId && typeof log.userId === 'object' ? (log.userId as any).email : 'System'}
                                             </div>
                                         </td>
                                         <td>

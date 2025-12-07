@@ -4,6 +4,7 @@ import type { Staff } from '../../types';
 import { StaffFormModal } from '../../components/forms/StaffFormModal';
 // import { DocumentUploadModal } from '../../components/forms/DocumentUploadModal';
 import './StaffManagement.css';
+import { settingsService } from '../../services/settingsService';
 
 export const StaffManagement: React.FC = () => {
     const [staff, setStaff] = useState<Staff[]>([]);
@@ -14,16 +15,30 @@ export const StaffManagement: React.FC = () => {
     const [showModal, setShowModal] = useState(false);
     // const [showDocumentModal, setShowDocumentModal] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+    const [currencySymbol, setCurrencySymbol] = useState('$');
 
     useEffect(() => {
         loadStaff();
     }, []);
 
+    const getCurrencySymbol = (currencyCode: string) => {
+        const symbols: Record<string, string> = {
+            USD: '$', GBP: '£', EUR: '€', INR: '₹', SGD: 'S$', AUD: 'A$', CAD: 'C$', AED: 'AED '
+        };
+        return symbols[currencyCode] || currencyCode;
+    };
+
     const loadStaff = async () => {
         try {
             setLoading(true);
-            const response = await staffService.getAll();
+            const [response, settingsRes] = await Promise.all([
+                staffService.getAll(),
+                settingsService.get()
+            ]);
             setStaff(response.data || []);
+            if (settingsRes.data?.currency) {
+                setCurrencySymbol(getCurrencySymbol(settingsRes.data.currency));
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to load staff');
         } finally {
@@ -172,7 +187,7 @@ export const StaffManagement: React.FC = () => {
                                         <td>{staffMember.email}</td>
                                         <td>{staffMember.designation || '-'}</td>
                                         <td className="text-primary">
-                                            <strong>${staffMember.hourlyRate.toFixed(2)}/hr</strong>
+                                            <strong>{currencySymbol}{staffMember.hourlyRate.toFixed(2)}/hr</strong>
                                         </td>
                                         <td>
                                             <span className={`badge badge-${staffMember.employmentStatus === 'Active' ? 'success' : 'secondary'}`}>
