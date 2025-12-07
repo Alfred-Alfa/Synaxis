@@ -12,6 +12,18 @@ export const AdminTimeEntry: React.FC = () => {
     const [error, setError] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'Approved' | 'Rejected'>('Pending');
 
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'approve' | 'reject';
+        title: string;
+        entityId: string;
+    }>({
+        isOpen: false,
+        type: 'approve',
+        title: '',
+        entityId: '',
+    });
+
     useEffect(() => {
         loadData();
     }, []);
@@ -32,28 +44,39 @@ export const AdminTimeEntry: React.FC = () => {
         }
     };
 
-    const handleApprove = async (id: string) => {
-        if (!window.confirm('Approve this time entry?')) {
-            return;
-        }
+    const openApproveModal = (id: string) => {
+        setModalConfig({
+            isOpen: true,
+            type: 'approve',
+            title: 'Approve Time Entry',
+            entityId: id,
+        });
+    };
 
+    const openRejectModal = (id: string) => {
+        setModalConfig({
+            isOpen: true,
+            type: 'reject',
+            title: 'Reject Time Entry',
+            entityId: id,
+        });
+    };
+
+    const handleApprove = async (comment?: string) => {
         try {
-            await timeEntryService.approve(id);
+            await timeEntryService.approve(modalConfig.entityId, comment);
             loadData();
+            setModalConfig(prev => ({ ...prev, isOpen: false }));
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to approve entry');
         }
     };
 
-    const handleReject = async (id: string) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
-
-        const comment = prompt('Additional comments (optional):');
-
+    const handleReject = async (reason: string, comment?: string) => {
         try {
-            await timeEntryService.reject(id, reason, comment || undefined);
+            await timeEntryService.reject(modalConfig.entityId, reason, comment);
             loadData();
+            setModalConfig(prev => ({ ...prev, isOpen: false }));
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to reject entry');
         }

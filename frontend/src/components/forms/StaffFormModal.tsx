@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { staffService } from '../../services/staffService';
 import type { Staff } from '../../types';
 import './StaffFormModal.css';
@@ -65,7 +66,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
         }
     };
 
-    return (
+    return createPortal(
         <div className="modal-overlay" onClick={() => onClose()}>
             <div className="modal-content slide-up" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
@@ -241,6 +242,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
