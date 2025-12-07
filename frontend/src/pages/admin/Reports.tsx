@@ -398,7 +398,7 @@ export const Reports: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="action-buttons mt-3">
+                <div className="action-buttons mt-3" style={{ display: 'flex', gap: '10px' }}>
                     <button
                         onClick={generateReport}
                         className="btn btn-primary"
@@ -406,6 +406,19 @@ export const Reports: React.FC = () => {
                     >
                         {loading ? 'Generating...' : '📊 Generate Report'}
                     </button>
+                    {reportData && (
+                        <>
+                            <button onClick={exportToPDF} className="btn btn-secondary">
+                                📄 Download PDF
+                            </button>
+                            <button onClick={exportToCSV} className="btn btn-secondary">
+                                📥 Download CSV
+                            </button>
+                            <button onClick={printReport} className="btn btn-secondary">
+                                🖨️ Print
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 

@@ -7,6 +7,8 @@ export const AuditLogs: React.FC = () => {
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [filters, setFilters] = useState({
         action: '',
         resource: '',
@@ -16,7 +18,7 @@ export const AuditLogs: React.FC = () => {
 
     useEffect(() => {
         loadLogs();
-    }, []);
+    }, [page]); // Reload when page changes
 
     const loadLogs = async () => {
         try {
@@ -26,8 +28,11 @@ export const AuditLogs: React.FC = () => {
                 resource: filters.resource || undefined,
                 startDate: filters.startDate || undefined,
                 endDate: filters.endDate || undefined,
+                page,
+                limit: 50,
             });
             setLogs(response.data || []);
+            setTotalPages(response.pages || 1);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to load audit logs');
         } finally {
@@ -43,7 +48,14 @@ export const AuditLogs: React.FC = () => {
     };
 
     const handleApplyFilters = () => {
+        setPage(1); // Reset to first page
         loadLogs();
+    };
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setPage(newPage);
+        }
     };
 
     const handleClearFilters = () => {
@@ -170,51 +182,75 @@ export const AuditLogs: React.FC = () => {
                         <p>No audit logs found</p>
                     </div>
                 ) : (
-                    <div className="table-responsive">
-                        <table className="table">
-                            <thead>
-                                <tr>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Resource</th>
-                                    <th>Description</th>
-                                    <th>IP Address</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {logs.map((log) => (
-                                    <tr key={log._id}>
-                                        <td>
-                                            <div className="text-sm">
-                                                {new Date(log.createdAt).toLocaleString()}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div className="staff-name">
-                                                {log.userId && typeof log.userId === 'object' ? (log.userId as any).email : 'System'}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span className={`badge badge-${log.action === 'CREATE' ? 'success' :
-                                                log.action === 'UPDATE' ? 'primary' :
-                                                    log.action === 'DELETE' ? 'danger' :
-                                                        log.action === 'APPROVE' ? 'success' :
-                                                            log.action === 'REJECT' ? 'danger' : 'secondary'
-                                                }`}>
-                                                {log.action}
-                                            </span>
-                                        </td>
-                                        <td>{log.resource}</td>
-                                        <td>
-                                            <div className="entry-description">{log.description}</div>
-                                        </td>
-                                        <td className="text-muted text-sm">{log.ipAddress || '-'}</td>
+                    <>
+                        <div className="table-responsive">
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Action</th>
+                                        <th>Resource</th>
+                                        <th>Description</th>
+                                        <th>IP Address</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {logs.map((log) => (
+                                        <tr key={log._id}>
+                                            <td>
+                                                <div className="text-sm">
+                                                    {new Date(log.createdAt).toLocaleString()}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="staff-name">
+                                                    {log.userId && typeof log.userId === 'object' ? (log.userId as any).email : 'System'}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span className={`badge badge-${log.action === 'CREATE' ? 'success' :
+                                                    log.action === 'UPDATE' ? 'primary' :
+                                                        log.action === 'DELETE' ? 'danger' :
+                                                            log.action === 'APPROVE' ? 'success' :
+                                                                log.action === 'REJECT' ? 'danger' : 'secondary'
+                                                    }`}>
+                                                    {log.action}
+                                                </span>
+                                            </td>
+                                            <td>{log.resource}</td>
+                                            <td>
+                                                <div className="entry-description">{log.description}</div>
+                                            </td>
+                                            <td className="text-muted text-sm">{log.ipAddress || '-'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {totalPages > 1 && (
+                            <div className="pagination-controls mt-2">
+                                <button
+                                    onClick={() => handlePageChange(page - 1)}
+                                    disabled={page === 1}
+                                    className="btn btn-secondary btn-sm"
+                                >
+                                    Previous
+                                </button>
+                                <span className="mx-2">
+                                    Page {page} of {totalPages}
+                                </span>
+                                <button
+                                    onClick={() => handlePageChange(page + 1)}
+                                    disabled={page === totalPages}
+                                    className="btn btn-secondary btn-sm"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

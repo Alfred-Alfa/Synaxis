@@ -15,6 +15,7 @@ export const Sidebar: React.FC = () => {
         { to: '/admin/sites', label: 'Sites/Projects', icon: '🏢' },
         { to: '/admin/payroll', label: 'Payroll', icon: '💰' },
         { to: '/admin/settings', label: 'Settings', icon: '⚙️' },
+        { to: '/admin/reports', label: 'Reports & Analytics', icon: '📉' },
         { to: '/admin/audit-logs', label: 'Audit Logs', icon: '📋' },
     ];
 

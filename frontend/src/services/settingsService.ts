@@ -35,6 +35,8 @@ export const auditLogService = {
         resource?: string;
         startDate?: string;
         endDate?: string;
+        page?: number;
+        limit?: number;
     }): Promise<ApiResponse<AuditLog[]>> => {
         const response = await api.get('/audit-logs', { params });
         return response.data;
