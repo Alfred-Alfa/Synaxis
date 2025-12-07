@@ -95,7 +95,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ staff,
                                         <div key={index} className="document-item">
                                             <span>📄 {doc.name}</span>
                                             <small className="text-muted">
-                                                {new Date(doc.uploadedAt).toLocaleDateString()}
+                                                {new Date(doc.uploadDate).toLocaleDateString()}
                                             </small>
                                         </div>
                                     ))}

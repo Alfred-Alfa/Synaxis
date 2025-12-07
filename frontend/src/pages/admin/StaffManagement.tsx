@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { staffService } from '../../services/staffService';
 import type { Staff } from '../../types';
 import { StaffFormModal } from '../../components/forms/StaffFormModal';
-import { DocumentUploadModal } from '../../components/forms/DocumentUploadModal';
+// import { DocumentUploadModal } from '../../components/forms/DocumentUploadModal';
 import './StaffManagement.css';
 
 export const StaffManagement: React.FC = () => {
@@ -12,7 +12,7 @@ export const StaffManagement: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'Active' | 'Inactive'>('all');
     const [showModal, setShowModal] = useState(false);
-    const [showDocumentModal, setShowDocumentModal] = useState(false);
+    // const [showDocumentModal, setShowDocumentModal] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
 
     useEffect(() => {
@@ -62,18 +62,18 @@ export const StaffManagement: React.FC = () => {
         }
     };
 
-    const handleUploadDocument = (staffMember: Staff) => {
+    /*const handleUploadDocument = (staffMember: Staff) => {
         setSelectedStaff(staffMember);
         setShowDocumentModal(true);
-    };
+    };*/
 
-    const handleDocumentModalClose = (success?: boolean) => {
+    /*const handleDocumentModalClose = (success?: boolean) => {
         setShowDocumentModal(false);
         setSelectedStaff(null);
         if (success) {
             loadStaff();
         }
-    };
+    };*/
 
     // Filter staff
     const filteredStaff = staff.filter((s) => {

@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -22,12 +22,12 @@ import { StaffReports } from './pages/staff/StaffReports';
 import './index.css';
 
 // Placeholder components for routes
-const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
+/* const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
   <div className="fade-in">
     <h1>{title}</h1>
     <p className="text-muted">This page is under development.</p>
   </div>
-);
+); */
 
 function App() {
   console.log('App.tsx: Rendering App component');

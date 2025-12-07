@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+// import { useAuth } from '../../contexts/AuthContext';
 import { timeEntryService } from '../../services/timeEntryService';
 import { overtimeService } from '../../services/overtimeService';
 import { payrollService } from '../../services/payrollService';
 import './StaffReports.css';
 
 export const StaffReports: React.FC = () => {
-    const { user } = useAuth();
+    // const { user } = useAuth();
     const [viewMode, setViewMode] = useState<'hours' | 'payment'>('hours');
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState({

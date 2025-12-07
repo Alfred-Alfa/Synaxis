@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
 
 export const Sidebar: React.FC = () => {
-    const { user, isAdmin } = useAuth();
+    const { isAdmin } = useAuth();
 
     const adminLinks = [
         { to: '/admin/dashboard', label: 'Dashboard', icon: '📊' },

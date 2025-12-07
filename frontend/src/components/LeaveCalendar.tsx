@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Leave, Staff } from '../../types';
+import type { Leave, Staff } from '../types';
 import './LeaveCalendar.css';
 
 interface LeaveCalendarProps {
@@ -137,8 +137,8 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ leaves }) => {
                                         <div
                                             key={idx}
                                             className={`leave-indicator badge-${leave.leaveType === 'Paid' ? 'success' :
-                                                    leave.leaveType === 'Sick' ? 'warning' :
-                                                        leave.leaveType === 'Casual' ? 'primary' : 'secondary'
+                                                leave.leaveType === 'Sick' ? 'warning' :
+                                                    leave.leaveType === 'Casual' ? 'primary' : 'secondary'
                                                 }`}
                                             title={`${getStaffName(leave.staffId)} - ${leave.leaveType} Leave${leave.isHalfDay ? ' (Half Day)' : ''
                                                 }`}

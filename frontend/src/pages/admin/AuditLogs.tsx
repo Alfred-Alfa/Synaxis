@@ -187,20 +187,20 @@ export const AuditLogs: React.FC = () => {
                                     <tr key={log._id}>
                                         <td>
                                             <div className="text-sm">
-                                                {new Date(log.timestamp).toLocaleString()}
+                                                {new Date(log.createdAt).toLocaleString()}
                                             </div>
                                         </td>
                                         <td>
                                             <div className="staff-name">
-                                                {typeof log.userId === 'object' ? log.userId.email : 'System'}
+                                                {typeof log.userId === 'object' ? (log.userId as any).email : 'System'}
                                             </div>
                                         </td>
                                         <td>
                                             <span className={`badge badge-${log.action === 'CREATE' ? 'success' :
-                                                    log.action === 'UPDATE' ? 'primary' :
-                                                        log.action === 'DELETE' ? 'danger' :
-                                                            log.action === 'APPROVE' ? 'success' :
-                                                                log.action === 'REJECT' ? 'danger' : 'secondary'
+                                                log.action === 'UPDATE' ? 'primary' :
+                                                    log.action === 'DELETE' ? 'danger' :
+                                                        log.action === 'APPROVE' ? 'success' :
+                                                            log.action === 'REJECT' ? 'danger' : 'secondary'
                                                 }`}>
                                                 {log.action}
                                             </span>

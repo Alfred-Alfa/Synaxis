@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { settingsService } from '../../services/settingsService';
-import type { Settings } from '../../types';
+import type { /* Settings */ } from '../../types';
 import './SettingsPage.css';
 
 export const SettingsPage: React.FC = () => {
-    const [settings, setSettings] = useState<Settings | null>(null);
+    // const [settings, setSettings] = useState<Settings | null>(null);
     const [formData, setFormData] = useState({
         companyName: '',
         timezone: '',
         currency: '',
         defaultOtRate: '',
-        weekendOtRate: '',
-        nightShiftOtRate: '',
+        // weekendOtRate: '',
+        // nightShiftOtRate: '',
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -27,15 +27,17 @@ export const SettingsPage: React.FC = () => {
             setLoading(true);
             const response = await settingsService.get();
             const data = response.data;
-            setSettings(data);
-            setFormData({
-                companyName: data.companyName || '',
-                timezone: data.timezone || 'UTC',
-                currency: data.currency || 'USD',
-                defaultOtRate: data.otRates?.default?.toString() || '1.5',
-                weekendOtRate: data.otRates?.weekend?.toString() || '2',
-                nightShiftOtRate: data.otRates?.nightShift?.toString() || '1.75',
-            });
+            // setSettings(data);
+            if (data) {
+                setFormData({
+                    companyName: data.companyName || '',
+                    timezone: data.timezone || 'UTC',
+                    currency: data.currency || 'USD',
+                    defaultOtRate: data.globalOtRate?.toString() || '1.5',
+                    // weekendOtRate: '2',
+                    // nightShiftOtRate: '1.75',
+                });
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to load settings');
         } finally {
@@ -60,12 +62,13 @@ export const SettingsPage: React.FC = () => {
             await settingsService.update({
                 companyName: formData.companyName,
                 timezone: formData.timezone,
-                currency: formData.currency,
-                otRates: {
+                currency: formData.currency as any, // Cast to any to satisfy specific union type
+                globalOtRate: parseFloat(formData.defaultOtRate),
+                /*otRates: {
                     default: parseFloat(formData.defaultOtRate),
                     weekend: parseFloat(formData.weekendOtRate),
                     nightShift: parseFloat(formData.nightShiftOtRate),
-                },
+                },*/
             });
             setSuccess('Settings updated successfully!');
             loadSettings();
@@ -201,7 +204,7 @@ export const SettingsPage: React.FC = () => {
                             <small className="text-muted">e.g., 1.5 for 1.5x hourly rate</small>
                         </div>
 
-                        <div className="form-group">
+                        {/* <div className="form-group">
                             <label htmlFor="weekendOtRate" className="form-label">
                                 Weekend OT Rate
                             </label>
@@ -233,7 +236,7 @@ export const SettingsPage: React.FC = () => {
                                 onChange={handleChange}
                             />
                             <small className="text-muted">e.g., 1.75 for 1.75x hourly rate</small>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 

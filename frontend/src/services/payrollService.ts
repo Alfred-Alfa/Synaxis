@@ -5,6 +5,8 @@ export const payrollService = {
     // Get all payroll records
     getAll: async (params?: {
         staffId?: string;
+        startDate?: string;
+        endDate?: string;
     }): Promise<ApiResponse<Payroll[]>> => {
         const response = await api.get('/payroll', { params });
         return response.data;
