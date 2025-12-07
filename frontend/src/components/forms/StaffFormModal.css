@@ -26,25 +26,29 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-lg) var(--spacing-xl);
+    padding: var(--spacing-md) var(--spacing-lg);
+    /* Reduced from lg xl */
     border-bottom: 1px solid var(--border-color);
 }
 
 .modal-header h2 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    /* Reduced from 1.5rem */
 }
 
 .modal-close {
     background: none;
     border: none;
-    font-size: 2rem;
+    font-size: 1.5rem;
+    /* Reduced from 2rem */
     line-height: 1;
     cursor: pointer;
     color: var(--text-secondary);
     padding: 0;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    /* Reduced from 32px */
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -58,22 +62,27 @@
 }
 
 .modal-body {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    /* Reduced from xl */
 }
 
 .modal-footer {
     display: flex;
     justify-content: flex-end;
-    gap: var(--spacing-md);
-    padding-top: var(--spacing-lg);
+    gap: var(--spacing-sm);
+    /* Reduced from md */
+    padding-top: var(--spacing-md);
+    /* Reduced from lg */
     border-top: 1px solid var(--border-color);
-    margin-top: var(--spacing-lg);
+    margin-top: var(--spacing-md);
+    /* Reduced from lg */
 }
 
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
+    /* Reduced from lg */
 }
 
 .form-group-full {

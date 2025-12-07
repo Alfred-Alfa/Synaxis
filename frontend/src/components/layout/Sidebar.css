@@ -8,68 +8,27 @@
     overflow-y: auto;
 }
 
-.sidebar-header {
-    padding: var(--spacing-lg) var(--spacing-md);
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-sm);
-    background: linear-gradient(135deg, var(--primary-blue-light), var(--primary-blue));
-    color: white;
-}
-
-.sidebar-logo {
-    width: 80px;
-    height: 80px;
-    object-fit: contain;
-    border-radius: var(--radius-md);
-    background: white;
-    padding: var(--spacing-xs);
-    box-shadow: var(--shadow-sm);
-}
-
-.sidebar-logo-placeholder {
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-}
-
-.sidebar-logo-icon {
-    font-size: 2.5rem;
-}
-
-.sidebar-company-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    text-align: center;
-    margin: 0;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
+/* Sidebar header, logo, and company name styles removed as they are moved to Navbar */
 
 .sidebar-nav {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 4px;
 }
 
 .sidebar-link {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--radius-md);
     text-decoration: none;
     color: var(--text-primary);
     transition: all 0.2s ease;
     font-weight: 500;
+    min-height: 44px;
+    /* Ensure good clickable area */
 }
 
 .sidebar-link:hover {
@@ -83,7 +42,8 @@
 }
 
 .sidebar-icon {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
+    /* Slightly smaller icon */
 }
 
 .sidebar-label {
@@ -95,22 +55,9 @@
         width: 70px;
     }
 
-    .sidebar-header {
-        padding: var(--spacing-md) var(--spacing-xs);
-    }
-
-    .sidebar-logo,
-    .sidebar-logo-placeholder {
-        width: 50px;
-        height: 50px;
-    }
-
-    .sidebar-logo-icon {
-        font-size: 1.5rem;
-    }
-
-    .sidebar-company-name {
-        display: none;
+    .sidebar-nav {
+        padding: var(--spacing-xs);
+        align-items: center;
     }
 
     .sidebar-label {
@@ -119,6 +66,11 @@
 
     .sidebar-link {
         justify-content: center;
+        padding: var(--spacing-sm);
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        /* Circular hover effect for icon-only */
     }
 }
 

@@ -6,16 +6,21 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-md);
+    /* Reduced from xl */
 }
 
 .page-header h1 {
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: 2px;
+    /* Reduced from spacing-xs */
+    font-size: 1.5rem;
+    /* Slightly smaller for compactness */
 }
 
 .staff-filters {
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
+    /* Reduced from md */
     align-items: center;
     flex-wrap: wrap;
 }
@@ -23,6 +28,8 @@
 .staff-count {
     color: var(--text-secondary);
     font-size: 0.875rem;
+    margin-bottom: var(--spacing-sm);
+    /* Explicit margin control for compact view */
 }
 
 .table-responsive {
@@ -35,12 +42,14 @@
 
 .action-buttons {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
+    /* Reduced from sm */
 }
 
 .empty-state {
     text-align: center;
-    padding: var(--spacing-2xl);
+    padding: var(--spacing-lg);
+    /* Reduced from 2xl */
     color: var(--text-secondary);
 }
 
@@ -48,8 +57,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 400px;
-    font-size: 1.125rem;
+    min-height: 200px;
+    /* Reduced from 400px */
+    font-size: 1rem;
     color: var(--text-secondary);
 }
 
@@ -57,7 +67,7 @@
     .page-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: var(--spacing-md);
+        gap: var(--spacing-sm);
     }
 
     .action-buttons {

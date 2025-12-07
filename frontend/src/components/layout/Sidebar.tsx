@@ -1,29 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { settingsService } from '../../services/settingsService';
 import './Sidebar.css';
 
 export const Sidebar: React.FC = () => {
     const { isAdmin } = useAuth();
-    const [companyName, setCompanyName] = useState('HRMS');
-    const [companyLogo, setCompanyLogo] = useState('');
-
-    useEffect(() => {
-        loadSettings();
-    }, []);
-
-    const loadSettings = async () => {
-        try {
-            const response = await settingsService.get();
-            if (response.data) {
-                setCompanyName(response.data.companyName || 'HRMS');
-                setCompanyLogo(response.data.companyLogo || '');
-            }
-        } catch (error) {
-            console.error('Failed to load settings:', error);
-        }
-    };
 
     const adminLinks = [
         { to: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
@@ -48,20 +29,6 @@ export const Sidebar: React.FC = () => {
 
     return (
         <aside className="sidebar">
-            <div className="sidebar-header">
-                {companyLogo ? (
-                    <img
-                        src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/uploads/${companyLogo}`}
-                        alt={companyName}
-                        className="sidebar-logo"
-                    />
-                ) : (
-                    <div className="sidebar-logo-placeholder">
-                        <span className="sidebar-logo-icon">🏢</span>
-                    </div>
-                )}
-                <h2 className="sidebar-company-name">{companyName}</h2>
-            </div>
             <nav className="sidebar-nav">
                 {links.map((link) => (
                     <NavLink

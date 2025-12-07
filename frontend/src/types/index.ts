@@ -162,7 +162,13 @@ export interface Settings {
     timezone: string;
     currency: 'USD' | 'GBP' | 'EUR' | 'INR' | 'SGD' | 'AUD' | 'CAD';
     companyName: string;
-    companyAddress?: string;
+    companyAddress?: {
+        street: string;
+        city: string;
+        state: string;
+        zip: string;
+        country: string;
+    };
     companyLogo?: string;
     workingHoursPerDay: number;
     globalOtRate: number;
