@@ -171,4 +171,123 @@ router.post('/logout', protect, async (req, res) => {
     }
 });
 
+// @route   POST /api/auth/create-admin
+// @desc    Create a new admin user (SuperAdmin only)
+// @access  Private (SuperAdmin only)
+router.post('/create-admin', protect, isSuperAdmin, async (req, res) => {
+    try {
+        const { email, password, name } = req.body;
+
+        // Validate input
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Please provide email and password' });
+        }
+
+        // Validate password length
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+
+        // Check if user already exists
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ message: 'User with this email already exists' });
+        }
+
+        // Create admin user
+        const user = await User.create({
+            email,
+            password,
+            role: 'Admin',
+        });
+
+        // Log audit
+        await logAudit({
+            userId: req.user._id,
+            action: 'CREATE',
+            resource: 'User',
+            resourceId: user._id,
+            description: `SuperAdmin created new Admin user: ${email}`,
+            req,
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Admin user created successfully',
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   GET /api/auth/admins
+// @desc    Get all admin users (SuperAdmin only)
+// @access  Private (SuperAdmin only)
+router.get('/admins', protect, isSuperAdmin, async (req, res) => {
+    try {
+        const admins = await User.find({
+            role: { $in: ['Admin', 'SuperAdmin'] }
+        }).select('-password').sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            data: admins,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   DELETE /api/auth/admin/:id
+// @desc    Delete an admin user (SuperAdmin only, cannot delete self or other SuperAdmins)
+// @access  Private (SuperAdmin only)
+router.delete('/admin/:id', protect, isSuperAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Prevent deleting SuperAdmin accounts
+        if (user.role === 'SuperAdmin') {
+            return res.status(403).json({ message: 'Cannot delete SuperAdmin accounts' });
+        }
+
+        // Prevent deleting self
+        if (user._id.toString() === req.user._id.toString()) {
+            return res.status(403).json({ message: 'Cannot delete your own account' });
+        }
+
+        // Only allow deleting Admin users
+        if (user.role !== 'Admin') {
+            return res.status(403).json({ message: 'Can only delete Admin users' });
+        }
+
+        await user.deleteOne();
+
+        // Log audit
+        await logAudit({
+            userId: req.user._id,
+            action: 'DELETE',
+            resource: 'User',
+            resourceId: user._id,
+            description: `SuperAdmin deleted Admin user: ${user.email}`,
+            req,
+        });
+
+        res.json({
+            success: true,
+            message: 'Admin user deleted successfully',
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 export default router;

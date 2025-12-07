@@ -9,7 +9,7 @@ const settingsSchema = new mongoose.Schema(
         currency: {
             type: String,
             default: 'USD',
-            enum: ['USD', 'GBP', 'EUR', 'INR', 'SGD', 'AUD', 'CAD'],
+            enum: ['USD', 'GBP', 'EUR', 'INR', 'SGD', 'AUD', 'CAD', 'AED'],
         },
         companyName: {
             type: String,

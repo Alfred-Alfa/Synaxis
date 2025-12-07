@@ -13,6 +13,10 @@ export const SettingsPage: React.FC = () => {
         // weekendOtRate: '',
         // nightShiftOtRate: '',
     });
+    const [companyLogo, setCompanyLogo] = useState<string>('');
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string>('');
+    const [uploadingLogo, setUploadingLogo] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -37,6 +41,7 @@ export const SettingsPage: React.FC = () => {
                     // weekendOtRate: '2',
                     // nightShiftOtRate: '1.75',
                 });
+                setCompanyLogo(data.companyLogo || '');
             }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to load settings');
@@ -50,6 +55,49 @@ export const SettingsPage: React.FC = () => {
             ...formData,
             [e.target.name]: e.target.value,
         });
+    };
+
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                setError('Please select an image file');
+                return;
+            }
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setError('File size must be less than 5MB');
+                return;
+            }
+            setLogoFile(file);
+            // Create preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleLogoUpload = async () => {
+        if (!logoFile) return;
+
+        setError('');
+        setSuccess('');
+        setUploadingLogo(true);
+
+        try {
+            await settingsService.uploadLogo(logoFile);
+            setSuccess('Logo uploaded successfully!');
+            setLogoFile(null);
+            setLogoPreview('');
+            loadSettings(); // Reload to get the new logo path
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to upload logo');
+        } finally {
+            setUploadingLogo(false);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -121,6 +169,61 @@ export const SettingsPage: React.FC = () => {
                                 onChange={handleChange}
                                 placeholder="Your Company Name"
                             />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="card mb-3">
+                    <h3 className="card-title">Company Logo</h3>
+                    <p className="text-muted mb-3">
+                        Upload your company logo. Recommended size: 200x200px. Max file size: 5MB.
+                    </p>
+                    <div className="logo-upload-section">
+                        <div className="logo-preview-container">
+                            {(logoPreview || companyLogo) && (
+                                <div className="logo-preview">
+                                    <img
+                                        src={logoPreview || `${import.meta.env.VITE_API_URL?.replace('/api', '')}/uploads/${companyLogo}`}
+                                        alt="Company Logo"
+                                        className="logo-image"
+                                    />
+                                </div>
+                            )}
+                            {!logoPreview && !companyLogo && (
+                                <div className="logo-placeholder">
+                                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                        <polyline points="21 15 16 10 5 21" />
+                                    </svg>
+                                    <p>No logo uploaded</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="logo-upload-controls">
+                            <input
+                                type="file"
+                                id="logo-upload"
+                                accept="image/*"
+                                onChange={handleLogoChange}
+                                style={{ display: 'none' }}
+                            />
+                            <label htmlFor="logo-upload" className="btn btn-secondary">
+                                Choose File
+                            </label>
+                            {logoFile && (
+                                <div className="selected-file-info">
+                                    <span className="file-name">{logoFile.name}</span>
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary"
+                                        onClick={handleLogoUpload}
+                                        disabled={uploadingLogo}
+                                    >
+                                        {uploadingLogo ? 'Uploading...' : 'Upload Logo'}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

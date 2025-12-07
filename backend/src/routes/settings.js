@@ -80,7 +80,8 @@ router.post('/logo', protect, isAdmin, upload.single('logo'), async (req, res) =
         }
 
         const settings = await Settings.getSingleton();
-        settings.companyLogo = req.file.path;
+        // Store only filename - the /uploads path is handled by static middleware
+        settings.companyLogo = req.file.filename;
         await settings.save();
 
         await logAudit({
