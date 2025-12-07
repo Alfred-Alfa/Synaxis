@@ -3,6 +3,7 @@ import { payrollService } from '../../services/payrollService';
 import { staffService } from '../../services/staffService';
 import type { Payroll, Staff } from '../../types';
 import { PayrollGenerateModal } from '../../components/forms/PayrollGenerateModal';
+import { Filter, Calendar, X, Download, CheckCircle, FileText, Clock } from 'lucide-react';
 import './AdminTimeEntry.css';
 
 export const PayrollManagement: React.FC = () => {
@@ -12,15 +13,23 @@ export const PayrollManagement: React.FC = () => {
     const [error, setError] = useState('');
     const [showModal, setShowModal] = useState(false);
 
+    // Filter states
+    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+    const [selectedMonth, setSelectedMonth] = useState<number | ''>('');
+
     useEffect(() => {
         loadData();
-    }, []);
+    }, [selectedYear, selectedMonth]);
 
     const loadData = async () => {
         try {
             setLoading(true);
+            const params: any = {};
+            if (selectedYear) params.year = selectedYear;
+            if (selectedMonth) params.month = selectedMonth;
+
             const [payrollRes, staffRes] = await Promise.all([
-                payrollService.getAll(),
+                payrollService.getAll(params),
                 staffService.getAll({ status: 'Active' }),
             ]);
             setPayrollRecords(payrollRes.data || []);
@@ -78,19 +87,35 @@ export const PayrollManagement: React.FC = () => {
         return staffMember?.fullName || 'Unknown';
     };
 
-    if (loading) {
-        return <div className="loading">Loading payroll records...</div>;
-    }
+    // Generate year options (current year - 2 to current year + 1)
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 4 }, (_, i) => currentYear - 2 + i);
+
+    const months = [
+        { value: 1, label: 'January' },
+        { value: 2, label: 'February' },
+        { value: 3, label: 'March' },
+        { value: 4, label: 'April' },
+        { value: 5, label: 'May' },
+        { value: 6, label: 'June' },
+        { value: 7, label: 'July' },
+        { value: 8, label: 'August' },
+        { value: 9, label: 'September' },
+        { value: 10, label: 'October' },
+        { value: 11, label: 'November' },
+        { value: 12, label: 'December' },
+    ];
 
     return (
         <div className="admin-time-entry fade-in">
             <div className="page-header">
                 <div>
-                    <h1>Payroll Management</h1>
-                    <p className="text-muted">Generate payroll and manage payments</p>
+                    <h1>Payroll History</h1>
+                    <p className="text-muted">Manage monthly payrolls and payments</p>
                 </div>
-                <button onClick={handleGenerate} className="btn btn-primary">
-                    + Generate Payroll
+                <button onClick={handleGenerate} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <FileText size={18} />
+                    Generate Payroll
                 </button>
             </div>
 
@@ -101,15 +126,75 @@ export const PayrollManagement: React.FC = () => {
             )}
 
             <div className="card">
-                <div className="entry-count mb-3">
-                    <strong>{payrollRecords.length}</strong> payroll records found
+                <div className="filter-bar" style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    alignItems: 'center',
+                    marginBottom: '1.5rem',
+                    padding: '1rem',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#64748b' }}>
+                        <Filter size={18} />
+                        <span style={{ fontWeight: 500 }}>Filters:</span>
+                    </div>
+
+                    <div className="select-wrapper">
+                        <select
+                            className="select"
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            style={{ width: '120px' }}
+                        >
+                            {years.map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="select-wrapper">
+                        <select
+                            className="select"
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value ? Number(e.target.value) : '')}
+                            style={{ width: '150px' }}
+                        >
+                            <option value="">All Months</option>
+                            {months.map(m => (
+                                <option key={m.value} value={m.value}>{m.label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {(selectedMonth !== '' || selectedYear !== currentYear) && (
+                        <button
+                            onClick={() => {
+                                setSelectedYear(currentYear);
+                                setSelectedMonth('');
+                            }}
+                            className="btn btn-text"
+                            style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                        >
+                            <X size={16} />
+                            Reset
+                        </button>
+                    )}
                 </div>
 
-                {payrollRecords.length === 0 ? (
+                <div className="entry-count mb-3">
+                    <strong>{payrollRecords.length}</strong> payroll records found
+                    {selectedMonth && ` for ${months.find(m => m.value === selectedMonth)?.label}`} {selectedYear}
+                </div>
+
+                {loading ? (
+                    <div className="loading" style={{ textAlign: 'center', padding: '2rem' }}>Loading payroll records...</div>
+                ) : payrollRecords.length === 0 ? (
                     <div className="empty-state">
-                        <p>No payroll records found</p>
+                        <p>No payroll records found for this period</p>
                         <button onClick={handleGenerate} className="btn btn-primary mt-2">
-                            Generate First Payroll
+                            Generate Payroll
                         </button>
                     </div>
                 ) : (
@@ -117,12 +202,9 @@ export const PayrollManagement: React.FC = () => {
                         <table className="table">
                             <thead>
                                 <tr>
-                                    <th>Staff</th>
-                                    <th>Period</th>
-                                    <th>Normal Hours</th>
-                                    <th>OT Hours</th>
-                                    <th>Travel</th>
-                                    <th>Deductions</th>
+                                    <th>Staff Member</th>
+                                    <th>Pay Period</th>
+                                    <th>Breakdown</th>
                                     <th>Total Pay</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -132,51 +214,58 @@ export const PayrollManagement: React.FC = () => {
                                 {payrollRecords.map((payroll) => (
                                     <tr key={payroll._id}>
                                         <td>
-                                            <div className="staff-name">{getStaffName(payroll.staffId)}</div>
-                                        </td>
-                                        <td>
-                                            <div className="text-sm">
-                                                {new Date(payroll.periodStart).toLocaleDateString()}
-                                            </div>
-                                            <div className="text-muted text-sm">to</div>
-                                            <div className="text-sm">
-                                                {new Date(payroll.periodEnd).toLocaleDateString()}
+                                            <div style={{ fontWeight: 500, color: '#0f172a' }}>{getStaffName(payroll.staffId)}</div>
+                                            <div className="text-muted text-sm" style={{ fontSize: '0.85rem' }}>
+                                                {typeof payroll.staffId === 'object' ? payroll.staffId.email : ''}
                                             </div>
                                         </td>
                                         <td>
-                                            <div>{payroll.normalHours.toFixed(2)} hrs</div>
-                                            <div className="text-muted text-sm">${payroll.normalPay.toFixed(2)}</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <Calendar size={14} className="text-muted" />
+                                                <span className="text-sm">
+                                                    {new Date(payroll.periodStart).toLocaleDateString()} - {new Date(payroll.periodEnd).toLocaleDateString()}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td>
-                                            <div>{payroll.otHours.toFixed(2)} hrs</div>
-                                            <div className="text-muted text-sm">${payroll.otPay.toFixed(2)}</div>
-                                        </td>
-                                        <td className="text-success">
-                                            ${payroll.travelExpenses.toFixed(2)}
-                                        </td>
-                                        <td className="text-danger">
-                                            ${payroll.leaveDeductions.toFixed(2)}
-                                        </td>
-                                        <td className="text-primary">
-                                            <strong>${payroll.totalPay.toFixed(2)}</strong>
+                                            <div className="text-sm">
+                                                <div>Normal: {payroll.normalHours.toFixed(1)}h</div>
+                                                {payroll.otHours > 0 && (
+                                                    <div style={{ color: '#d97706' }}>OT: {payroll.otHours.toFixed(1)}h (${payroll.otPay.toFixed(2)})</div>
+                                                )}
+                                                {payroll.travelExpenses > 0 && (
+                                                    <div style={{ color: '#059669' }}>Travel: +${payroll.travelExpenses.toFixed(2)}</div>
+                                                )}
+                                            </div>
                                         </td>
                                         <td>
-                                            <span className={`badge badge-${payroll.isPaid ? 'success' : 'warning'}`}>
-                                                {payroll.isPaid ? 'Paid' : 'Unpaid'}
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#0f172a' }}>
+                                                ${payroll.totalPay.toFixed(2)}
+                                            </div>
+                                            {payroll.leaveDeductions > 0 && (
+                                                <div className="text-danger text-sm">-${payroll.leaveDeductions.toFixed(2)} deductions</div>
+                                            )}
+                                        </td>
+                                        <td>
+                                            <span className={`badge badge-${payroll.isPaid ? 'success' : 'warning'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                {payroll.isPaid ? <CheckCircle size={12} /> : <Clock size={12} />}
+                                                {payroll.isPaid ? 'Paid' : 'Pending'}
                                             </span>
                                             {payroll.isPaid && payroll.paidAt && (
-                                                <div className="text-sm text-muted mt-1">
+                                                <div className="text-sm text-muted mt-1" style={{ fontSize: '0.75rem' }}>
                                                     {new Date(payroll.paidAt).toLocaleDateString()}
                                                 </div>
                                             )}
                                         </td>
                                         <td>
-                                            <div className="action-buttons">
+                                            <div className="action-buttons" style={{ display: 'flex', gap: '0.5rem' }}>
                                                 <button
                                                     onClick={() => handleDownloadPayslip(payroll._id)}
                                                     className="btn btn-secondary btn-sm"
+                                                    title="Download Payslip"
+                                                    style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
                                                 >
-                                                    📄 Payslip
+                                                    <Download size={14} /> Payslip
                                                 </button>
                                                 {!payroll.isPaid && (
                                                     <button

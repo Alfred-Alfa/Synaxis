@@ -31,6 +31,30 @@ router.get('/', protect, async (req, res) => {
             query.staffId = req.query.staffId;
         }
 
+        if (req.query.year) {
+            const year = parseInt(req.query.year);
+            // month is 1-based (1=Jan, 12=Dec)
+            const month = req.query.month ? parseInt(req.query.month) : null;
+
+            let startDate, endDate;
+
+            if (month) {
+                // Specific month
+                startDate = new Date(year, month - 1, 1);
+                // Last day of month: day 0 of next month
+                endDate = new Date(year, month, 0, 23, 59, 59, 999);
+            } else {
+                // Entire year
+                startDate = new Date(year, 0, 1);
+                endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+            }
+
+            query.periodEnd = {
+                $gte: startDate,
+                $lte: endDate
+            };
+        }
+
         const payrolls = await Payroll.find(query)
             .populate('staffId', 'fullName email')
             .populate('generatedBy', 'email')

@@ -7,6 +7,8 @@ export const payrollService = {
         staffId?: string;
         startDate?: string;
         endDate?: string;
+        month?: number;
+        year?: number;
     }): Promise<ApiResponse<Payroll[]>> => {
         const response = await api.get('/payroll', { params });
         return response.data;
