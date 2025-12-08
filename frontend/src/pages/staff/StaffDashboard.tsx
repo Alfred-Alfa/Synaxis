@@ -3,7 +3,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { timeEntryService } from '../../services/timeEntryService';
 import { overtimeService } from '../../services/overtimeService';
 import { leaveService } from '../../services/leaveService';
-// Imports removed
+import { siteService } from '../../services/siteService'; // Import siteService
+import { Play, Square, MapPin, Clock } from 'lucide-react'; // Import icons
 
 export const StaffDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -15,9 +16,35 @@ export const StaffDashboard: React.FC = () => {
         pendingRequests: 0,
     });
 
+    // Check-in State
+    const [activeEntry, setActiveEntry] = useState<any>(null);
+    const [sites, setSites] = useState<any[]>([]);
+    const [selectedSiteId, setSelectedSiteId] = useState('');
+    const [checkInLoading, setCheckInLoading] = useState(false);
+    const [checkoutDesc, setCheckoutDesc] = useState('Standard Shift');
+
     useEffect(() => {
         loadDashboardData();
+        loadCheckInData();
     }, []);
+
+    const loadCheckInData = async () => {
+        try {
+            // Get current active status
+            const statusRes = await timeEntryService.getCurrentStatus();
+            setActiveEntry(statusRes.data);
+
+            // Get Sites
+            const sitesRes = await siteService.getAll({ status: 'Active' });
+            setSites(sitesRes.data || []);
+
+            if (sitesRes.data && sitesRes.data.length > 0) {
+                setSelectedSiteId(sitesRes.data[0]._id);
+            }
+        } catch (err) {
+            console.error('Failed to load check-in data', err);
+        }
+    };
 
     const loadDashboardData = async () => {
         try {
@@ -30,28 +57,15 @@ export const StaffDashboard: React.FC = () => {
             const [timeRes, otRes, leaveRes] = await Promise.all([
                 timeEntryService.getAll({ startDate: firstDayOfMonth, endDate: lastDayOfMonth }),
                 overtimeService.getAll({ startDate: firstDayOfMonth, endDate: lastDayOfMonth }),
-                leaveService.getAll() // Get all leave to calculate pending properly, can filter for month if needed
+                leaveService.getAll()
             ]);
 
             const timeEntries = timeRes.data || [];
             const overtimeEntries = otRes.data || [];
             const leaveEntries = leaveRes.data || [];
 
-            // Calculate totals for current month (Service filters date for time/ot, but let's double check if needed)
             const totalHours = timeEntries.reduce((sum, entry) => sum + (entry.status === 'Approved' ? entry.totalHours : 0), 0);
             const otHours = overtimeEntries.reduce((sum, entry) => sum + (entry.status === 'Approved' ? entry.otHours : 0), 0);
-
-            // Calculate pending requests (across all time, or just this month? Usually pending is all)
-            // Note: The services might have only returned this month's data if we passed params. 
-            // For Pending count, we ideally want ALL pending. 
-            // Let's re-fetch just pending items or filter if we can't.
-            // Actually, let's just fetch ALL pending items in a separate call or modify the logic.
-            // For simplicity and performance, let's do a separate fetch for "Pending" status for the counter, 
-            // or just fetch all for this month + all pending.
-
-            // Revised strategy: Fetch ALL entries for the staff to compute everything locally or make specific calls.
-            // Since we don't expect huge data yet, fetching all for the staff is fine.
-            // Or better: parallel fetch for stats.
 
             const [allPendingTime, allPendingOt, allPendingLeave] = await Promise.all([
                 timeEntryService.getAll({ status: 'Pending' }),
@@ -63,8 +77,6 @@ export const StaffDashboard: React.FC = () => {
                 (allPendingOt.data?.length || 0) +
                 (allPendingLeave.data?.length || 0);
 
-            // For monthly stats, we rely on the date-filtered calls
-            // Leave taken this month
             const currentMonthLeave = leaveEntries.filter(leave => {
                 const leaveDate = new Date(leave.startDate);
                 return leaveDate >= new Date(firstDayOfMonth) && leaveDate <= new Date(lastDayOfMonth) && leave.status === 'Approved';
@@ -85,6 +97,37 @@ export const StaffDashboard: React.FC = () => {
         }
     };
 
+    const handleCheckIn = async () => {
+        if (!selectedSiteId) return;
+        setCheckInLoading(true);
+        try {
+            const res = await timeEntryService.checkIn({ siteId: selectedSiteId });
+            setActiveEntry(res.data);
+            // Refresh stats if needed, or just set active
+        } catch (err) {
+            console.error('Check in failed', err);
+            alert('Failed to check in');
+        } finally {
+            setCheckInLoading(false);
+        }
+    };
+
+    const handleCheckOut = async () => {
+        setCheckInLoading(true);
+        try {
+            await timeEntryService.checkOut({ jobDescription: checkoutDesc });
+            setActiveEntry(null);
+            setCheckoutDesc('Standard Shift'); // Reset
+            loadDashboardData(); // Refresh stats
+            alert('Checked out successfully!');
+        } catch (err) {
+            console.error('Check out failed', err);
+            alert('Failed to check out');
+        } finally {
+            setCheckInLoading(false);
+        }
+    };
+
     if (loading) {
         return <div className="loading">Loading dashboard...</div>;
     }
@@ -94,6 +137,78 @@ export const StaffDashboard: React.FC = () => {
             <div className="dashboard-header">
                 <h1>Staff Dashboard</h1>
                 <p className="text-muted">Welcome, {user?.email}!</p>
+            </div>
+
+            {/* Check-In/Out Widget */}
+            <div className="card mb-4 border-l-4 border-indigo-500">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Clock className={activeEntry ? "text-green-500" : "text-gray-400"} />
+                            {activeEntry ? 'Current Session' : 'Start New Shift'}
+                        </h2>
+                        {activeEntry ? (
+                            <div className="text-sm">
+                                <p className="mb-1"><strong>Site:</strong> {activeEntry.siteId?.name || 'Unknown Site'}</p>
+                                <p><strong>Started:</strong> {activeEntry.startTime}</p>
+                            </div>
+                        ) : (
+                            <p className="text-muted text-sm">Select a site and start your work timer.</p>
+                        )}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                        {!activeEntry ? (
+                            <>
+                                <div style={{ minWidth: '200px' }}>
+                                    <label htmlFor="site-select" className="sr-only">Select Site</label>
+                                    <div className="relative">
+                                        <MapPin size={16} style={{ position: 'absolute', left: '10px', top: '12px', color: '#6b7280' }} />
+                                        <select
+                                            id="site-select"
+                                            value={selectedSiteId}
+                                            onChange={(e) => setSelectedSiteId(e.target.value)}
+                                            className="input"
+                                            style={{ paddingLeft: '32px' }}
+                                        >
+                                            <option value="" disabled>Select Job Site</option>
+                                            {sites.map(site => (
+                                                <option key={site._id} value={site._id}>{site.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleCheckIn}
+                                    disabled={checkInLoading || !selectedSiteId}
+                                    className="btn btn-primary"
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem' }}
+                                >
+                                    {checkInLoading ? 'Starting...' : <><Play size={18} fill="currentColor" /> Check In</>}
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <input
+                                    type="text"
+                                    className="input"
+                                    placeholder="Work Description (Optional)"
+                                    value={checkoutDesc}
+                                    onChange={(e) => setCheckoutDesc(e.target.value)}
+                                    style={{ minWidth: '250px' }}
+                                />
+                                <button
+                                    onClick={handleCheckOut}
+                                    disabled={checkInLoading}
+                                    className="btn btn-danger"
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', background: '#ef4444', borderColor: '#ef4444', color: 'white' }}
+                                >
+                                    {checkInLoading ? 'Stopping...' : <><Square size={18} fill="currentColor" /> Check Out</>}
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
             </div>
 
             <div className="dashboard-grid">
@@ -128,7 +243,7 @@ export const StaffDashboard: React.FC = () => {
                     <div className="action-grid">
                         <a href="/staff/time-entries" className="action-card">
                             <span className="action-icon">⏰</span>
-                            <span>Submit Time Entry</span>
+                            <span>Time List</span>
                         </a>
                         <a href="/staff/overtime" className="action-card">
                             <span className="action-icon">⏱️</span>

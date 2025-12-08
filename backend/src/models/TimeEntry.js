@@ -20,6 +20,9 @@ const timeEntrySchema = new mongoose.Schema(
         endTime: {
             type: String,
             required: function () {
+                // If status is Active, endTime is not required
+                if (this.status === 'Active') return false;
+                // Otherwise (Pending/Approved), it is required if totalHours is not set manually
                 return !this.totalHours;
             },
         },
@@ -34,6 +37,10 @@ const timeEntrySchema = new mongoose.Schema(
         },
         jobDescription: {
             type: String,
+            // Job description might be optional during initial check-in, but required for checkout?
+            // Let's keep it required but allow a default for check-in if needed, or user must enter it.
+            // User requested "direct check in ... by choosing the site". Maybe Description comes later?
+            // For now, let's make it required but simple.
             required: [true, 'Job description is required'],
             trim: true,
         },
@@ -57,7 +64,7 @@ const timeEntrySchema = new mongoose.Schema(
         ],
         status: {
             type: String,
-            enum: ['Pending', 'Approved', 'Rejected'],
+            enum: ['Pending', 'Approved', 'Rejected', 'Active'],
             default: 'Pending',
         },
         approvedBy: {

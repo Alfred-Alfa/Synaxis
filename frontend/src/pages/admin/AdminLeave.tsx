@@ -80,8 +80,9 @@ export const AdminLeave: React.FC = () => {
         }
     };
 
-    const getStaffName = (staffId: string | Staff) => {
-        if (typeof staffId === 'object') return staffId.fullName;
+    const getStaffName = (staffId: string | Staff | null | undefined) => {
+        if (!staffId) return 'Unknown Staff';
+        if (typeof staffId === 'object') return staffId.fullName || 'Unknown Staff';
         return 'Staff Member';
     };
 

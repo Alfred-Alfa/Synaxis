@@ -85,14 +85,16 @@ export const AdminTimeEntry: React.FC = () => {
         }
     };
 
-    const getSiteName = (siteId: string | Site) => {
-        if (typeof siteId === 'object') return siteId.name;
+    const getSiteName = (siteId: string | Site | null | undefined) => {
+        if (!siteId) return 'Unknown Site';
+        if (typeof siteId === 'object') return siteId.name || 'Unknown Site';
         const site = sites.find(s => s._id === siteId);
         return site?.name || 'Unknown Site';
     };
 
-    const getStaffName = (staffId: string | Staff) => {
-        if (typeof staffId === 'object') return staffId.fullName;
+    const getStaffName = (staffId: string | Staff | null | undefined) => {
+        if (!staffId) return 'Unknown Staff';
+        if (typeof staffId === 'object') return staffId.fullName || 'Unknown Staff';
         return 'Staff Member';
     };
 
@@ -188,7 +190,7 @@ export const AdminTimeEntry: React.FC = () => {
                                         </td>
                                         <td>{getSiteName(entry.siteId)}</td>
                                         <td className="text-primary">
-                                            <strong>{entry.totalHours.toFixed(2)} hrs</strong>
+                                            <strong>{entry.totalHours ? `${entry.totalHours.toFixed(2)} hrs` : 'In Progress'}</strong>
                                         </td>
                                         <td>
                                             <div className="entry-description">{entry.jobDescription}</div>
@@ -207,7 +209,8 @@ export const AdminTimeEntry: React.FC = () => {
                                         </td>
                                         <td>
                                             <span className={`badge badge-${entry.status === 'Approved' ? 'success' :
-                                                entry.status === 'Rejected' ? 'danger' : 'warning'
+                                                entry.status === 'Rejected' ? 'danger' :
+                                                    entry.status === 'Active' ? 'info' : 'warning'
                                                 }`}>
                                                 {entry.status}
                                             </span>

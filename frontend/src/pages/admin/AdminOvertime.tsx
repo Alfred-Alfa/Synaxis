@@ -80,14 +80,16 @@ export const AdminOvertime: React.FC = () => {
         }
     };
 
-    const getSiteName = (siteId: string | Site) => {
-        if (typeof siteId === 'object') return siteId.name;
+    const getSiteName = (siteId: string | Site | null | undefined) => {
+        if (!siteId) return 'Unknown Site';
+        if (typeof siteId === 'object') return siteId.name || 'Unknown Site';
         const site = sites.find(s => s._id === siteId);
         return site?.name || 'Unknown Site';
     };
 
-    const getStaffName = (staffId: string | Staff) => {
-        if (typeof staffId === 'object') return staffId.fullName;
+    const getStaffName = (staffId: string | Staff | null | undefined) => {
+        if (!staffId) return 'Unknown Staff';
+        if (typeof staffId === 'object') return staffId.fullName || 'Unknown Staff';
         return 'Staff Member';
     };
 

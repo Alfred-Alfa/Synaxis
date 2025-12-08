@@ -104,13 +104,8 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                 } : undefined,
             };
 
-            console.log('Submitting staff data:', data);
-            console.log('Is Edit:', isEdit);
-            console.log('Role value:', formData.role);
-
             if (isEdit) {
-                const response = await staffService.update(staff._id, data);
-                console.log('Update response:', response);
+                await staffService.update(staff._id, data);
 
                 // Show success toast for role change
                 if (isRoleChanging) {
@@ -128,7 +123,6 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                 }
             } else {
                 const response: any = await staffService.create(data);
-                console.log('Create response:', response);
 
                 // Show success toast with email status
                 const emailMessage = response.emailSent

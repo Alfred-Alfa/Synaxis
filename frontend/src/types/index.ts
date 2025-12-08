@@ -84,7 +84,7 @@ export interface TimeEntry {
         path: string;
         uploadDate: string;
     }[];
-    status: 'Pending' | 'Approved' | 'Rejected';
+    status: 'Pending' | 'Approved' | 'Rejected' | 'Active';
     approvedBy?: string;
     approvedAt?: string;
     approvalComment?: string;

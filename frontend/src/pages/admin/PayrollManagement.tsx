@@ -116,8 +116,9 @@ export const PayrollManagement: React.FC = () => {
         }
     };
 
-    const getStaffName = (staffId: string | Staff) => {
-        if (typeof staffId === 'object') return staffId.fullName;
+    const getStaffName = (staffId: string | Staff | null | undefined) => {
+        if (!staffId) return 'Unknown Staff';
+        if (typeof staffId === 'object') return staffId.fullName || 'Unknown Staff';
         const staffMember = staff.find(s => s._id === staffId);
         return staffMember?.fullName || 'Unknown';
     };
@@ -250,10 +251,11 @@ export const PayrollManagement: React.FC = () => {
                             <tbody>
                                 {payrollRecords.map((payroll) => (
                                     <tr key={payroll._id}>
+
                                         <td>
                                             <div style={{ fontWeight: 500, color: '#0f172a' }}>{getStaffName(payroll.staffId)}</div>
                                             <div className="text-muted text-sm" style={{ fontSize: '0.85rem' }}>
-                                                {typeof payroll.staffId === 'object' ? payroll.staffId.email : ''}
+                                                {payroll.staffId && typeof payroll.staffId === 'object' ? payroll.staffId.email : ''}
                                             </div>
                                         </td>
                                         <td>
@@ -332,13 +334,13 @@ export const PayrollManagement: React.FC = () => {
                                                 )}
                                             </div>
                                         </td>
-                                    </tr>
+                                    </tr >
                                 ))}
-                            </tbody>
-                        </table>
-                    </div>
+                            </tbody >
+                        </table >
+                    </div >
                 )}
-            </div>
+            </div >
 
             {showModal && (
                 <PayrollGenerateModal
@@ -347,13 +349,15 @@ export const PayrollManagement: React.FC = () => {
                 />
             )}
 
-            {editingPayroll && (
-                <EditPayrollModal
-                    payroll={editingPayroll}
-                    staffName={getStaffName(editingPayroll.staffId)}
-                    onClose={handleEditClose}
-                />
-            )}
-        </div>
+            {
+                editingPayroll && (
+                    <EditPayrollModal
+                        payroll={editingPayroll}
+                        staffName={getStaffName(editingPayroll.staffId)}
+                        onClose={handleEditClose}
+                    />
+                )
+            }
+        </div >
     );
 };

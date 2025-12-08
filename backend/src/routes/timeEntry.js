@@ -322,4 +322,135 @@ router.post('/:id/reject', protect, isAdmin, async (req, res) => {
     }
 });
 
+// @route   GET /api/time-entries/current/status
+// @desc    Get current check-in status
+// @access  Private (Staff only)
+router.get('/current/status', protect, async (req, res) => {
+    try {
+        const activeEntry = await TimeEntry.findOne({
+            staffId: req.user.staffRef,
+            status: 'Active'
+        }).populate('siteId', 'name location');
+
+        res.json({
+            success: true,
+            data: activeEntry || null,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   POST /api/time-entries/check-in
+// @desc    Check in to a site
+// @access  Private (Staff only)
+router.post('/check-in', protect, async (req, res) => {
+    try {
+        const { siteId, latitude, longitude } = req.body;
+
+        // Check if already checked in
+        const existingActive = await TimeEntry.findOne({
+            staffId: req.user.staffRef,
+            status: 'Active'
+        });
+
+        if (existingActive) {
+            return res.status(400).json({ message: 'You are already checked in' });
+        }
+
+        const now = new Date();
+        const startTime = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+        const timeEntry = await TimeEntry.create({
+            staffId: req.user.staffRef,
+            date: now,
+            startTime,
+            siteId,
+            jobDescription: 'Checked In via Dashboard', // Default description
+            status: 'Active',
+            // Location could be stored if we added fields, for now ignores lat/long
+        });
+
+        // Log audit
+        await logAudit({
+            userId: req.user._id,
+            action: 'CHECK_IN',
+            resource: 'TimeEntry',
+            resourceId: timeEntry._id,
+            description: `Checked in at site`,
+            req,
+        });
+
+        res.status(201).json({
+            success: true,
+            data: timeEntry,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   POST /api/time-entries/check-out
+// @desc    Check out from current site
+// @access  Private (Staff only)
+router.post('/check-out', protect, async (req, res) => {
+    try {
+        const activeEntry = await TimeEntry.findOne({
+            staffId: req.user.staffRef,
+            status: 'Active'
+        });
+
+        if (!activeEntry) {
+            return res.status(400).json({ message: 'No active check-in found' });
+        }
+
+        const now = new Date();
+        const endTime = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+        // Calculate hours
+        // Use the original check-in timestamp (activeEntry.date) for calculation vs 'now'
+        // This avoids any string parsing issues with startTime and ensures robustness.
+        let diff = (now.getTime() - new Date(activeEntry.date).getTime()) / (1000 * 60 * 60); // Hours
+
+        // Safety: ensure positive and not NaN
+        if (isNaN(diff) || diff < 0) diff = 0;
+
+        activeEntry.endTime = endTime;
+        activeEntry.totalHours = parseFloat(diff.toFixed(2));
+        activeEntry.status = 'Pending'; // Move to Pending for approval
+
+        // Allow updating description on checkout if provided?
+        if (req.body.jobDescription) {
+            activeEntry.jobDescription = req.body.jobDescription;
+        }
+
+        await activeEntry.save();
+
+        // Log audit
+        await logAudit({
+            userId: req.user._id,
+            action: 'CHECK_OUT',
+            resource: 'TimeEntry',
+            resourceId: activeEntry._id,
+            description: `Checked out. Total hours: ${activeEntry.totalHours}`,
+            req,
+        });
+
+        // Notify Admins
+        await notifyAdmins({
+            title: 'New Time Entry',
+            message: `User completed a shift (${activeEntry.totalHours} hrs)`,
+            link: '/admin/time-entries',
+            type: 'INFO',
+        });
+
+        res.json({
+            success: true,
+            data: activeEntry,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 export default router;

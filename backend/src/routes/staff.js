@@ -228,32 +228,14 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
 
         await staff.save();
 
-        // Update User Role if provided
-        console.log('=== ROLE UPDATE DEBUG ===');
-        console.log('Staff ID:', staff._id);
-        console.log('Role in request body:', req.body.role);
-
         if (req.body.role && ['Admin', 'Staff', 'SuperAdmin'].includes(req.body.role)) {
-            console.log('Updating user role to:', req.body.role);
-
-            // First, check if User exists
-            const existingUser = await User.findOne({ staffRef: staff._id });
-            console.log('Existing User before update:', existingUser);
-
-            const userUpdate = await User.findOneAndUpdate(
+            // Update User role
+            await User.findOneAndUpdate(
                 { staffRef: staff._id },
                 { role: req.body.role },
                 { new: true }
             );
-            console.log('User after role update:', userUpdate);
-
-            if (!userUpdate) {
-                console.error('⚠️ No User document found for staffRef:', staff._id);
-            }
-        } else {
-            console.log('Role not provided or invalid:', req.body.role);
         }
-        console.log('=== END ROLE UPDATE DEBUG ===');
 
         // Log audit
         await logAudit({

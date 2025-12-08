@@ -29,6 +29,24 @@ export const timeEntryService = {
         return response.data;
     },
 
+    // Get current active check-in
+    getCurrentStatus: async (): Promise<ApiResponse<any>> => {
+        const response = await api.get('/time-entries/current/status');
+        return response.data;
+    },
+
+    // direct check-in
+    checkIn: async (data: { siteId: string; latitude?: number; longitude?: number }): Promise<ApiResponse<any>> => {
+        const response = await api.post('/time-entries/check-in', data);
+        return response.data;
+    },
+
+    // direct check-out
+    checkOut: async (data: { jobDescription?: string; latitude?: number; longitude?: number }): Promise<ApiResponse<any>> => {
+        const response = await api.post('/time-entries/check-out', data);
+        return response.data;
+    },
+
     // Update time entry
     update: async (id: string, data: Partial<TimeEntry>): Promise<ApiResponse<TimeEntry>> => {
         const response = await api.put(`/time-entries/${id}`, data);

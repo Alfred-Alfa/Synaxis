@@ -27,7 +27,7 @@ export const TimeEntryFormModal: React.FC<TimeEntryFormModalProps> = ({
         startTime: entry?.startTime || '',
         endTime: entry?.endTime || '',
         totalHours: entry?.totalHours?.toString() || '',
-        siteId: entry ? (typeof entry.siteId === 'object' ? entry.siteId._id : entry.siteId) : '',
+        siteId: entry ? (entry.siteId && typeof entry.siteId === 'object' ? entry.siteId._id : entry.siteId?.toString() || '') : '',
         jobDescription: entry?.jobDescription || '',
         ownTransport: entry?.ownTransport || false,
         travelDistance: entry?.travelDetails?.distance || '',
