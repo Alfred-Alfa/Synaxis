@@ -157,12 +157,14 @@ router.post('/', protect, isAdmin, async (req, res) => {
         });
 
         // Send welcome email with credentials
+        let emailSent = false;
         try {
             // Fetch company name from settings
             const settings = await Settings.getSingleton();
             const companyName = settings.companyName || 'HRMS';
 
-            await sendWelcomeEmail(email, tempPassword, fullName, companyName);
+            const emailResult = await sendWelcomeEmail(email, tempPassword, fullName, companyName);
+            emailSent = !!(emailResult && emailResult.success);
         } catch (emailError) {
             console.error('Failed to send welcome email:', emailError);
             // We continue even if email fails
@@ -182,6 +184,8 @@ router.post('/', protect, isAdmin, async (req, res) => {
         res.status(201).json({
             success: true,
             data: staff,
+            emailSent,
+            message: 'Staff created successfully',
             user: {
                 email: user.email,
                 role: user.role,

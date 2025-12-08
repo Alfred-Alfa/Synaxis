@@ -5,18 +5,22 @@ const createTransporter = () => {
     // For development: Use Ethereal (fake SMTP)
     // For production: Configure with real SMTP credentials
 
-    if (process.env.NODE_ENV === 'production' && process.env.SMTP_HOST) {
+    // Check for SMTP or ZeptoMail configuration
+    const host = process.env.SMTP_HOST || process.env.ZEPTOMAIL_HOST;
+
+    if (host) {
         return nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: parseInt(process.env.SMTP_PORT || '587'),
-            secure: process.env.SMTP_SECURE === 'true',
+            host: host,
+            port: parseInt(process.env.SMTP_PORT || process.env.ZEPTOMAIL_PORT || '587'),
+            secure: process.env.SMTP_SECURE === 'true', // Default to false for port 587
             auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
+                user: process.env.SMTP_USER || process.env.ZEPTOMAIL_USER,
+                pass: process.env.SMTP_PASS || process.env.ZEPTOMAIL_PASS,
             },
         });
     } else {
-        // Development mode - log to console
+        // Fallback to Ethereal only if no compatible credentials are provided
+        console.log('Using Ethereal Mail (No SMTP/ZeptoMail settings provided)');
         return nodemailer.createTransport({
             host: 'smtp.ethereal.email',
             port: 587,
@@ -28,6 +32,16 @@ const createTransporter = () => {
     }
 };
 
+const getFromAddress = () => {
+    if (process.env.EMAIL_FROM) return process.env.EMAIL_FROM;
+    if (process.env.EMAIL_FROM_ADDRESS) {
+        return process.env.EMAIL_FROM_NAME
+            ? `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_ADDRESS}>`
+            : process.env.EMAIL_FROM_ADDRESS;
+    }
+    return 'HRMS <noreply@hrms.com>';
+};
+
 export const sendPasswordResetEmail = async (email, resetToken, userName) => {
     try {
         const transporter = createTransporter();
@@ -35,7 +49,7 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
         const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
 
         const mailOptions = {
-            from: process.env.EMAIL_FROM || 'HRMS <noreply@hrms.com>',
+            from: getFromAddress(),
             to: email,
             subject: 'Password Reset Request - HRMS',
             html: `
@@ -107,7 +121,7 @@ export const sendWelcomeEmail = async (email, tempPassword, userName, companyNam
         const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
 
         const mailOptions = {
-            from: process.env.EMAIL_FROM || `${companyName} <noreply@hrms.com>`,
+            from: getFromAddress(),
             to: email,
             subject: `Welcome to ${companyName} - Your Account Details`,
             html: `

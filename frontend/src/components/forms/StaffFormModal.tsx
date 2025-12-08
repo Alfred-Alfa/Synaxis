@@ -127,9 +127,24 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                     onClose(true);
                 }
             } else {
-                const response = await staffService.create(data);
+                const response: any = await staffService.create(data);
                 console.log('Create response:', response);
-                onClose(true);
+
+                // Show success toast with email status
+                const emailMessage = response.emailSent
+                    ? "Login details sent to the staff email id."
+                    : "However, failed to send login details email.";
+
+                setSuccessMessage({
+                    title: 'Staff Created Successfully',
+                    message: `${formData.fullName} has been added. ${emailMessage}`
+                });
+                setShowSuccessToast(true);
+
+                // Close after a delay
+                setTimeout(() => {
+                    onClose(true);
+                }, 2000);
             }
         } catch (err: any) {
             console.error('Error updating staff:', err);

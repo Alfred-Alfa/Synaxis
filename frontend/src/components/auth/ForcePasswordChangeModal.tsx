@@ -57,10 +57,10 @@ export const ForcePasswordChangeModal: React.FC<ForcePasswordChangeModalProps> =
             <div className="force-password-modal-container">
                 <div className="force-password-modal-header">
                     <div className="header-icon">
-                        <Lock size={32} />
+                        <Lock size={24} />
                     </div>
-                    <h2>🔐 Set Your Password</h2>
-                    <p className="subtitle">For security, please set a new password for your account</p>
+                    <h2>Set Your Password</h2>
+                    <p className="subtitle">Please update your password to continue accessing your account securely.</p>
                 </div>
 
                 <div className="force-password-modal-body">
