@@ -100,16 +100,16 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
     }
 };
 
-export const sendWelcomeEmail = async (email, tempPassword, userName) => {
+export const sendWelcomeEmail = async (email, tempPassword, userName, companyName = 'HRMS') => {
     try {
         const transporter = createTransporter();
 
         const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
 
         const mailOptions = {
-            from: process.env.EMAIL_FROM || 'HRMS <noreply@hrms.com>',
+            from: process.env.EMAIL_FROM || `${companyName} <noreply@hrms.com>`,
             to: email,
-            subject: 'Welcome to HRMS - Your Account Details',
+            subject: `Welcome to ${companyName} - Your Account Details`,
             html: `
                 <!DOCTYPE html>
                 <html>
@@ -127,11 +127,11 @@ export const sendWelcomeEmail = async (email, tempPassword, userName) => {
                 <body>
                     <div class="container">
                         <div class="header">
-                            <h1>👋 Welcome to HRMS!</h1>
+                            <h1>👋 Welcome to ${companyName}!</h1>
                         </div>
                         <div class="content">
                             <p>Hello ${userName},</p>
-                            <p>Your account has been created successfully. Here are your login credentials:</p>
+                            <p>Your account for <strong>${companyName}</strong> has been created successfully. Here are your login credentials:</p>
                             <div class="credentials">
                                 <p><strong>Email:</strong> ${email}</p>
                                 <p><strong>Temporary Password:</strong> <code style="background: #f0f0f0; padding: 5px 10px; border-radius: 3px;">${tempPassword}</code></p>

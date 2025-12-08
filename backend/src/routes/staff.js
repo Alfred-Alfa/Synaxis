@@ -8,7 +8,9 @@ import { isAdmin, isSuperAdmin } from '../middleware/rbac.js';
 import upload from '../config/multer.js';
 import logAudit from '../utils/auditLogger.js';
 import { syncStaffUsers } from '../utils/syncStaffUsers.js';
-import { sendPasswordResetEmail } from '../services/emailService.js';
+import { sendPasswordResetEmail, sendWelcomeEmail } from '../services/emailService.js';
+
+import Settings from '../models/Settings.js';
 
 const router = express.Router();
 
@@ -144,14 +146,27 @@ router.post('/', protect, isAdmin, async (req, res) => {
 
         // Determine user role (default to Staff)
         const userRole = (role && ['Admin', 'Staff'].includes(role)) ? role : 'Staff';
+        const tempPassword = password || 'password123';
 
         // Create user account for staff
         const user = await User.create({
             email,
-            password: password || 'password123', // Default password
+            password: tempPassword, // Default password
             role: userRole,
             staffRef: staff._id,
         });
+
+        // Send welcome email with credentials
+        try {
+            // Fetch company name from settings
+            const settings = await Settings.getSingleton();
+            const companyName = settings.companyName || 'HRMS';
+
+            await sendWelcomeEmail(email, tempPassword, fullName, companyName);
+        } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError);
+            // We continue even if email fails
+        }
 
         // Log audit
         await logAudit({
@@ -170,7 +185,7 @@ router.post('/', protect, isAdmin, async (req, res) => {
             user: {
                 email: user.email,
                 role: user.role,
-                tempPassword: password || 'password123',
+                tempPassword: tempPassword,
             },
         });
     } catch (error) {
