@@ -3,6 +3,7 @@ import { timeEntryService } from '../../services/timeEntryService';
 import { siteService } from '../../services/siteService';
 import type { TimeEntry, Site, Staff } from '../../types';
 import { ApprovalModal } from '../../components/common/ApprovalModal';
+import { TimeEntryFormModal } from '../../components/forms/TimeEntryFormModal';
 import './AdminTimeEntry.css';
 
 export const AdminTimeEntry: React.FC = () => {
@@ -23,6 +24,8 @@ export const AdminTimeEntry: React.FC = () => {
         title: '',
         entityId: '',
     });
+
+    const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
 
     useEffect(() => {
         loadData();
@@ -223,16 +226,11 @@ export const AdminTimeEntry: React.FC = () => {
                                             {entry.status === 'Pending' && (
                                                 <div className="action-buttons">
                                                     <button
-                                                        onClick={() => openApproveModal(entry._id)}
-                                                        className="btn btn-success btn-sm"
+                                                        onClick={() => setEditingEntry(entry)}
+                                                        className="btn btn-primary btn-sm"
+                                                        title="Review and Edit"
                                                     >
-                                                        ✓ Approve
-                                                    </button>
-                                                    <button
-                                                        onClick={() => openRejectModal(entry._id)}
-                                                        className="btn btn-danger btn-sm"
-                                                    >
-                                                        ✗ Reject
+                                                        Review
                                                     </button>
                                                 </div>
                                             )}
@@ -244,6 +242,28 @@ export const AdminTimeEntry: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {editingEntry && (
+                <TimeEntryFormModal
+                    entry={editingEntry}
+                    sites={sites}
+                    onClose={(success) => {
+                        setEditingEntry(null);
+                        if (success) loadData();
+                    }}
+                    isAdminReview={true}
+                    onApprove={() => {
+                        const id = editingEntry._id;
+                        setEditingEntry(null);
+                        openApproveModal(id);
+                    }}
+                    onReject={() => {
+                        const id = editingEntry._id;
+                        setEditingEntry(null);
+                        openRejectModal(id);
+                    }}
+                />
+            )}
 
             <ApprovalModal
                 isOpen={modalConfig.isOpen}

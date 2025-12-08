@@ -3,9 +3,11 @@ import { timeEntryService } from '../../services/timeEntryService';
 import { siteService } from '../../services/siteService';
 import type { TimeEntry, Site } from '../../types';
 import { TimeEntryFormModal } from '../../components/forms/TimeEntryFormModal';
+import { useAuth } from '../../contexts/AuthContext';
 import './StaffTimeEntry.css';
 
 export const StaffTimeEntry: React.FC = () => {
+    const { isAdmin } = useAuth();
     const [entries, setEntries] = useState<TimeEntry[]>([]);
     const [sites, setSites] = useState<Site[]>([]);
     const [loading, setLoading] = useState(true);
@@ -22,7 +24,7 @@ export const StaffTimeEntry: React.FC = () => {
         try {
             setLoading(true);
             const [entriesRes, sitesRes] = await Promise.all([
-                timeEntryService.getAll(),
+                timeEntryService.getAll(isAdmin ? { mode: 'personal' } : {}),
                 siteService.getAll({ status: 'Active' }),
             ]);
             setEntries(entriesRes.data || []);
@@ -175,7 +177,7 @@ export const StaffTimeEntry: React.FC = () => {
                                         </td>
                                         <td>
                                             <span className={`badge badge-${entry.status === 'Approved' ? 'success' :
-                                                    entry.status === 'Rejected' ? 'danger' : 'warning'
+                                                entry.status === 'Rejected' ? 'danger' : 'warning'
                                                 }`}>
                                                 {entry.status}
                                             </span>

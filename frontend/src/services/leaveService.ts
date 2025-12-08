@@ -6,6 +6,7 @@ export const leaveService = {
     getAll: async (params?: {
         status?: string;
         leaveType?: string;
+        mode?: string;
     }): Promise<ApiResponse<Leave[]>> => {
         const response = await api.get('/leave', { params });
         return response.data;

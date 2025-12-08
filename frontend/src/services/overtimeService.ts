@@ -7,6 +7,7 @@ export const overtimeService = {
         status?: string;
         startDate?: string;
         endDate?: string;
+        mode?: string;
     }): Promise<ApiResponse<Overtime[]>> => {
         const response = await api.get('/overtime', { params });
         return response.data;

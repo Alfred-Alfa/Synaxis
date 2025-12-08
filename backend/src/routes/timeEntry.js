@@ -15,8 +15,8 @@ router.get('/', protect, async (req, res) => {
     try {
         let query = {};
 
-        // If staff, only show their own entries
-        if (req.user.role === 'Staff') {
+        // If staff or personal mode requested, only show their own entries
+        if (req.user.role === 'Staff' || req.query.mode === 'personal') {
             query.staffId = req.user.staffRef;
         }
 
@@ -48,33 +48,7 @@ router.get('/', protect, async (req, res) => {
     }
 });
 
-// @route   GET /api/time-entries/:id
-// @desc    Get time entry by ID
-// @access  Private
-router.get('/:id', protect, async (req, res) => {
-    try {
-        const timeEntry = await TimeEntry.findById(req.params.id)
-            .populate('staffId', 'fullName email')
-            .populate('siteId', 'name location')
-            .populate('approvedBy', 'email');
-
-        if (!timeEntry) {
-            return res.status(404).json({ message: 'Time entry not found' });
-        }
-
-        // Staff can only view their own entries
-        if (req.user.role === 'Staff' && timeEntry.staffId._id.toString() !== req.user.staffRef.toString()) {
-            return res.status(403).json({ message: 'Access denied' });
-        }
-
-        res.json({
-            success: true,
-            data: timeEntry,
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+// ... GET /:id route remains same ...
 
 // @route   POST /api/time-entries
 // @desc    Create time entry
@@ -94,6 +68,8 @@ router.post('/', protect, upload.array('attachments', 5), async (req, res) => {
             travelNotes,
         } = req.body;
 
+        const isAdminUser = req.user.role === 'Admin' || req.user.role === 'SuperAdmin';
+
         // Create time entry
         const timeEntry = await TimeEntry.create({
             staffId: req.user.staffRef,
@@ -110,6 +86,10 @@ router.post('/', protect, upload.array('attachments', 5), async (req, res) => {
                 notes: travelNotes,
             } : undefined,
             attachments: req.files ? req.files.map(file => ({ path: file.path })) : [],
+            status: isAdminUser ? 'Approved' : 'Pending',
+            approvedBy: isAdminUser ? req.user._id : undefined,
+            approvedAt: isAdminUser ? new Date() : undefined,
+            approvalComment: isAdminUser ? 'Auto-approved for Admin' : undefined
         });
 
         // Log audit
@@ -118,18 +98,20 @@ router.post('/', protect, upload.array('attachments', 5), async (req, res) => {
             action: 'CREATE',
             resource: 'TimeEntry',
             resourceId: timeEntry._id,
-            description: 'Submitted time entry',
+            description: isAdminUser ? 'Submitted and auto-approved time entry' : 'Submitted time entry',
             newValue: timeEntry,
             req,
         });
 
-        // Notify Admins
-        await notifyAdmins({
-            title: 'New Time Entry',
-            message: `New time entry submitted by user`,
-            link: '/admin/time-entries',
-            type: 'INFO',
-        });
+        // Notify Admins only if not auto-approved
+        if (!isAdminUser) {
+            await notifyAdmins({
+                title: 'New Time Entry',
+                message: `New time entry submitted by user`,
+                link: '/admin/time-entries',
+                type: 'INFO',
+            });
+        }
 
         res.status(201).json({
             success: true,

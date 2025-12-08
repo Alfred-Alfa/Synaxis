@@ -11,6 +11,7 @@ dotenv.config();
 
 // Import routes
 import authRoutes from './routes/auth.js';
+import passwordRoutes from './routes/password.js';
 import staffRoutes from './routes/staff.js';
 import timeEntryRoutes from './routes/timeEntry.js';
 import overtimeRoutes from './routes/overtime.js';
@@ -42,6 +43,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', passwordRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/time-entries', timeEntryRoutes);
 app.use('/api/overtime', overtimeRoutes);

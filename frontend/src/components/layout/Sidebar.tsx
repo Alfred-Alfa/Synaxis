@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
 
 export const Sidebar: React.FC = () => {
-    const { isAdmin } = useAuth();
+    const { isAdmin, user } = useAuth();
 
     const adminLinks = [
         { to: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
@@ -14,7 +14,6 @@ export const Sidebar: React.FC = () => {
         { to: '/admin/leave', label: 'Leave Requests', icon: '🏖️' },
         { to: '/admin/sites', label: 'Sites/Projects', icon: '🏢' },
         { to: '/admin/payroll', label: 'Payroll', icon: '💰' },
-        { to: '/admin/settings', label: 'Settings', icon: '⚙️' },
         { to: '/admin/reports', label: 'Reports & Analytics', icon: '📉' },
         { to: '/admin/audit-logs', label: 'Audit Logs', icon: '📋' },
     ];
@@ -26,7 +25,21 @@ export const Sidebar: React.FC = () => {
         { to: '/staff/leave', label: 'Leave', icon: '🏖️' },
     ];
 
-    const links = isAdmin ? adminLinks : staffLinks;
+    const myAppsLinks = [
+        { to: '/staff/time-entries', label: 'My Time Entries', icon: '⏱️' },
+        { to: '/staff/overtime', label: 'My Overtime', icon: '⌚' },
+        { to: '/staff/leave', label: 'My Leave', icon: '🏖️' },
+    ];
+
+    const settingsLink = { to: '/admin/settings', label: 'Settings', icon: '⚙️' };
+
+    const links = isAdmin
+        ? [
+            ...adminLinks,
+            ...(user?.role === 'SuperAdmin' ? [] : myAppsLinks),
+            settingsLink
+        ]
+        : staffLinks;
 
     return (
         <aside className="sidebar">

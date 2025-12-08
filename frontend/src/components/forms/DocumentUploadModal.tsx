@@ -10,13 +10,35 @@ interface DocumentUploadModalProps {
 
 export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ staff, onClose }) => {
     const [documentName, setDocumentName] = useState('');
+    const [documentType, setDocumentType] = useState('');
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const documentTypes = [
+        'ID Card',
+        'Passport',
+        'Driver License',
+        'Employment Contract',
+        'Certificate/Degree',
+        'Medical Certificate',
+        'Police Clearance',
+        'Bank Statement',
+        'Other'
+    ];
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0]);
+            const selectedFile = e.target.files[0];
+
+            // Validate file size (5MB)
+            if (selectedFile.size > 5 * 1024 * 1024) {
+                setError('File size must be less than 5MB');
+                return;
+            }
+
+            setFile(selectedFile);
+            setError('');
         }
     };
 
@@ -27,11 +49,17 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ staff,
             return;
         }
 
+        if (!documentType) {
+            setError('Please select a document type');
+            return;
+        }
+
         setError('');
         setLoading(true);
 
         try {
-            await staffService.uploadDocument(staff._id, file, documentName);
+            const docName = documentName || `${documentType} - ${new Date().toLocaleDateString()}`;
+            await staffService.uploadDocument(staff._id, file, docName);
             onClose(true);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to upload document');
@@ -44,7 +72,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ staff,
         <div className="modal-overlay" onClick={() => onClose()}>
             <div className="modal-content slide-up" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Upload Document for {staff.fullName}</h2>
+                    <h2>📄 Upload Document for {staff.fullName}</h2>
                     <button onClick={() => onClose()} className="modal-close">×</button>
                 </div>
 
@@ -57,8 +85,28 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ staff,
                 <form onSubmit={handleSubmit} className="modal-body">
                     <div className="form-grid">
                         <div className="form-group form-group-full">
+                            <label htmlFor="documentType" className="form-label">
+                                Document Type *
+                            </label>
+                            <select
+                                id="documentType"
+                                className="select"
+                                value={documentType}
+                                onChange={(e) => setDocumentType(e.target.value)}
+                                required
+                            >
+                                <option value="">Select document type</option>
+                                {documentTypes.map((type) => (
+                                    <option key={type} value={type}>
+                                        {type}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group form-group-full">
                             <label htmlFor="documentName" className="form-label">
-                                Document Name *
+                                Document Name (Optional)
                             </label>
                             <input
                                 id="documentName"
@@ -67,9 +115,11 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ staff,
                                 className="input"
                                 value={documentName}
                                 onChange={(e) => setDocumentName(e.target.value)}
-                                required
-                                placeholder="e.g., ID Card, Contract, Certificate"
+                                placeholder="e.g., National ID - Front, Contract 2024"
                             />
+                            <small className="text-muted">
+                                Leave blank to auto-generate based on type and date
+                            </small>
                         </div>
 
                         <div className="form-group form-group-full">
@@ -79,24 +129,55 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({ staff,
                             <input
                                 id="document"
                                 type="file"
-                                accept=".pdf,.jpg,.jpeg,.png"
+                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                 onChange={handleFileChange}
                                 className="input"
                                 required
                             />
-                            <small className="text-muted">Accepted formats: PDF, JPG, PNG (Max 5MB)</small>
+                            <small className="text-muted">
+                                Accepted: PDF, JPG, PNG, DOC, DOCX (Max 5MB)
+                            </small>
+                            {file && (
+                                <div className="mt-2" style={{
+                                    padding: '0.5rem',
+                                    background: 'var(--surface-secondary)',
+                                    borderRadius: '0.375rem',
+                                    fontSize: '0.875rem'
+                                }}>
+                                    📎 {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                                </div>
+                            )}
                         </div>
 
                         {staff.documents && staff.documents.length > 0 && (
                             <div className="form-group form-group-full">
-                                <label className="form-label">Existing Documents</label>
-                                <div className="document-list">
+                                <label className="form-label">Existing Documents ({staff.documents.length})</label>
+                                <div style={{
+                                    maxHeight: '200px',
+                                    overflowY: 'auto',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '0.375rem',
+                                    padding: '0.5rem'
+                                }}>
                                     {staff.documents.map((doc, index) => (
-                                        <div key={index} className="document-item">
-                                            <span>📄 {doc.name}</span>
-                                            <small className="text-muted">
-                                                {new Date(doc.uploadDate).toLocaleDateString()}
-                                            </small>
+                                        <div
+                                            key={index}
+                                            style={{
+                                                padding: '0.625rem',
+                                                marginBottom: '0.5rem',
+                                                background: 'var(--surface-secondary)',
+                                                borderRadius: '0.375rem',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
+                                            }}
+                                        >
+                                            <div>
+                                                <div style={{ fontWeight: 500 }}>📄 {doc.name}</div>
+                                                <small className="text-muted">
+                                                    Uploaded: {new Date(doc.uploadDate).toLocaleDateString()}
+                                                </small>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

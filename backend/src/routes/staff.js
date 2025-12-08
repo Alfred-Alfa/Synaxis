@@ -1,10 +1,14 @@
 import express from 'express';
+import mongoose from 'mongoose';
+import crypto from 'crypto';
 import Staff from '../models/Staff.js';
 import User from '../models/User.js';
 import { protect } from '../middleware/auth.js';
-import { isAdmin } from '../middleware/rbac.js';
+import { isAdmin, isSuperAdmin } from '../middleware/rbac.js';
 import upload from '../config/multer.js';
 import logAudit from '../utils/auditLogger.js';
+import { syncStaffUsers } from '../utils/syncStaffUsers.js';
+import { sendPasswordResetEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -13,14 +17,35 @@ const router = express.Router();
 // @access  Private (Admin or Staff can see their own)
 router.get('/', protect, async (req, res) => {
     try {
-        let query = {};
+        let matchStage = {};
 
         // If staff user, only show their own record
         if (req.user.role === 'Staff') {
-            query._id = req.user.staffRef;
+            matchStage._id = req.user.staffRef;
         }
 
-        const staff = await Staff.find(query).sort({ createdAt: -1 });
+        const staff = await Staff.aggregate([
+            { $match: matchStage },
+            { $sort: { createdAt: -1 } },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: 'staffRef',
+                    as: 'userInfo'
+                }
+            },
+            {
+                $addFields: {
+                    role: { $arrayElemAt: ['$userInfo.role', 0] }
+                }
+            },
+            {
+                $project: {
+                    userInfo: 0 // Remove the full user object to keep response clean
+                }
+            }
+        ]);
 
         res.json({
             success: true,
@@ -37,11 +62,33 @@ router.get('/', protect, async (req, res) => {
 // @access  Private
 router.get('/:id', protect, async (req, res) => {
     try {
-        const staff = await Staff.findById(req.params.id);
+        const staffDocs = await Staff.aggregate([
+            { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: 'staffRef',
+                    as: 'userInfo'
+                }
+            },
+            {
+                $addFields: {
+                    role: { $arrayElemAt: ['$userInfo.role', 0] }
+                }
+            },
+            {
+                $project: {
+                    userInfo: 0
+                }
+            }
+        ]);
 
-        if (!staff) {
+        if (!staffDocs || staffDocs.length === 0) {
             return res.status(404).json({ message: 'Staff not found' });
         }
+
+        const staff = staffDocs[0];
 
         // Staff can only view their own record
         if (req.user.role === 'Staff' && staff._id.toString() !== req.user.staffRef.toString()) {
@@ -73,6 +120,7 @@ router.post('/', protect, isAdmin, async (req, res) => {
             bankDetails,
             password,
             otRate,
+            role, // Added role
         } = req.body;
 
         // Check if staff with email already exists
@@ -94,11 +142,14 @@ router.post('/', protect, isAdmin, async (req, res) => {
             otRate,
         });
 
+        // Determine user role (default to Staff)
+        const userRole = (role && ['Admin', 'Staff'].includes(role)) ? role : 'Staff';
+
         // Create user account for staff
         const user = await User.create({
             email,
             password: password || 'password123', // Default password
-            role: 'Staff',
+            role: userRole,
             staffRef: staff._id,
         });
 
@@ -108,7 +159,7 @@ router.post('/', protect, isAdmin, async (req, res) => {
             action: 'CREATE',
             resource: 'Staff',
             resourceId: staff._id,
-            description: `Created staff: ${fullName}`,
+            description: `Created staff: ${fullName} with role ${userRole}`,
             newValue: staff,
             req,
         });
@@ -118,6 +169,7 @@ router.post('/', protect, isAdmin, async (req, res) => {
             data: staff,
             user: {
                 email: user.email,
+                role: user.role,
                 tempPassword: password || 'password123',
             },
         });
@@ -150,20 +202,46 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
 
         // Update fields
         Object.keys(req.body).forEach(key => {
-            if (key !== 'hourlyRateHistory' && req.body[key] !== undefined) {
+            if (key !== 'hourlyRateHistory' && key !== 'role' && req.body[key] !== undefined) {
                 staff[key] = req.body[key];
             }
         });
 
         await staff.save();
 
+        // Update User Role if provided
+        console.log('=== ROLE UPDATE DEBUG ===');
+        console.log('Staff ID:', staff._id);
+        console.log('Role in request body:', req.body.role);
+
+        if (req.body.role && ['Admin', 'Staff', 'SuperAdmin'].includes(req.body.role)) {
+            console.log('Updating user role to:', req.body.role);
+
+            // First, check if User exists
+            const existingUser = await User.findOne({ staffRef: staff._id });
+            console.log('Existing User before update:', existingUser);
+
+            const userUpdate = await User.findOneAndUpdate(
+                { staffRef: staff._id },
+                { role: req.body.role },
+                { new: true }
+            );
+            console.log('User after role update:', userUpdate);
+
+            if (!userUpdate) {
+                console.error('⚠️ No User document found for staffRef:', staff._id);
+            }
+        } else {
+            console.log('Role not provided or invalid:', req.body.role);
+        }
+        console.log('=== END ROLE UPDATE DEBUG ===');
+
         // Log audit
         await logAudit({
             userId: req.user._id,
             action: 'UPDATE',
-            resource: 'Staff',
-            resourceId: staff._id,
-            description: `Updated staff: ${staff.fullName}`,
+            entity: 'Staff',
+            entityId: staff._id,
             oldValue,
             newValue: staff,
             req,
@@ -254,6 +332,70 @@ router.post('/:id/documents', protect, isAdmin, upload.single('document'), async
             data: staff.documents,
         });
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   POST /api/staff/sync-users
+// @desc    Sync Staff-User relationships (create missing User accounts)
+// @access  Private (SuperAdmin only)
+router.post('/sync-users', protect, isSuperAdmin, async (req, res) => {
+    try {
+        const result = await syncStaffUsers();
+
+        res.json({
+            success: true,
+            message: 'Staff-User sync completed',
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   POST /api/staff/:id/reset-password
+// @desc    Admin resets staff password and sends reset email
+// @access  Private (Admin only)
+router.post('/:id/reset-password', protect, isAdmin, async (req, res) => {
+    try {
+        const staff = await Staff.findById(req.params.id);
+
+        if (!staff) {
+            return res.status(404).json({ message: 'Staff not found' });
+        }
+
+        // Find user account
+        const user = await User.findOne({ staffRef: staff._id });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User account not found for this staff member' });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        user.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        user.passwordResetExpires = Date.now() + 3600000; // 1 hour
+        await user.save();
+
+        // Send reset email
+        await sendPasswordResetEmail(user.email, resetToken, staff.fullName);
+
+        // Log audit
+        await logAudit({
+            userId: req.user._id,
+            action: 'ADMIN_PASSWORD_RESET',
+            entity: 'User',
+            entityId: user._id,
+            description: `Admin ${req.user.email} initiated password reset for ${staff.fullName}`,
+            req,
+        });
+
+        res.json({
+            success: true,
+            message: `Password reset email sent to ${staff.fullName} at ${user.email}`,
+        });
+    } catch (error) {
+        console.error('Admin password reset error:', error);
         res.status(500).json({ message: error.message });
     }
 });

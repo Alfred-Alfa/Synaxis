@@ -3,9 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { settingsService } from '../../services/settingsService';
 import { notificationService } from '../../services/notificationService';
+import { Bell, Moon, Sun, LogOut, User as UserIcon } from 'lucide-react';
 import './Navbar.css';
 
+import { useTheme } from '../../contexts/ThemeContext';
+
 export const Navbar: React.FC = () => {
+    const { theme, toggleTheme } = useTheme();
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [companyName, setCompanyName] = useState('HRMS');
@@ -76,27 +80,48 @@ export const Navbar: React.FC = () => {
                 <h2>{companyName}</h2>
             </div>
 
-            <div className="navbar-menu">
-                <div className="navbar-user">
+            <div className="navbar-actions">
+                <button
+                    className="nav-icon-btn"
+                    onClick={toggleTheme}
+                    title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+                >
+                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                </button>
+
+                <button
+                    className="nav-icon-btn notification-btn"
+                    onClick={goToNotifications}
+                    title="Notifications"
+                >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                        <span className="notification-badge">{unreadCount}</span>
+                    )}
+                </button>
+
+                <div className="divider-vertical"></div>
+
+                <div className="user-profile-section">
+                    <div className="user-text">
+                        <span className="user-name">{user?.email?.split('@')[0]}</span>
+                        <span className="user-role-label">{user?.role}</span>
+                    </div>
+
                     <button
-                        className="btn-icon notification-btn"
-                        onClick={goToNotifications}
-                        title="Notifications"
+                        className="nav-icon-btn profile-btn"
+                        onClick={() => navigate(user?.role === 'Staff' ? '/staff/profile' : '/admin/profile')}
+                        title="My Profile"
                     >
-                        🔔
-                        {unreadCount > 0 && (
-                            <span className="notification-badge">{unreadCount}</span>
-                        )}
+                        <UserIcon size={20} />
                     </button>
 
-                    <div className="user-info">
-                        <span className="user-email">{user?.email}</span>
-                        <span className={`user-role badge badge-${user?.role === 'SuperAdmin' || user?.role === 'Admin' ? 'primary' : 'secondary'}`}>
-                            {user?.role}
-                        </span>
-                    </div>
-                    <button onClick={handleLogout} className="btn btn-secondary btn-sm">
-                        Logout
+                    <button
+                        className="nav-icon-btn logout-btn"
+                        onClick={handleLogout}
+                        title="Logout"
+                    >
+                        <LogOut size={20} />
                     </button>
                 </div>
             </div>

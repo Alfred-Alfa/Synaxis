@@ -1,0 +1,120 @@
+.profile-page {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-icon {
+    color: var(--primary-color);
+    width: 24px;
+    height: 24px;
+}
+
+.card-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.info-item label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.value-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+}
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.value-mono {
+    font-family: monospace;
+    background: var(--bg-secondary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    display: inline-block;
+    color: var(--text-primary);
+}
+
+.help-text {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.alert {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.success-alert {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.error-alert {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+@media (max-width: 768px) {
+    .profile-page {
+        padding: 1rem;
+    }
+
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}

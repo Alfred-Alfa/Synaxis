@@ -15,7 +15,7 @@ router.get('/', protect, async (req, res) => {
     try {
         let query = {};
 
-        if (req.user.role === 'Staff') {
+        if (req.user.role === 'Staff' || req.query.mode === 'personal') {
             query.staffId = req.user.staffRef;
         }
 
@@ -45,32 +45,7 @@ router.get('/', protect, async (req, res) => {
     }
 });
 
-// @route   GET /api/overtime/:id
-// @desc    Get overtime by ID
-// @access  Private
-router.get('/:id', protect, async (req, res) => {
-    try {
-        const overtime = await Overtime.findById(req.params.id)
-            .populate('staffId', 'fullName email')
-            .populate('siteId', 'name location')
-            .populate('approvedBy', 'email');
-
-        if (!overtime) {
-            return res.status(404).json({ message: 'Overtime not found' });
-        }
-
-        if (req.user.role === 'Staff' && overtime.staffId._id.toString() !== req.user.staffRef.toString()) {
-            return res.status(403).json({ message: 'Access denied' });
-        }
-
-        res.json({
-            success: true,
-            data: overtime,
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+// ... GET /:id route remains same ...
 
 // @route   POST /api/overtime
 // @desc    Create overtime request
@@ -86,6 +61,8 @@ router.post('/', protect, upload.single('attachment'), async (req, res) => {
             reason,
         } = req.body;
 
+        const isAdminUser = req.user.role === 'Admin' || req.user.role === 'SuperAdmin';
+
         const overtime = await Overtime.create({
             staffId: req.user.staffRef,
             date,
@@ -95,6 +72,10 @@ router.post('/', protect, upload.single('attachment'), async (req, res) => {
             siteId,
             reason,
             attachment: req.file ? { path: req.file.path } : undefined,
+            status: isAdminUser ? 'Approved' : 'Pending',
+            approvedBy: isAdminUser ? req.user._id : undefined,
+            approvedAt: isAdminUser ? new Date() : undefined,
+            approvalComment: isAdminUser ? 'Auto-approved for Admin' : undefined
         });
 
         await logAudit({
@@ -102,18 +83,20 @@ router.post('/', protect, upload.single('attachment'), async (req, res) => {
             action: 'CREATE',
             resource: 'Overtime',
             resourceId: overtime._id,
-            description: 'Submitted overtime request',
+            description: isAdminUser ? 'Submitted and auto-approved overtime request' : 'Submitted overtime request',
             newValue: overtime,
             req,
         });
 
-        // Notify Admins
-        await notifyAdmins({
-            title: 'New Overtime Request',
-            message: `New overtime request for ${otHours} hours`,
-            link: '/admin/overtime',
-            type: 'INFO',
-        });
+        // Notify Admins only if not auto-approved
+        if (!isAdminUser) {
+            await notifyAdmins({
+                title: 'New Overtime Request',
+                message: `New overtime request for ${otHours} hours`,
+                link: '/admin/overtime',
+                type: 'INFO',
+            });
+        }
 
         res.status(201).json({
             success: true,

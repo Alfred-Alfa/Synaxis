@@ -32,6 +32,16 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: true,
         },
+        isFirstLogin: {
+            type: Boolean,
+            default: true,
+        },
+        passwordResetToken: {
+            type: String,
+        },
+        passwordResetExpires: {
+            type: Date,
+        },
     },
     {
         timestamps: true,

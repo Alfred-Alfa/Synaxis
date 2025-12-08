@@ -7,6 +7,7 @@ export const timeEntryService = {
         status?: string;
         startDate?: string;
         endDate?: string;
+        mode?: string;
     }): Promise<ApiResponse<TimeEntry[]>> => {
         const response = await api.get('/time-entries', { params });
         return response.data;

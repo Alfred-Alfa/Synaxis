@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { leaveService } from '../../services/leaveService';
 import type { Leave } from '../../types';
 import { LeaveFormModal } from '../../components/forms/LeaveFormModal';
+import { useAuth } from '../../contexts/AuthContext';
 import '../staff/StaffTimeEntry.css';
 
 export const StaffLeave: React.FC = () => {
+    const { isAdmin } = useAuth();
     const [leaveApplications, setLeaveApplications] = useState<Leave[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -19,7 +21,7 @@ export const StaffLeave: React.FC = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const response = await leaveService.getAll();
+            const response = await leaveService.getAll(isAdmin ? { mode: 'personal' } : {});
             setLeaveApplications(response.data || []);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to load leave applications');

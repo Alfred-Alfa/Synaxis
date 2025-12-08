@@ -87,7 +87,7 @@ export const AdminDashboard: React.FC = () => {
       {/* Statistics Cards */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#dbeafe' }}>
+          <div className="stat-icon icon-blue">
             <span style={{ fontSize: '2rem' }}>👥</span>
           </div>
           <div className="stat-content">
@@ -98,7 +98,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#fef3c7' }}>
+          <div className="stat-icon icon-yellow">
             <span style={{ fontSize: '2rem' }}>⏰</span>
           </div>
           <div className="stat-content">
@@ -109,7 +109,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#fce7f3' }}>
+          <div className="stat-icon icon-pink">
             <span style={{ fontSize: '2rem' }}>💼</span>
           </div>
           <div className="stat-content">
@@ -120,7 +120,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon" style={{ backgroundColor: '#d1fae5' }}>
+          <div className="stat-icon icon-green">
             <span style={{ fontSize: '2rem' }}>🏖️</span>
           </div>
           <div className="stat-content">

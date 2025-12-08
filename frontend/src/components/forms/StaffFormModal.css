@@ -16,16 +16,16 @@
 }
 
 .modal-container {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
     width: 100%;
     max-width: 650px;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
 }
 
 /* Header */
@@ -34,10 +34,10 @@
     align-items: flex-start;
     justify-content: space-between;
     padding: 1.5rem;
-    border-bottom: 1px solid #f1f5f9;
-    background-color: #ffffff;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
 }
 
 .modal-header-content {
@@ -50,7 +50,7 @@
     width: 48px;
     height: 48px;
     border-radius: 12px;
-    background-color: #eff6ff;
+    background-color: rgba(37, 99, 235, 0.1);
     color: #2563eb;
     display: flex;
     align-items: center;
@@ -61,7 +61,7 @@
 .modal-header h2 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--text-primary);
     margin: 0;
     line-height: 1.2;
 }
@@ -69,13 +69,13 @@
 .subtitle {
     margin: 4px 0 0 0;
     font-size: 0.875rem;
-    color: #64748b;
+    color: var(--text-secondary);
 }
 
 .close-button {
     background: transparent;
     border: none;
-    color: #94a3b8;
+    color: var(--text-muted);
     cursor: pointer;
     padding: 8px;
     border-radius: 8px;
@@ -86,8 +86,8 @@
 }
 
 .close-button:hover {
-    background-color: #f1f5f9;
-    color: #64748b;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 /* Form Body */

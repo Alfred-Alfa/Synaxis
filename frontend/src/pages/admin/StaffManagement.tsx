@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { staffService } from '../../services/staffService';
 import type { Staff } from '../../types';
 import { StaffFormModal } from '../../components/forms/StaffFormModal';
-// import { DocumentUploadModal } from '../../components/forms/DocumentUploadModal';
+import { DocumentUploadModal } from '../../components/forms/DocumentUploadModal';
 import './StaffManagement.css';
 import { settingsService } from '../../services/settingsService';
+import { passwordService } from '../../services/passwordService';
 
 export const StaffManagement: React.FC = () => {
     const [staff, setStaff] = useState<Staff[]>([]);
@@ -13,7 +14,7 @@ export const StaffManagement: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'Active' | 'Inactive'>('all');
     const [showModal, setShowModal] = useState(false);
-    // const [showDocumentModal, setShowDocumentModal] = useState(false);
+    const [showDocumentModal, setShowDocumentModal] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
     const [currencySymbol, setCurrencySymbol] = useState('$');
 
@@ -35,6 +36,10 @@ export const StaffManagement: React.FC = () => {
                 staffService.getAll(),
                 settingsService.get()
             ]);
+            console.log('Staff data from API:', response.data);
+            response.data?.forEach((s: Staff) => {
+                console.log(`${s.fullName}: role = ${s.role}`);
+            });
             setStaff(response.data || []);
             if (settingsRes.data?.currency) {
                 setCurrencySymbol(getCurrencySymbol(settingsRes.data.currency));
@@ -77,18 +82,51 @@ export const StaffManagement: React.FC = () => {
         }
     };
 
-    /*const handleUploadDocument = (staffMember: Staff) => {
+    const handleUploadDocument = (staffMember: Staff) => {
         setSelectedStaff(staffMember);
         setShowDocumentModal(true);
-    };*/
+    };
 
-    /*const handleDocumentModalClose = (success?: boolean) => {
+    const handleDocumentModalClose = (success?: boolean) => {
         setShowDocumentModal(false);
         setSelectedStaff(null);
         if (success) {
             loadStaff();
         }
-    };*/
+    };
+
+    const handleSyncUsers = async () => {
+        if (!window.confirm('🔄 Sync Staff-User Accounts?\n\nThis will create User accounts for any staff members who don\'t have one. Continue?')) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const response = await staffService.syncUsers();
+            alert(`✅ Sync Complete!\n\nCreated: ${response.data.created} new users\nExisting: ${response.data.existing} users\nTotal: ${response.data.total} staff members`);
+            loadStaff(); // Refresh to show updated roles
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Failed to sync users');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async (staffMember: Staff) => {
+        if (!window.confirm(`Are you sure you want to reset the password for ${staffMember.fullName}?\n\nThis will generate a password reset link and email it to ${staffMember.email}.`)) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const response = await passwordService.adminResetPassword(staffMember._id);
+            alert(response.message || 'Password reset email sent successfully');
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Failed to reset password');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Filter staff
     const filteredStaff = staff.filter((s) => {
@@ -109,9 +147,18 @@ export const StaffManagement: React.FC = () => {
                     <h1>Staff Management</h1>
                     <p className="text-muted">Manage employee information and access</p>
                 </div>
-                <button onClick={handleAdd} className="btn btn-primary">
-                    + Add Staff
-                </button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button
+                        onClick={handleSyncUsers}
+                        className="btn btn-secondary"
+                        title="Sync Staff-User Accounts"
+                    >
+                        🔄 Sync Users
+                    </button>
+                    <button onClick={handleAdd} className="btn btn-primary">
+                        + Add Staff
+                    </button>
+                </div>
             </div>
 
             {error && (
@@ -166,6 +213,7 @@ export const StaffManagement: React.FC = () => {
                                     <th>Email</th>
                                     <th>Designation</th>
                                     <th>Hourly Rate</th>
+                                    <th>Documents</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -179,7 +227,17 @@ export const StaffManagement: React.FC = () => {
                                             </span>
                                         </td>
                                         <td>
-                                            <div className="staff-name">{staffMember.fullName}</div>
+                                            <div className="staff-name">
+                                                {staffMember.fullName}
+                                                {staffMember.role && staffMember.role !== 'Staff' && (
+                                                    <span
+                                                        className={`role-badge role-badge-${staffMember.role.toLowerCase()}`}
+                                                        title={`Role: ${staffMember.role}`}
+                                                    >
+                                                        {staffMember.role === 'SuperAdmin' ? '👑' : '🛡️'} {staffMember.role}
+                                                    </span>
+                                                )}
+                                            </div>
                                             {staffMember.phone && (
                                                 <div className="text-muted text-sm">{staffMember.phone}</div>
                                             )}
@@ -190,24 +248,49 @@ export const StaffManagement: React.FC = () => {
                                             <strong>{currencySymbol}{staffMember.hourlyRate.toFixed(2)}/hr</strong>
                                         </td>
                                         <td>
+                                            {staffMember.documents && staffMember.documents.length > 0 ? (
+                                                <span className="badge badge-primary">
+                                                    📄 {staffMember.documents.length}
+                                                </span>
+                                            ) : (
+                                                <span className="text-muted">-</span>
+                                            )}
+                                        </td>
+                                        <td>
                                             <span className={`badge badge-${staffMember.employmentStatus === 'Active' ? 'success' : 'secondary'}`}>
                                                 {staffMember.employmentStatus}
                                             </span>
                                         </td>
                                         <td>
-                                            <div className="action-buttons">
+                                            <div className="action-buttons" style={{ gap: '0.5rem' }}>
+                                                <button
+                                                    onClick={() => handleResetPassword(staffMember)}
+                                                    className="btn-icon"
+                                                    title="Reset Password"
+                                                >
+                                                    🔑
+                                                </button>
                                                 <button
                                                     onClick={() => handleEdit(staffMember)}
-                                                    className="btn btn-secondary btn-sm"
+                                                    className="btn-icon"
+                                                    title="Edit Staff"
                                                 >
-                                                    Edit
+                                                    ✏️
+                                                </button>
+                                                <button
+                                                    onClick={() => handleUploadDocument(staffMember)}
+                                                    className="btn-icon"
+                                                    title="Manage Documents"
+                                                >
+                                                    📄
                                                 </button>
                                                 {staffMember.employmentStatus === 'Active' && (
                                                     <button
                                                         onClick={() => handleDelete(staffMember._id)}
-                                                        className="btn btn-danger btn-sm"
+                                                        className="btn-icon btn-icon-danger"
+                                                        title="Deactivate Staff"
                                                     >
-                                                        Deactivate
+                                                        🗑️
                                                     </button>
                                                 )}
                                             </div>
@@ -224,6 +307,13 @@ export const StaffManagement: React.FC = () => {
                 <StaffFormModal
                     staff={selectedStaff}
                     onClose={handleModalClose}
+                />
+            )}
+
+            {showDocumentModal && selectedStaff && (
+                <DocumentUploadModal
+                    staff={selectedStaff}
+                    onClose={handleDocumentModalClose}
                 />
             )}
         </div>

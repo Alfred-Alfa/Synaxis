@@ -8,6 +8,7 @@ import {
     Mail,
     Phone,
     Briefcase,
+    Shield,
     Calendar,
     DollarSign,
     Lock,
@@ -16,6 +17,8 @@ import {
     Clock,
     CreditCard
 } from 'lucide-react';
+import { ConfirmModal } from '../common/ConfirmModal';
+import { Toast } from '../common/Toast';
 import './StaffFormModal.css';
 
 interface StaffFormModalProps {
@@ -33,6 +36,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
         phone: staff?.phone || '',
         hourlyRate: staff?.hourlyRate?.toString() || '',
         designation: staff?.designation || '',
+        role: staff?.role || 'Staff',
         address: staff?.address || '',
         startDate: staff?.startDate ? new Date(staff.startDate).toISOString().split('T')[0] : '',
         password: '',
@@ -45,8 +49,14 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const originalRole = staff?.role || 'Staff'; // Track original role
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    // Custom modal states
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [showSuccessToast, setShowSuccessToast] = useState(false);
+    const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value,
@@ -56,6 +66,21 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        // Check if role is changing
+        const isRoleChanging = isEdit && originalRole !== formData.role;
+
+        if (isRoleChanging) {
+            // Show custom confirmation modal
+            setShowConfirmModal(true);
+        } else {
+            // No role change, proceed directly
+            await saveStaff();
+        }
+    };
+
+    const saveStaff = async () => {
+        const isRoleChanging = isEdit && originalRole !== formData.role;
         setLoading(true);
 
         try {
@@ -66,6 +91,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                 phone: formData.phone || undefined,
                 hourlyRate: parseFloat(formData.hourlyRate),
                 designation: formData.designation || undefined,
+                role: formData.role,
                 address: formData.address || undefined,
                 startDate: formData.startDate || undefined,
                 password: formData.password || 'password123',
@@ -78,14 +104,36 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                 } : undefined,
             };
 
-            if (isEdit) {
-                await staffService.update(staff._id, data);
-            } else {
-                await staffService.create(data);
-            }
+            console.log('Submitting staff data:', data);
+            console.log('Is Edit:', isEdit);
+            console.log('Role value:', formData.role);
 
-            onClose(true);
+            if (isEdit) {
+                const response = await staffService.update(staff._id, data);
+                console.log('Update response:', response);
+
+                // Show success toast for role change
+                if (isRoleChanging) {
+                    setSuccessMessage({
+                        title: 'Success!',
+                        message: `${staff?.fullName} has been successfully moved from "${originalRole}" to "${formData.role}" role.`
+                    });
+                    setShowSuccessToast(true);
+                    // Close after a delay to show the toast
+                    setTimeout(() => {
+                        onClose(true);
+                    }, 1500);
+                } else {
+                    onClose(true);
+                }
+            } else {
+                const response = await staffService.create(data);
+                console.log('Create response:', response);
+                onClose(true);
+            }
         } catch (err: any) {
+            console.error('Error updating staff:', err);
+            console.error('Error response:', err.response);
             setError(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} staff`);
         } finally {
             setLoading(false);
@@ -246,6 +294,35 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                                         />
                                     </div>
                                 </div>
+
+                                <div className="input-group">
+                                    <label htmlFor="role">System Role</label>
+                                    <div className="input-wrapper">
+                                        <Shield className="input-icon" size={18} />
+                                        <select
+                                            id="role"
+                                            name="role"
+                                            value={formData.role}
+                                            onChange={handleChange}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.625rem 1rem 0.625rem 2.5rem',
+                                                border: '1px solid var(--border-color)',
+                                                borderRadius: '8px',
+                                                fontSize: '0.95rem',
+                                                color: 'var(--text-primary)',
+                                                outline: 'none',
+                                                backgroundColor: 'var(--input-bg)',
+                                                height: '42px'
+                                            }}
+                                        >
+                                            <option value="Staff">Staff</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="SuperAdmin">Super Admin</option>
+                                        </select>
+                                    </div>
+                                    <p className="input-hint">System access level</p>
+                                </div>
                             </div>
 
                             <div className="grid-2">
@@ -400,6 +477,31 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                     </div>
                 </form>
             </div>
+
+            {/* Confirmation Modal for Role Change */}
+            <ConfirmModal
+                isOpen={showConfirmModal}
+                title="Confirm Role Change"
+                message={`Are you sure you want to change ${staff?.fullName}'s role from "${originalRole}" to "${formData.role}"?\n\nThis will affect their system access permissions.`}
+                confirmText="Yes, Change Role"
+                cancelText="Cancel"
+                type="warning"
+                onConfirm={() => {
+                    setShowConfirmModal(false);
+                    saveStaff();
+                }}
+                onCancel={() => setShowConfirmModal(false)}
+            />
+
+            {/* Success Toast */}
+            <Toast
+                isOpen={showSuccessToast}
+                title={successMessage.title}
+                message={successMessage.message}
+                type="success"
+                duration={3000}
+                onClose={() => setShowSuccessToast(false)}
+            />
         </div>,
         document.body
     );

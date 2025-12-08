@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { settingsService } from '../../services/settingsService';
-import { adminService, type AdminUser } from '../../services/adminService';
-import { useAuth } from '../../contexts/AuthContext';
+
 import type { /* Settings */ } from '../../types';
 import './SettingsPage.css';
 
 export const SettingsPage: React.FC = () => {
-    const { user } = useAuth();
+
     const [formData, setFormData] = useState({
         companyName: '',
+        companyEmail: '',
+        phoneCountryCode: '+1',
+        companyPhone: '',
         timezone: '',
         currency: '',
         defaultOtRate: '',
@@ -29,18 +31,9 @@ export const SettingsPage: React.FC = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    // Admin Management State
-    const [admins, setAdmins] = useState<AdminUser[]>([]);
-    const [newAdmin, setNewAdmin] = useState({ email: '', password: '', name: '' });
-    const [loadingAdmins, setLoadingAdmins] = useState(false);
-    const [addingAdmin, setAddingAdmin] = useState(false);
-
     useEffect(() => {
         loadSettings();
-        if (user?.role === 'SuperAdmin') {
-            loadAdmins();
-        }
-    }, [user?.role]);
+    }, []);
 
     const loadSettings = async () => {
         try {
@@ -50,6 +43,9 @@ export const SettingsPage: React.FC = () => {
             if (data) {
                 setFormData({
                     companyName: data.companyName || '',
+                    companyEmail: data.companyEmail || '',
+                    phoneCountryCode: data.phoneCountryCode || '+1',
+                    companyPhone: data.companyPhone || '',
                     timezone: data.timezone || 'UTC',
                     currency: data.currency || 'USD',
                     defaultOtRate: data.globalOtRate?.toString() || '1.5',
@@ -70,19 +66,7 @@ export const SettingsPage: React.FC = () => {
         }
     };
 
-    const loadAdmins = async () => {
-        try {
-            setLoadingAdmins(true);
-            const response = await adminService.getAll();
-            if (response.success && response.data) {
-                setAdmins(response.data);
-            }
-        } catch (err: any) {
-            console.error('Failed to load admins', err);
-        } finally {
-            setLoadingAdmins(false);
-        }
-    };
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -152,6 +136,9 @@ export const SettingsPage: React.FC = () => {
         try {
             await settingsService.update({
                 companyName: formData.companyName,
+                companyEmail: formData.companyEmail,
+                phoneCountryCode: formData.phoneCountryCode,
+                companyPhone: formData.companyPhone,
                 timezone: formData.timezone,
                 currency: formData.currency as any,
                 globalOtRate: parseFloat(formData.defaultOtRate),
@@ -166,38 +153,7 @@ export const SettingsPage: React.FC = () => {
         }
     };
 
-    const handleAddAdmin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setSuccess('');
-        setAddingAdmin(true);
 
-        try {
-            await adminService.create({
-                email: newAdmin.email,
-                password: newAdmin.password
-            });
-            setSuccess('Admin created successfully!');
-            setNewAdmin({ email: '', password: '', name: '' });
-            loadAdmins();
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to create admin');
-        } finally {
-            setAddingAdmin(false);
-        }
-    };
-
-    const handleDeleteAdmin = async (id: string) => {
-        if (!window.confirm('Are you sure you want to delete this admin?')) return;
-
-        try {
-            await adminService.delete(id);
-            setSuccess('Admin deleted successfully');
-            loadAdmins();
-        } catch (err: any) {
-            setError(err.response?.data?.message || 'Failed to delete admin');
-        }
-    };
 
     // List of countries with flags
     const countries = [
@@ -481,6 +437,59 @@ export const SettingsPage: React.FC = () => {
                                     placeholder="Enter company name"
                                 />
                             </div>
+
+                            <div className="form-group">
+                                <label htmlFor="companyEmail" className="form-label">Company Email</label>
+                                <input
+                                    id="companyEmail"
+                                    name="companyEmail"
+                                    type="email"
+                                    className="input"
+                                    value={formData.companyEmail}
+                                    onChange={handleChange}
+                                    placeholder="contact@company.com"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="companyPhone" className="form-label">Company Phone Number</label>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <select
+                                        name="phoneCountryCode"
+                                        className="select"
+                                        value={formData.phoneCountryCode}
+                                        onChange={handleChange}
+                                        style={{ width: '120px' }}
+                                    >
+                                        <option value="+1">🇺🇸 +1</option>
+                                        <option value="+44">🇬🇧 +44</option>
+                                        <option value="+91">🇮🇳 +91</option>
+                                        <option value="+971">🇦🇪 +971</option>
+                                        <option value="+65">🇸🇬 +65</option>
+                                        <option value="+61">🇦🇺 +61</option>
+                                        <option value="+1">🇨🇦 +1</option>
+                                        <option value="+49">🇩🇪 +49</option>
+                                        <option value="+33">🇫🇷 +33</option>
+                                        <option value="+39">🇮🇹 +39</option>
+                                        <option value="+34">🇪🇸 +34</option>
+                                        <option value="+86">🇨🇳 +86</option>
+                                        <option value="+81">🇯🇵 +81</option>
+                                        <option value="+82">🇰🇷 +82</option>
+                                        <option value="+55">🇧🇷 +55</option>
+                                        <option value="+52">🇲🇽 +52</option>
+                                    </select>
+                                    <input
+                                        id="companyPhone"
+                                        name="companyPhone"
+                                        type="tel"
+                                        className="input"
+                                        value={formData.companyPhone}
+                                        onChange={handleChange}
+                                        placeholder="1234567890"
+                                        style={{ flex: 1 }}
+                                    />
+                                </div>
+                            </div>
                         </section>
 
                         <section className="card mb-4">
@@ -631,101 +640,84 @@ export const SettingsPage: React.FC = () => {
                 </div>
             </form>
 
-            {/* Admin Management Section (Full Width) */}
-            {user?.role === 'SuperAdmin' && (
-                <section className="card mt-4">
-                    <div className="card-header-flex">
-                        <div>
-                            <h3 className="card-title mb-1">Administrator Access</h3>
-                            <p className="text-muted text-sm">Manage users with administrative privileges.</p>
-                        </div>
+            {/* Role Management Section */}
+            <section className="card mt-4">
+                <div className="card-header-flex">
+                    <div>
+                        <h3 className="card-title mb-1">Roles & Permissions</h3>
+                        <p className="text-muted text-sm">Define roles and access levels for your organization.</p>
                     </div>
+                    <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => alert('Role creation coming soon')}
+                    >
+                        + Create New Role
+                    </button>
+                </div>
 
-                    <div className="admin-management-layout">
-                        {/* List */}
-                        <div className="admins-list-panel">
-                            {loadingAdmins ? (
-                                <p>Loading...</p>
-                            ) : (
-                                <table className="table admin-table">
-                                    <thead>
-                                        <tr>
-                                            <th>User</th>
-                                            <th>Role</th>
-                                            <th>Added On</th>
-                                            <th className="text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {admins.length === 0 ? (
-                                            <tr><td colSpan={4} className="text-center text-muted p-4">No additional admins.</td></tr>
-                                        ) : admins.map((admin) => (
-                                            <tr key={admin._id}>
-                                                <td>
-                                                    <div className="admin-user-cell">
-                                                        <div className="admin-avatar">{admin.email[0].toUpperCase()}</div>
-                                                        <span>{admin.email}</span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className={`badge ${admin.role === 'SuperAdmin' ? 'badge-primary' : 'badge-info'}`}>
-                                                        {admin.role}
-                                                    </span>
-                                                </td>
-                                                <td>{new Date(admin.createdAt).toLocaleDateString()}</td>
-                                                <td className="text-right">
-                                                    {admin.role !== 'SuperAdmin' && (
-                                                        <button
-                                                            className="btn-icon text-danger"
-                                                            onClick={() => handleDeleteAdmin(admin._id)}
-                                                            title="Remove Admin"
-                                                        >
-                                                            🗑️
-                                                        </button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-
-                        {/* Add Form */}
-                        <div className="add-admin-panel">
-                            <h4 className="panel-title">Grant Access</h4>
-                            <div className="form-group">
-                                <label className="text-xs font-bold">Email Address</label>
-                                <input
-                                    type="email"
-                                    className="input input-sm"
-                                    value={newAdmin.email}
-                                    onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
-                                    placeholder="colleague@company.com"
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label className="text-xs font-bold">Password</label>
-                                <input
-                                    type="password"
-                                    className="input input-sm"
-                                    value={newAdmin.password}
-                                    onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
-                                    placeholder="******"
-                                />
-                            </div>
-                            <button
-                                type="button"
-                                className="btn btn-secondary btn-sm btn-block mt-2"
-                                onClick={handleAddAdmin}
-                                disabled={addingAdmin || !newAdmin.email || !newAdmin.password}
-                            >
-                                {addingAdmin ? 'Adding...' : 'Add Administrator'}
-                            </button>
-                        </div>
-                    </div>
-                </section>
-            )}
+                <div className="table-responsive mt-3">
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>Role Name</th>
+                                <th>Access Level</th>
+                                <th>Users</th>
+                                <th className="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <div className="role-dot bg-purple-500"></div>
+                                        <span className="font-medium">SuperAdmin</span>
+                                    </div>
+                                </td>
+                                <td className="text-muted">Full System Access</td>
+                                <td>
+                                    <div className="avatar-group">
+                                        <div className="avatar-sm">SA</div>
+                                    </div>
+                                </td>
+                                <td className="text-right">
+                                    <span className="badge badge-ghost">System Default</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <div className="role-dot bg-blue-500"></div>
+                                        <span className="font-medium">Admin</span>
+                                    </div>
+                                </td>
+                                <td className="text-muted">Administrative Access</td>
+                                <td>
+                                    <span className="text-sm text-muted">2 Users</span>
+                                </td>
+                                <td className="text-right">
+                                    <span className="badge badge-ghost">System Default</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <div className="role-dot bg-gray-500"></div>
+                                        <span className="font-medium">Staff</span>
+                                    </div>
+                                </td>
+                                <td className="text-muted">Employee Portal Access</td>
+                                <td>
+                                    <span className="text-sm text-muted">All Staff</span>
+                                </td>
+                                <td className="text-right">
+                                    <span className="badge badge-ghost">Default Role</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     );
 };

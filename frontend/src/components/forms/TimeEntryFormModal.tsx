@@ -7,9 +7,19 @@ interface TimeEntryFormModalProps {
     entry: TimeEntry | null;
     sites: Site[];
     onClose: (success?: boolean) => void;
+    isAdminReview?: boolean;
+    onApprove?: () => void;
+    onReject?: () => void;
 }
 
-export const TimeEntryFormModal: React.FC<TimeEntryFormModalProps> = ({ entry, sites, onClose }) => {
+export const TimeEntryFormModal: React.FC<TimeEntryFormModalProps> = ({
+    entry,
+    sites,
+    onClose,
+    isAdminReview = false,
+    onApprove,
+    onReject
+}) => {
     const isEdit = !!entry;
 
     const [formData, setFormData] = useState({
@@ -88,7 +98,9 @@ export const TimeEntryFormModal: React.FC<TimeEntryFormModalProps> = ({ entry, s
                         notes: formData.travelNotes,
                     } : undefined,
                 };
-                await timeEntryService.update(entry._id, updateData);
+                if (entry) {
+                    await timeEntryService.update(entry._id, updateData);
+                }
             } else {
                 await timeEntryService.create(formDataToSend);
             }
@@ -293,22 +305,61 @@ export const TimeEntryFormModal: React.FC<TimeEntryFormModalProps> = ({ entry, s
                         )}
                     </div>
 
-                    <div className="modal-footer">
-                        <button
-                            type="button"
-                            onClick={() => onClose()}
-                            className="btn btn-secondary"
-                            disabled={loading}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="btn btn-primary"
-                            disabled={loading}
-                        >
-                            {loading ? 'Saving...' : isEdit ? 'Update Entry' : 'Submit Entry'}
-                        </button>
+                    <div className="modal-footer" style={isAdminReview ? { justifyContent: 'space-between' } : undefined}>
+                        {isAdminReview ? (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={onReject}
+                                    className="btn btn-danger"
+                                    title="Reject this entry"
+                                >
+                                    Reject
+                                </button>
+                                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => onClose()}
+                                        className="btn btn-secondary"
+                                    >
+                                        Close
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary"
+                                        disabled={loading}
+                                    >
+                                        Save Changes
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={onApprove}
+                                        className="btn btn-success"
+                                        title="Approve this entry"
+                                    >
+                                        Approve
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => onClose()}
+                                    className="btn btn-secondary"
+                                    disabled={loading}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Saving...' : isEdit ? 'Update Entry' : 'Submit Entry'}
+                                </button>
+                            </>
+                        )}
                     </div>
                 </form>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { ForgotPasswordModal } from '../components/auth/ForgotPasswordModal';
 import './Login.css';
 
 export const Login: React.FC = () => {
@@ -8,6 +9,7 @@ export const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showForgotModal, setShowForgotModal] = useState(false);
 
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -72,9 +74,19 @@ export const Login: React.FC = () => {
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="password" className="form-label">
-                            Password
-                        </label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                            <label htmlFor="password" className="form-label" style={{ marginBottom: 0 }}>
+                                Password
+                            </label>
+                            <button
+                                type="button"
+                                className="text-sm text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer"
+                                onClick={() => setShowForgotModal(true)}
+                                style={{ color: 'var(--primary-color)' }}
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
                         <input
                             id="password"
                             type="password"
@@ -101,6 +113,11 @@ export const Login: React.FC = () => {
                     </p>
                 </div>
             </div>
+
+            <ForgotPasswordModal
+                isOpen={showForgotModal}
+                onClose={() => setShowForgotModal(false)}
+            />
         </div>
     );
 };

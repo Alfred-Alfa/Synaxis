@@ -3,9 +3,11 @@ import { overtimeService } from '../../services/overtimeService';
 import { siteService } from '../../services/siteService';
 import type { Overtime, Site } from '../../types';
 import { OvertimeFormModal } from '../../components/forms/OvertimeFormModal';
+import { useAuth } from '../../contexts/AuthContext';
 import '../staff/StaffTimeEntry.css';
 
 export const StaffOvertime: React.FC = () => {
+    const { isAdmin } = useAuth();
     const [overtimeRequests, setOvertimeRequests] = useState<Overtime[]>([]);
     const [sites, setSites] = useState<Site[]>([]);
     const [loading, setLoading] = useState(true);
@@ -22,7 +24,7 @@ export const StaffOvertime: React.FC = () => {
         try {
             setLoading(true);
             const [otRes, sitesRes] = await Promise.all([
-                overtimeService.getAll(),
+                overtimeService.getAll(isAdmin ? { mode: 'personal' } : {}),
                 siteService.getAll({ status: 'Active' }),
             ]);
             setOvertimeRequests(otRes.data || []);

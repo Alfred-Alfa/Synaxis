@@ -4,6 +4,7 @@ export interface User {
     email: string;
     role: 'SuperAdmin' | 'Admin' | 'Staff';
     staffRef?: string;
+    isFirstLogin?: boolean;
 }
 
 export interface AuthResponse {
@@ -23,6 +24,7 @@ export interface Staff {
     fullName: string;
     email: string;
     employeeId?: string;
+    role?: 'SuperAdmin' | 'Admin' | 'Staff';
     phone?: string;
     hourlyRate: number;
     hourlyRateHistory: {
@@ -166,6 +168,9 @@ export interface Settings {
     timezone: string;
     currency: 'USD' | 'GBP' | 'EUR' | 'INR' | 'SGD' | 'AUD' | 'CAD';
     companyName: string;
+    companyEmail?: string;
+    phoneCountryCode?: string;
+    companyPhone?: string;
     companyAddress?: {
         street: string;
         city: string;

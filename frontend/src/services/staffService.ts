@@ -55,4 +55,10 @@ export const staffService = {
         });
         return response.data;
     },
+
+    // Sync Staff-User relationships
+    syncUsers: async (): Promise<ApiResponse> => {
+        const response = await api.post('/staff/sync-users');
+        return response.data;
+    },
 };

@@ -10,6 +10,7 @@ interface AuthContextType {
     logout: () => void;
     isAdmin: boolean;
     isStaff: boolean;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +31,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         setLoading(false);
     }, []);
+
+    const refreshUser = async () => {
+        try {
+            const response = await authService.me();
+            if (response.user) {
+                setUser(response.user);
+                localStorage.setItem('hrms_user', JSON.stringify(response.user));
+            }
+        } catch (error) {
+            console.error('Failed to refresh user:', error);
+        }
+    };
 
     const login = async (email: string, password: string) => {
         try {
@@ -66,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 logout,
                 isAdmin,
                 isStaff,
+                refreshUser,
             }}
         >
             {children}

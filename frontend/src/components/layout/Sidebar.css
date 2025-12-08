@@ -1,53 +1,54 @@
 .sidebar {
     width: 260px;
-    background: white;
+    background: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
     height: calc(100vh - 73px);
     position: sticky;
     top: 73px;
     overflow-y: auto;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Sidebar header, logo, and company name styles removed as they are moved to Navbar */
 
 .sidebar-nav {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs, 8px);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
 .sidebar-link {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
-    padding: var(--spacing-sm) var(--spacing-md);
+    gap: 12px;
+    padding: 8px 12px;
     border-radius: var(--radius-md);
     text-decoration: none;
     color: var(--text-primary);
     transition: all 0.2s ease;
     font-weight: 500;
-    min-height: 44px;
+    min-height: 38px;
     /* Ensure good clickable area */
 }
 
 .sidebar-link:hover {
-    background-color: var(--light-bg);
+    background-color: var(--sidebar-hover);
 }
 
 .sidebar-link.active {
     background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
     color: white;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
 }
 
 .sidebar-icon {
-    font-size: 1.15rem;
+    font-size: 1rem;
     /* Slightly smaller icon */
 }
 
 .sidebar-label {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
 }
 
 @media (max-width: 1024px) {

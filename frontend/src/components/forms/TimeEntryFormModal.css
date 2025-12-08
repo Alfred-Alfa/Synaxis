@@ -1,16 +1,141 @@
+/* Modal Base Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: var(--spacing-md);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-xl);
+    animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+/* Modal Body & Form */
+.modal-body {
+    padding: var(--spacing-lg);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.form-group-full {
+    grid-column: 1 / -1;
+}
+
+/* File Input Sizing in Modal */
+input[type="file"] {
+    padding: 0.5rem;
+}
+
+/* Modal Footer */
+.modal-footer {
+    padding: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    background-color: var(--light-bg);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* Checkbox Styles */
 .checkbox-label {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     cursor: pointer;
     font-weight: 500;
+    padding: var(--spacing-sm);
+    background: var(--light-bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
 }
 
 .checkbox-label input[type="checkbox"] {
-    width: auto;
+    width: 1.1em;
+    height: 1.1em;
     cursor: pointer;
 }
 
 .checkbox-label span {
     user-select: none;
+}
+
+/* Animations */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        max-height: 100vh;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .modal-footer {
+        border-radius: 0;
+    }
 }
