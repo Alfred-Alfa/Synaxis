@@ -15,6 +15,10 @@ RUN npm --prefix ui install
 COPY backend ./backend
 COPY ui ./ui
 
+# Set environment for build
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build frontend
 RUN npm --prefix ui run build
 
