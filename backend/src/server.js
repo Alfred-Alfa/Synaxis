@@ -4,10 +4,15 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import connectDB from './config/database.js';
+import seedSuperAdmin from './utils/initialSeed.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
+// Get __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -26,12 +31,11 @@ import notificationRoutes from './routes/notifications.js';
 // Initialize Express
 const app = express();
 
-// Get __dirname in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Connect to database
-connectDB();
+connectDB().then(() => {
+    // Run initial seed check
+    seedSuperAdmin();
+});
 
 // Middleware
 app.use(cors());
@@ -59,6 +63,19 @@ app.use('/api/notifications', notificationRoutes);
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'HRMS API is running' });
 });
+
+// Serve frontend static files
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
+    app.use(express.static(path.join(__dirname, '../public')));
+
+    app.get('*', (req, res, next) => {
+        // If request is for API, skip to 404 handler
+        if (req.originalUrl.startsWith('/api')) {
+            return next();
+        }
+        res.sendFile(path.resolve(__dirname, '../public', 'index.html'));
+    });
+}
 
 // Error handling
 app.use(notFound);

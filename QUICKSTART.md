@@ -22,9 +22,9 @@ UPLOAD_DIR=./uploads
 MAX_FILE_SIZE=5242880" > .env
 ```
 
-**Frontend (.env file):**
+**UI (.env file):**
 ```bash
-cd frontend
+cd ui
 echo "VITE_API_URL=http://localhost:5000/api" > .env
 ```
 
@@ -35,8 +35,8 @@ echo "VITE_API_URL=http://localhost:5000/api" > .env
 cd backend
 npm install
 
-# Frontend (in a new terminal)
-cd frontend
+# UI (in a new terminal)
+cd ui
 npm install
 ```
 
@@ -62,9 +62,9 @@ npm run dev
 # Server running in development mode on port 5000
 ```
 
-**Terminal 2 - Frontend:**
+**Terminal 2 - UI:**
 ```bash
-cd frontend
+cd ui
 npm run dev
 
 # You should see:
@@ -115,9 +115,9 @@ curl -X POST http://localhost:5000/api/auth/register \
 - Check if port 5000 is available
 - Verify `.env` file exists with correct values
 
-### Frontend not connecting to backend
+### UI not connecting to backend
 - Check if backend is running on port 5000
-- Verify `VITE_API_URL` in frontend `.env`
+- Verify `VITE_API_URL` in UI `.env`
 - Check browser console for CORS errors
 
 ### Database connection errors
@@ -135,7 +135,7 @@ curl -X POST http://localhost:5000/api/auth/register \
 
 ## Next Steps
 
-The frontend currently has:
+The UI currently has:
 - ✅ Authentication system
 - ✅ Layout and navigation
 - ✅ Dashboard pages (placeholders)

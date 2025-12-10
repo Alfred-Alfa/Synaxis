@@ -25,7 +25,7 @@ A comprehensive Human Resource Management System with attendance tracking, time 
 - **PDF Generation**: PDFKit for payslips and reports
 - **Excel Export**: xlsx library
 
-#### Frontend
+#### UI
 - **Framework**: React 18 with TypeScript
 - **Build Tool**: Vite
 - **Routing**: React Router (to be integrated)
@@ -63,10 +63,10 @@ cp .env.example .env
 # - PORT: API server port (default: 5001)
 ```
 
-### 3. Frontend Setup
+### 3. UI Setup
 
 ```bash
-cd frontend
+cd ui
 
 # Install dependencies
 npm install
@@ -98,14 +98,14 @@ cd backend
 npm run dev
 ```
 
-**Terminal 2 - Frontend:**
+**Terminal 2 - UI:**
 ```bash
-cd frontend
+cd ui
 npm run dev
 ```
 
 The backend API will be available at `http://localhost:5001`  
-The frontend will be available at `http://localhost:5173`
+The UI will be available at `http://localhost:5173`
 
 ### First-Time Setup
 
@@ -258,7 +258,7 @@ Proprietary - All rights reserved
   - Excel Export Foundation
 
 ### In Progress 🚧
-- Frontend Application
+- UI Application
   - UI Components
   - Authentication Pages
   - Admin Dashboard

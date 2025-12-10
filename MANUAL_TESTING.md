@@ -5,7 +5,7 @@ This document outlines the testing procedures for the entire HRMS application, c
 ## 0. Prerequisites
 - **Admin Account**: `it@elitecraftuk.com` (SuperAdmin privileges)
 - **Staff Account**: Create a test staff account during testing.
-- **Environment**: Ensure backend and frontend servers are running (`npm run dev`).
+- **Environment**: Ensure backend and UI servers are running (`npm run dev`).
 
 ---
 
