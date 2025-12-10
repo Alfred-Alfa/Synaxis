@@ -65,6 +65,17 @@
     position: relative;
 }
 
+.mobile-menu-btn {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-menu-btn {
+        display: flex;
+        margin-right: 0.5rem;
+    }
+}
+
 .nav-icon-btn:hover {
     background: var(--bg-secondary);
     color: var(--primary-color);

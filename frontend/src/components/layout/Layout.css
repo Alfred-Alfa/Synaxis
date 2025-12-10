@@ -13,7 +13,7 @@
     flex: 1;
     padding: var(--spacing-xl);
     background-color: var(--light-bg);
-    min-height: calc(100vh - 73px);
+    min-height: calc(100vh - 65px);
     overflow-y: auto;
 }
 

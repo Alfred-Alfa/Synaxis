@@ -3,7 +3,12 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     const { isAdmin, user } = useAuth();
 
     const adminLinks = [
@@ -42,21 +47,32 @@ export const Sidebar: React.FC = () => {
         : staffLinks;
 
     return (
-        <aside className="sidebar">
-            <nav className="sidebar-nav">
-                {links.map((link) => (
-                    <NavLink
-                        key={link.to}
-                        to={link.to}
-                        className={({ isActive }) =>
-                            `sidebar-link ${isActive ? 'active' : ''}`
-                        }
-                    >
-                        <span className="sidebar-icon">{link.icon}</span>
-                        <span className="sidebar-label">{link.label}</span>
-                    </NavLink>
-                ))}
-            </nav>
-        </aside>
+        <>
+            <div
+                className={`sidebar-overlay ${isOpen ? 'open' : ''}`}
+                onClick={onClose}
+            />
+            <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+                <nav className="sidebar-nav">
+                    {links.map((link) => (
+                        <NavLink
+                            key={link.to}
+                            to={link.to}
+                            className={({ isActive }) =>
+                                `sidebar-link ${isActive ? 'active' : ''}`
+                            }
+                            onClick={() => {
+                                if (window.innerWidth <= 768) {
+                                    onClose();
+                                }
+                            }}
+                        >
+                            <span className="sidebar-icon">{link.icon}</span>
+                            <span className="sidebar-label">{link.label}</span>
+                        </NavLink>
+                    ))}
+                </nav>
+            </aside>
+        </>
     );
 };

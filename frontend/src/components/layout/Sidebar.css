@@ -4,9 +4,10 @@
     border-right: 1px solid var(--border-color);
     height: calc(100vh - 73px);
     position: sticky;
-    top: 73px;
+    top: 65px;
+    height: calc(100vh - 65px);
     overflow-y: auto;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease-in-out;
 }
 
 /* Sidebar header, logo, and company name styles removed as they are moved to Navbar */
@@ -51,6 +52,19 @@
     font-size: 0.85rem;
 }
 
+/* Overlay for mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 65px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 90;
+    backdrop-filter: blur(2px);
+}
+
 @media (max-width: 1024px) {
     .sidebar {
         width: 70px;
@@ -77,6 +91,41 @@
 
 @media (max-width: 768px) {
     .sidebar {
-        display: none;
+        display: block;
+        position: fixed;
+        left: 0;
+        width: 260px;
+        /* Full width properties on mobile open */
+        transform: translateX(-100%);
+        z-index: 100;
+        background: var(--sidebar-bg);
+        border-right: 1px solid var(--border-color);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    /* Restore label visibility on mobile since it's a drawer */
+    .sidebar-label {
+        display: block;
+    }
+
+    .sidebar-nav {
+        padding: var(--spacing-sm);
+        align-items: stretch;
+        /* Align items normally */
+    }
+
+    .sidebar-link {
+        justify-content: flex-start;
+        padding: 12px;
+        width: auto;
+        height: auto;
+        border-radius: var(--radius-md);
+    }
+
+    .sidebar-overlay.open {
+        display: block;
     }
 }

@@ -12,6 +12,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
     const { user, refreshUser } = useAuth();
     const [showForcePasswordModal, setShowForcePasswordModal] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (user?.isFirstLogin) {
@@ -29,9 +30,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     return (
         <div className="app-layout">
-            <Navbar />
+            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
             <div className="app-content">
-                <Sidebar />
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
                 <main className="main-content">
                     {children}
                 </main>

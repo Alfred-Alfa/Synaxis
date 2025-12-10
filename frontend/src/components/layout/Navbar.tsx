@@ -3,12 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { settingsService } from '../../services/settingsService';
 import { notificationService } from '../../services/notificationService';
-import { Bell, Moon, Sun, LogOut, User as UserIcon } from 'lucide-react';
+import { Bell, Moon, Sun, LogOut, User as UserIcon, Menu } from 'lucide-react';
 import './Navbar.css';
 
 import { useTheme } from '../../contexts/ThemeContext';
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+    onToggleSidebar: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
     const { theme, toggleTheme } = useTheme();
     const { user, logout } = useAuth();
     const navigate = useNavigate();
@@ -66,6 +70,14 @@ export const Navbar: React.FC = () => {
     return (
         <nav className="navbar">
             <div className="navbar-brand">
+                <button
+                    className="nav-icon-btn mobile-menu-btn"
+                    onClick={onToggleSidebar}
+                    aria-label="Toggle Sidebar"
+                >
+                    <Menu size={24} />
+                </button>
+
                 {companyLogo ? (
                     <img
                         src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/uploads/${companyLogo}`}

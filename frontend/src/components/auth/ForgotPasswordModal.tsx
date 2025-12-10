@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Mail, CheckCircle, X, AlertCircle } from 'lucide-react';
+import { Mail, CheckCircle, X, AlertCircle, KeyRound } from 'lucide-react';
 import { passwordService } from '../../services/passwordService';
 import './ForgotPasswordModal.css';
 
@@ -40,64 +40,79 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     return createPortal(
         <div className="forgot-password-modal-overlay">
             <div className="forgot-password-modal-container">
-                <button className="modal-close" onClick={onClose}>
-                    <X size={24} />
+                <button className="modal-close" onClick={onClose} aria-label="Close">
+                    <X size={20} />
                 </button>
 
-                <div className="forgot-password-header">
-                    <h2>Forgot Password?</h2>
-                    <p>Enter your email to receive a password reset link.</p>
-                </div>
-
-                <div className="forgot-password-body">
-                    {message ? (
-                        <div className="success-message">
-                            <CheckCircle size={48} className="success-icon" />
-                            <p>{message}</p>
-                            <p className="note">Please check your inbox (and spam folder).</p>
-                            <button className="btn btn-primary btn-block" onClick={onClose}>
-                                Close
-                            </button>
-                        </div>
-                    ) : (
-                        <form onSubmit={handleSubmit}>
-                            {error && (
-                                <div className="error-alert">
-                                    <AlertCircle size={16} />
-                                    {error}
+                <div className="forgot-password-content">
+                    {!message ? (
+                        <>
+                            <div className="forgot-password-header">
+                                <div className="featured-icon">
+                                    <KeyRound size={28} />
                                 </div>
-                            )}
-
-                            <div className="form-group">
-                                <label htmlFor="reset-email">Email Address</label>
-                                <div className="input-wrapper">
-                                    <Mail className="input-icon" size={18} />
-                                    <input
-                                        id="reset-email"
-                                        type="email"
-                                        className="input"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="Enter your email"
-                                        required
-                                        autoFocus
-                                    />
-                                </div>
+                                <h2>Forgot password?</h2>
+                                <p>No worries, we'll send you reset instructions.</p>
                             </div>
 
-                            <button
-                                type="submit"
-                                className="btn btn-primary btn-block"
-                                disabled={loading}
-                            >
-                                {loading ? 'Sending Request...' : 'Send Reset Link'}
-                            </button>
-                        </form>
-                    )}
-                </div>
+                            <form onSubmit={handleSubmit} className="forgot-password-form">
+                                {error && (
+                                    <div className="error-message">
+                                        <AlertCircle size={16} />
+                                        <span>{error}</span>
+                                    </div>
+                                )}
 
-                <div className="forgot-password-footer">
-                    <p>If you forgot your email, please contact your administrator.</p>
+                                <div className="form-group">
+                                    <label htmlFor="reset-email">Email address</label>
+                                    <div className="input-with-icon">
+                                        <Mail size={18} />
+                                        <input
+                                            id="reset-email"
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="Enter your email"
+                                            required
+                                            autoFocus
+                                            disabled={loading}
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="btn-submit"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Sending instruction...' : 'Send Reset Link'}
+                                </button>
+                            </form>
+
+                            <div className="forgot-password-footer">
+                                <p>Remember your password? <button onClick={onClose} className="link-text">Back to login</button></p>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="success-state">
+                            <div className="success-icon-wrapper">
+                                <CheckCircle size={32} />
+                            </div>
+                            <h3>Check your email</h3>
+                            <p className="success-desc">{message}</p>
+                            <div className="email-sent-to">
+                                <span>sent to</span> <strong>{email}</strong>
+                            </div>
+
+                            <button className="btn-primary w-full" onClick={onClose}>
+                                Back to Login
+                            </button>
+
+                            <p className="resend-text">
+                                Didn't receive the email? <button onClick={() => { setMessage(''); setLoading(false); }} className="link-text">Click to resend</button>
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>,
