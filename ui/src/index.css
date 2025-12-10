@@ -27,6 +27,17 @@
   --error: #ef4444;
   --info: #3b82f6;
 
+  /* Surface Colors */
+  --surface-primary: #ffffff;
+  --surface-secondary: #f8fafc;
+  --bg-hover: #f1f5f9;
+
+  /* Primary Color Mapping */
+  --primary-color: var(--primary-blue);
+  --primary-dark: var(--primary-blue-dark);
+  --primary-light: var(--primary-blue-light);
+  --primary-color-alpha: rgba(30, 64, 175, 0.1);
+
   /* Sidebar Specific */
   --sidebar-bg: #ffffff;
   --sidebar-text: #0f172a;
@@ -74,6 +85,11 @@
   --sidebar-bg: #1e293b;
   --sidebar-text: #f8fafc;
   --sidebar-hover: #334155;
+
+  --surface-primary: #1e293b;
+  --surface-secondary: #0f172a;
+  --bg-hover: #334155;
+  --primary-color-alpha: rgba(59, 130, 246, 0.2);
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
