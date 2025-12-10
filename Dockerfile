@@ -25,12 +25,31 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy built backend and frontend into /app
+
 COPY --from=builder /app/backend ./backend
 
+
+
 # Set NODE_ENV
+
 ENV NODE_ENV=production
 
+
+
 # Expose port
+
 EXPOSE 5000
+
+
+
+# Set working directory to backend
+
+WORKDIR /app/backend
+
+
+
+
+
+
 
 
