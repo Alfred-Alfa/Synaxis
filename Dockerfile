@@ -26,10 +26,11 @@ WORKDIR /app
 
 # Copy built backend and frontend into /app
 COPY --from=builder /app/backend ./backend
-COPY --from=builder /app/ui/dist ./ui/dist
 
 # Set NODE_ENV
 ENV NODE_ENV=production
 
 # Expose port
 EXPOSE 5000
+
+
