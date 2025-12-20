@@ -47,12 +47,10 @@ EXPOSE 5000
 
 
 # Set working directory to backend
-
 WORKDIR /app/backend
 
-
-
-
+# Start the application
+CMD ["node", "src/server.js"]
 
 
 
