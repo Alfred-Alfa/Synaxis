@@ -3,9 +3,11 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createServer } from 'http';
 import connectDB from './config/database.js';
 import seedSuperAdmin from './utils/initialSeed.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import { initializeSocket } from './config/socket.js';
 
 // Get __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -27,14 +29,19 @@ import settingsRoutes from './routes/settings.js';
 import auditLogRoutes from './routes/auditLog.js';
 import reportRoutes from './routes/reportRoutes.js';
 import notificationRoutes from './routes/notifications.js';
+import chatRoutes from './routes/chat.js';
 
 // Initialize Express
 const app = express();
+const httpServer = createServer(app);
 
 // Connect to database
 connectDB().then(() => {
     // Run initial seed check
     seedSuperAdmin();
+
+    // Initialize WebSocket server for chat (isolated module)
+    initializeSocket(httpServer);
 });
 
 // Middleware
@@ -65,6 +72,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -90,8 +98,9 @@ app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
 
 export default app;
+

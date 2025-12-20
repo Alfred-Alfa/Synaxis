@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { ChatBadge } from '../common/ChatBadge';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -36,15 +37,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         { to: '/staff/leave', label: 'My Leave', icon: '🏖️' },
     ];
 
+    // Chat link - available to all users (isolated module)
+    const chatLink = { to: isAdmin ? '/admin/chat' : '/staff/chat', label: 'Chat', icon: '💬', showBadge: true };
+
     const settingsLink = { to: '/admin/settings', label: 'Settings', icon: '⚙️' };
 
     const links = isAdmin
         ? [
             ...adminLinks,
+            chatLink,
             ...(user?.role === 'SuperAdmin' ? [] : myAppsLinks),
             settingsLink
         ]
-        : staffLinks;
+        : [...staffLinks, chatLink];
 
     return (
         <>
@@ -68,7 +73,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                             }}
                         >
                             <span className="sidebar-icon">{link.icon}</span>
-                            <span className="sidebar-label">{link.label}</span>
+                            <span className="sidebar-label">
+                                {link.label}
+                                {(link as any).showBadge && <ChatBadge />}
+                            </span>
                         </NavLink>
                     ))}
                 </nav>

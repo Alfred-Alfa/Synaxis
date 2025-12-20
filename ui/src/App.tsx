@@ -33,64 +33,71 @@ import './index.css';
 ); */
 
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ChatProvider } from './contexts/ChatContext';
+import { ChatPage } from './pages/common/ChatPage';
+
 // ...
 function App() {
   console.log('App.tsx: Rendering App component');
   return (
     <AuthProvider>
       <ThemeProvider>
-        <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <ChatProvider>
+          <Router>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
-            {/* Admin Routes */}
-            <Route path="/admin/*" element={
-              <ProtectedRoute requireAdmin>
-                <Layout>
-                  <Routes>
-                    <Route path="dashboard" element={<AdminDashboard />} />
-                    <Route path="profile" element={<ProfilePage />} />
-                    <Route path="staff" element={<StaffManagement />} />
-                    <Route path="time-entries" element={<AdminTimeEntry />} />
-                    <Route path="overtime" element={<AdminOvertime />} />
-                    <Route path="leave" element={<AdminLeave />} />
-                    <Route path="sites" element={<SiteManagement />} />
-                    <Route path="payroll" element={<PayrollManagement />} />
-                    <Route path="reports" element={<Reports />} />
-                    <Route path="settings" element={<SettingsPage />} />
-                    <Route path="audit-logs" element={<AuditLogs />} />
-                    <Route path="notifications" element={<NotificationsPage />} />
-                    <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
-                  </Routes>
-                </Layout>
-              </ProtectedRoute>
-            } />
+              {/* Admin Routes */}
+              <Route path="/admin/*" element={
+                <ProtectedRoute requireAdmin>
+                  <Layout>
+                    <Routes>
+                      <Route path="dashboard" element={<AdminDashboard />} />
+                      <Route path="profile" element={<ProfilePage />} />
+                      <Route path="staff" element={<StaffManagement />} />
+                      <Route path="time-entries" element={<AdminTimeEntry />} />
+                      <Route path="overtime" element={<AdminOvertime />} />
+                      <Route path="leave" element={<AdminLeave />} />
+                      <Route path="sites" element={<SiteManagement />} />
+                      <Route path="payroll" element={<PayrollManagement />} />
+                      <Route path="reports" element={<Reports />} />
+                      <Route path="settings" element={<SettingsPage />} />
+                      <Route path="audit-logs" element={<AuditLogs />} />
+                      <Route path="notifications" element={<NotificationsPage />} />
+                      <Route path="chat" element={<ChatPage />} />
+                      <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              } />
 
-            {/* Staff Routes */}
-            <Route path="/staff/*" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Routes>
-                    <Route path="dashboard" element={<StaffDashboard />} />
-                    <Route path="profile" element={<ProfilePage />} />
-                    <Route path="time-entries" element={<StaffTimeEntry />} />
-                    <Route path="overtime" element={<StaffOvertime />} />
-                    <Route path="leave" element={<StaffLeave />} />
-                    <Route path="reports" element={<StaffReports />} />
-                    <Route path="notifications" element={<NotificationsPage />} />
-                    <Route path="*" element={<Navigate to="/staff/dashboard" replace />} />
-                  </Routes>
-                </Layout>
-              </ProtectedRoute>
-            } />
+              {/* Staff Routes */}
+              <Route path="/staff/*" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Routes>
+                      <Route path="dashboard" element={<StaffDashboard />} />
+                      <Route path="profile" element={<ProfilePage />} />
+                      <Route path="time-entries" element={<StaffTimeEntry />} />
+                      <Route path="overtime" element={<StaffOvertime />} />
+                      <Route path="leave" element={<StaffLeave />} />
+                      <Route path="reports" element={<StaffReports />} />
+                      <Route path="notifications" element={<NotificationsPage />} />
+                      <Route path="chat" element={<ChatPage />} />
+                      <Route path="*" element={<Navigate to="/staff/dashboard" replace />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              } />
 
-            {/* Default Route */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </Router>
+              {/* Default Route */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </Router>
+        </ChatProvider>
       </ThemeProvider>
     </AuthProvider>
   );
