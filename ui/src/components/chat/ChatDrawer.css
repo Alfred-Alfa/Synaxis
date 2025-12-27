@@ -1,0 +1,322 @@
+/* Chat Drawer & Bubble Styles - Scoped Isolation */
+
+.chat-bubble-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 99999;
+    /* Higher than toasts/modals */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+/* 🔹 Floating Bubble */
+.chat-bubble-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--primary, #1976d2);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+}
+
+.chat-bubble-btn:hover {
+    transform: scale(1.05);
+    background-color: var(--primary-dark, #1565c0);
+}
+
+.chat-bubble-btn:active {
+    transform: scale(0.95);
+}
+
+.chat-bubble-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #ef4444;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    padding: 0 4px;
+}
+
+/* 🔹 Chat Drawer Window */
+.chat-drawer {
+    position: absolute;
+    bottom: 70px;
+    /* Above the bubble */
+    right: 0;
+    width: 380px;
+    height: 600px;
+    max-height: calc(100vh - 100px);
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform-origin: bottom right;
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid var(--border-color, #e0e0e0);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 🔹 Drawer Header */
+.drawer-header {
+    padding: 1rem;
+    background-color: var(--primary, #1976d2);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.drawer-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.drawer-actions button {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drawer-actions button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* 🔹 Drawer Content Area */
+.drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--background, #f9fafb);
+}
+
+/* 🔹 Chat List Items */
+.mini-chat-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.mini-chat-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color, #f0f0f0);
+    cursor: pointer;
+    background: white;
+    transition: background 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mini-chat-item:hover {
+    background-color: #f8fafc;
+}
+
+.mini-chat-item.unread {
+    background-color: #eff6ff;
+}
+
+.mini-chat-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.95rem;
+    color: var(--text-primary, #1e293b);
+}
+
+.mini-chat-preview {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #64748b);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 240px;
+}
+
+.mini-chat-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+}
+
+.mini-time {
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+.mini-unread-badge {
+    background-color: var(--primary, #1976d2);
+    color: white;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    padding: 0 6px;
+    min-width: 18px;
+    height: 18px;
+    /* Fixed height for circle */
+    display: flex;
+    /* Center text */
+    align-items: center;
+    justify-content: center;
+}
+
+/* 🔹 Compact Message View */
+.mini-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.mini-message-bubble {
+    max-width: 75%;
+    padding: 0.6rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    position: relative;
+    word-wrap: break-word;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.mini-message-bubble.sent {
+    align-self: flex-end;
+    background-color: var(--primary, #1976d2);
+    color: white;
+    border-bottom-right-radius: 2px;
+}
+
+.mini-message-bubble.received {
+    align-self: flex-start;
+    background-color: white;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    border-bottom-left-radius: 2px;
+}
+
+.mini-message-time {
+    font-size: 0.65rem;
+    margin-top: 4px;
+    display: block;
+    opacity: 0.8;
+    text-align: right;
+}
+
+/* 🔹 Mini Footer Input */
+.mini-chat-footer {
+    padding: 0.75rem;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+}
+
+.mini-input-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.mini-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    outline: none;
+    font-size: 0.9rem;
+}
+
+.mini-input:focus {
+    border-color: var(--primary, #1976d2);
+}
+
+.mini-send-btn {
+    background: var(--primary, #1976d2);
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.mini-send-btn:disabled {
+    background: #e2e8f0;
+    cursor: default;
+}
+
+/* 🔹 Utility / Empty States */
+.mini-empty-state,
+.mini-loading {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    gap: 0.5rem;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .chat-drawer {
+        width: 100vw;
+        height: 100vh;
+        bottom: 0px;
+        right: -2rem;
+        /* Compensate for container padding if any */
+        border-radius: 0;
+        max-height: none;
+        position: fixed;
+        /* Override absolute */
+        z-index: 100000;
+    }
+
+    .chat-bubble-container {
+        right: 1rem;
+        bottom: 1rem;
+    }
+}

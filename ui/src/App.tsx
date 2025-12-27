@@ -35,6 +35,7 @@ import './index.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ChatProvider } from './contexts/ChatContext';
 import { ChatPage } from './pages/common/ChatPage';
+import { ChatBubble } from './components/chat/ChatBubble';
 
 // ...
 function App() {
@@ -95,7 +96,9 @@ function App() {
               {/* Default Route */}
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
+            <ChatBubble />
           </Router>
         </ChatProvider>
       </ThemeProvider>
