@@ -5,7 +5,7 @@ import { ChatDrawer } from './ChatDrawer';
 import './ChatDrawer.css';
 
 export const ChatBubble: React.FC = () => {
-    const { unreadCount } = useChat();
+    const { unreadCount, onlineUsers } = useChat();
     const [isOpen, setIsOpen] = useState(false);
 
     const toggleChat = () => setIsOpen(!isOpen);
@@ -37,6 +37,25 @@ export const ChatBubble: React.FC = () => {
                     <div className="chat-bubble-badge">
                         {unreadCount.totalUnread > 99 ? '99+' : unreadCount.totalUnread}
                     </div>
+                )}
+
+                {/* Status Indicator */}
+                {!isOpen && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '0',
+                        right: '0',
+                        width: '14px',
+                        height: '14px',
+                        borderRadius: '50%',
+                        backgroundColor: Object.values(onlineUsers).some(u => u.status === 'online')
+                            ? '#22C55E'
+                            : Object.values(onlineUsers).some(u => u.status === 'away')
+                                ? '#FACC15'
+                                : '#9CA3AF',
+                        border: '2px solid white',
+                        zIndex: 5
+                    }} title="User Presence" />
                 )}
             </button>
         </div>

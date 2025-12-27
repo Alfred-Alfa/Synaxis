@@ -11,6 +11,8 @@ export interface Employee {
     name: string;
     position: string;
     role: string;
+    lastSeen?: Date;
+    status?: 'online' | 'away' | 'offline';
 }
 
 export interface ChatRoom {

@@ -19,7 +19,7 @@ interface ChatDrawerProps {
 }
 
 export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
-    const { socket, unreadCount, refreshUnreadCount, setActiveRoom } = useChat();
+    const { socket, unreadCount, refreshUnreadCount, setActiveRoom, onlineUsers } = useChat();
 
     // Local State
     const [view, setView] = useState<'LIST' | 'ROOM'>('LIST');
@@ -131,9 +131,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
         try {
             await sendMessage(currentRoom._id, messageText);
             setMessageText('');
-            // Message will be added via socket event 'receive_message'
-            // But we can optimistically add it if we wanted, 
-            // though socket is usually fast enough.
         } catch (error) {
             console.error('Failed to send message:', error);
         } finally {
@@ -154,6 +151,27 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
         return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
+    // Helper: Get Room Status
+    const getRoomStatus = (room: ChatRoom) => {
+        if (room.type === 'group') {
+            const onlineCount = room.members.filter((m: any) =>
+                onlineUsers[m._id]?.status === 'online' || onlineUsers[m._id]?.status === 'away'
+            ).length;
+            return onlineCount > 0 ? `${onlineCount} online` : null;
+        }
+
+        const other = room.members.find((m: any) => m._id !== currentUser._id);
+        if (!other) return 'offline';
+
+        return onlineUsers[other._id]?.status || 'offline';
+    };
+
+    const getStatusColor = (status: string | null) => {
+        if (status === 'online') return '#22C55E';
+        if (status === 'away') return '#FACC15';
+        return '#9CA3AF';
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -166,7 +184,16 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
                             <button onClick={handleBackToList} style={{ marginRight: '8px', color: 'white', background: 'none', border: 'none', cursor: 'pointer' }}>
                                 <ChevronLeft size={20} />
                             </button>
-                            <span>{currentRoom ? getRoomName(currentRoom) : 'Chat'}</span>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span>{currentRoom ? getRoomName(currentRoom) : 'Chat'}</span>
+                                {currentRoom && (
+                                    <span style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 'normal' }}>
+                                        {currentRoom.type === 'group'
+                                            ? getRoomStatus(currentRoom)
+                                            : ((s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Offline')(getRoomStatus(currentRoom))}
+                                    </span>
+                                )}
+                            </div>
                         </>
                     ) : (
                         <>
@@ -211,6 +238,17 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
                                             <span className="mini-time">{formatTime(room.lastMessageAt)}</span>
                                             {unread > 0 && (
                                                 <span className="mini-unread-badge">{unread}</span>
+                                            )}
+                                            {/* Status Dot for Direct Chat */}
+                                            {room.type !== 'group' && (
+                                                <div style={{
+                                                    width: '8px',
+                                                    height: '8px',
+                                                    borderRadius: '50%',
+                                                    backgroundColor: getStatusColor(getRoomStatus(room)),
+                                                    marginTop: '4px',
+                                                    alignSelf: 'flex-end'
+                                                }} />
                                             )}
                                         </div>
                                     </div>

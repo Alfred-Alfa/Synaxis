@@ -21,6 +21,7 @@ interface ChatContextType {
     toggleSoundMute: () => void;
     requestNotificationPermission: () => void;
     notificationPermission: NotificationPermission;
+    onlineUsers: Record<string, { status: 'online' | 'away' | 'offline'; lastSeen?: string }>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -64,10 +65,17 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
         typeof Notification !== 'undefined' ? Notification.permission : 'default'
     );
+    const [onlineUsers, setOnlineUsers] = useState<Record<string, { status: 'online' | 'away' | 'offline'; lastSeen?: string }>>({});
+
+    // Idle detection
+    const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const audioUnlockedRef = useRef(false);
     const currentUserIdRef = useRef<string | null>(null);
+
+
 
     /**
      * Initialize audio on first user interaction
@@ -291,6 +299,22 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             refreshUnreadCount();
         });
 
+        // Status updates
+        socketInstance.on('initial_statuses', (statuses: [string, 'online' | 'away'][]) => {
+            const statusMap: Record<string, { status: 'online' | 'away' | 'offline' }> = {};
+            statuses.forEach(([userId, status]) => {
+                statusMap[userId] = { status };
+            });
+            setOnlineUsers(prev => ({ ...prev, ...statusMap }));
+        });
+
+        socketInstance.on('user_status_change', ({ userId, status, lastSeen }) => {
+            setOnlineUsers(prev => ({
+                ...prev,
+                [userId]: { status, lastSeen },
+            }));
+        });
+
         setSocket(socketInstance);
 
         return () => {
@@ -298,6 +322,58 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             socketInstance.disconnect();
         };
     }, [activeRoom, playNotificationSound, showBrowserNotification, refreshUnreadCount]);
+
+    /**
+     * Idle Timer Logic
+     */
+    useEffect(() => {
+        if (!socket || !isConnected) return;
+
+        const setAway = () => {
+            socket.emit('update_status', { status: 'away' });
+        };
+
+        let isIdle = false;
+
+        const handleActivity = () => {
+            if (isIdle) {
+                isIdle = false;
+                socket.emit('update_status', { status: 'online' });
+            }
+
+            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+
+            idleTimerRef.current = setTimeout(() => {
+                isIdle = true;
+                setAway();
+            }, IDLE_TIMEOUT);
+        };
+
+        let throttleTimer: ReturnType<typeof setTimeout> | null = null;
+        const throttledHandler = () => {
+            if (!throttleTimer) {
+                handleActivity();
+                throttleTimer = setTimeout(() => {
+                    throttleTimer = null;
+                }, 1000);
+            }
+        };
+
+        const events = ['mousemove', 'keydown', 'click', 'scroll'];
+        events.forEach(event => window.addEventListener(event, throttledHandler));
+
+        // Initial timer start
+        idleTimerRef.current = setTimeout(() => {
+            isIdle = true;
+            setAway();
+        }, IDLE_TIMEOUT);
+
+        return () => {
+            events.forEach(event => window.removeEventListener(event, throttledHandler));
+            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+            if (throttleTimer) clearTimeout(throttleTimer);
+        };
+    }, [socket, isConnected]);
 
     /**
      * Auto-request notification permission on mount
@@ -318,6 +394,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleSoundMute,
         requestNotificationPermission,
         notificationPermission,
+        onlineUsers,
     };
 
     return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

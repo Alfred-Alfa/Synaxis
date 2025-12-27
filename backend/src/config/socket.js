@@ -24,6 +24,7 @@ let io;
 // Store active users and their socket IDs
 const activeUsers = new Map(); // userId -> Set of socketIds
 const userSockets = new Map(); // socketId -> userId
+const activeUsersStatus = new Map(); // userId -> 'online' | 'away'
 
 /**
  * Initialize Socket.IO server
@@ -81,8 +82,16 @@ export const initializeSocket = (httpServer) => {
         activeUsers.get(userId).add(socket.id);
         userSockets.set(socket.id, userId);
 
-        // Emit user online status
-        socket.broadcast.emit('user_online', { userId });
+        // Default status is online if not set
+        if (!activeUsersStatus.has(userId)) {
+            activeUsersStatus.set(userId, 'online');
+        }
+
+        // Send all current user statuses to the new client
+        socket.emit('initial_statuses', Array.from(activeUsersStatus.entries()));
+
+        // Broadcast user online status
+        socket.broadcast.emit('user_status_change', { userId, status: 'online' });
 
         /**
          * Join a chat room
@@ -107,6 +116,17 @@ export const initializeSocket = (httpServer) => {
             } catch (error) {
                 console.error('Error joining room:', error);
                 socket.emit('error', { message: 'Failed to join room' });
+            }
+        });
+
+        /**
+         * Update user status (online/away)
+         */
+        socket.on('update_status', ({ status }) => {
+            if (['online', 'away'].includes(status)) {
+                activeUsersStatus.set(userId, status);
+                // Broadcast to everyone
+                io.emit('user_status_change', { userId, status });
             }
         });
 
@@ -241,8 +261,17 @@ export const initializeSocket = (httpServer) => {
                 activeUsers.get(userId).delete(socket.id);
                 if (activeUsers.get(userId).size === 0) {
                     activeUsers.delete(userId);
+                    activeUsers.delete(userId);
+                    activeUsersStatus.delete(userId);
+
                     // User is completely offline
-                    socket.broadcast.emit('user_offline', { userId });
+                    const lastSeen = new Date();
+                    io.emit('user_status_change', { userId, status: 'offline', lastSeen });
+
+                    // Update lastSeen in DB
+                    User.findByIdAndUpdate(userId, { lastSeen }).catch(err => {
+                        console.error('Error updating lastSeen:', err);
+                    });
                 }
             }
             userSockets.delete(socket.id);
@@ -282,4 +311,11 @@ export const getActiveUsers = () => {
  */
 export const isUserOnline = (userId) => {
     return activeUsers.has(userId.toString());
+};
+
+/**
+ * Get user status
+ */
+export const getUserStatus = (userId) => {
+    return activeUsersStatus.get(userId.toString()) || 'offline';
 };
