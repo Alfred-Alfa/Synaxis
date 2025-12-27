@@ -515,7 +515,7 @@ export const ChatPage: React.FC = () => {
                                 <button
                                     type="submit"
                                     className="send-button"
-                                    disabled={!messageText.trim() || !isConnected}
+                                    disabled={(!messageText.trim() && attachments.length === 0) || !isConnected}
                                 >
                                     <Send size={20} />
                                 </button>
