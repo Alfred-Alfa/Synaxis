@@ -74,6 +74,20 @@ export const StaffManagement: React.FC = () => {
         }
     };
 
+    const handleReactivate = async (id: string, name: string) => {
+        if (!window.confirm(`Are you sure you want to reactivate ${name}?`)) {
+            return;
+        }
+
+        try {
+            await staffService.reactivate(id);
+            loadStaff();
+            alert('Staff reactivated successfully');
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Failed to reactivate staff');
+        }
+    };
+
     const handleModalClose = (success?: boolean) => {
         setShowModal(false);
         setSelectedStaff(null);
@@ -284,13 +298,22 @@ export const StaffManagement: React.FC = () => {
                                                 >
                                                     📄
                                                 </button>
-                                                {staffMember.employmentStatus === 'Active' && (
+                                                {staffMember.employmentStatus === 'Active' ? (
                                                     <button
                                                         onClick={() => handleDelete(staffMember._id)}
                                                         className="btn-icon btn-icon-danger"
                                                         title="Deactivate Staff"
                                                     >
                                                         🗑️
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleReactivate(staffMember._id, staffMember.fullName)}
+                                                        className="btn-icon"
+                                                        title="Reactivate Staff"
+                                                        style={{ color: '#10b981' }}
+                                                    >
+                                                        ✅
                                                     </button>
                                                 )}
                                             </div>
@@ -306,6 +329,7 @@ export const StaffManagement: React.FC = () => {
             {showModal && (
                 <StaffFormModal
                     staff={selectedStaff}
+                    existingEmployeeIds={staff.map(s => s.employeeId).filter(Boolean) as string[]}
                     onClose={handleModalClose}
                 />
             )}

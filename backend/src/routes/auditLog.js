@@ -31,7 +31,11 @@ router.get('/', protect, isAdmin, async (req, res) => {
         if (req.query.startDate || req.query.endDate) {
             query.createdAt = {};
             if (req.query.startDate) query.createdAt.$gte = new Date(req.query.startDate);
-            if (req.query.endDate) query.createdAt.$lte = new Date(req.query.endDate);
+            if (req.query.endDate) {
+                const endDate = new Date(req.query.endDate);
+                endDate.setHours(23, 59, 59, 999);
+                query.createdAt.$lte = endDate;
+            }
         }
 
         // Pagination

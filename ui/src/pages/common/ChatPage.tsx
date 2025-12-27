@@ -430,7 +430,7 @@ export const ChatPage: React.FC = () => {
                                     placeholder="Type a message..."
                                     value={messageText}
                                     onChange={handleTyping}
-                                    disabled={!isConnected}
+                                // disabled={!isConnected} // Allow typing even if connecting
                                 />
                                 <button
                                     type="submit"
@@ -516,7 +516,7 @@ export const ChatPage: React.FC = () => {
                             <button
                                 className="create-group-button"
                                 onClick={handleCreateGroup}
-                                disabled={!groupName.trim() || selectedEmployees.length < 2}
+                                disabled={!groupName.trim() || selectedEmployees.length < 1}
                             >
                                 Create Group
                             </button>

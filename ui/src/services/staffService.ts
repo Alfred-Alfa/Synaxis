@@ -42,6 +42,12 @@ export const staffService = {
         return response.data;
     },
 
+    // Reactivate staff
+    reactivate: async (id: string): Promise<ApiResponse> => {
+        const response = await api.put(`/staff/${id}/reactivate`, {});
+        return response.data;
+    },
+
     // Upload document
     uploadDocument: async (id: string, file: File, documentName: string): Promise<ApiResponse> => {
         const formData = new FormData();

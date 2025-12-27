@@ -23,10 +23,11 @@ import './StaffFormModal.css';
 
 interface StaffFormModalProps {
     staff: Staff | null;
+    existingEmployeeIds?: string[];
     onClose: (success?: boolean) => void;
 }
 
-export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }) => {
+export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingEmployeeIds = [], onClose }) => {
     const isEdit = !!staff;
 
     const [formData, setFormData] = useState({
@@ -56,15 +57,26 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
     const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value,
         });
+
+        if (e.target.name === 'employeeId') {
+            if (existingEmployeeIds?.includes(e.target.value) && e.target.value !== staff?.employeeId) {
+                setValidationErrors(prev => ({ ...prev, employeeId: 'Employee ID already exists' }));
+            } else {
+                setValidationErrors(prev => ({ ...prev, employeeId: '' }));
+            }
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (Object.values(validationErrors).some(err => err)) return;
         setError('');
 
         // Check if role is changing
@@ -269,8 +281,14 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, onClose }
                                             placeholder="e.g. EMP001"
                                             value={formData.employeeId}
                                             onChange={handleChange}
+                                            style={validationErrors.employeeId ? { borderColor: '#ef4444' } : {}}
                                         />
                                     </div>
+                                    {validationErrors.employeeId && (
+                                        <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                                            {validationErrors.employeeId}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="input-group">

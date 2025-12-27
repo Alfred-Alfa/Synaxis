@@ -93,9 +93,9 @@ export const createGroupRoom = async (req, res) => {
     try {
         const { name, memberIds } = req.body;
 
-        if (!name || !memberIds || memberIds.length < 2) {
+        if (!name || !memberIds || memberIds.length < 1) {
             return res.status(400).json({
-                message: 'Group name and at least 2 members are required'
+                message: 'Group name and at least 1 member are required'
             });
         }
 

@@ -123,12 +123,21 @@ router.post('/', protect, isAdmin, async (req, res) => {
             password,
             otRate,
             role, // Added role
+            employeeId // Added employeeId
         } = req.body;
 
         // Check if staff with email already exists
         const existingStaff = await Staff.findOne({ email });
         if (existingStaff) {
             return res.status(400).json({ message: 'Staff with this email already exists' });
+        }
+
+        // Check if staff with employeeId already exists
+        if (employeeId) {
+            const existingStaffId = await Staff.findOne({ employeeId });
+            if (existingStaffId) {
+                return res.status(400).json({ message: 'Employee ID already exists. Please use a unique ID.' });
+            }
         }
 
         // Create staff
@@ -142,6 +151,7 @@ router.post('/', protect, isAdmin, async (req, res) => {
             designation,
             bankDetails,
             otRate,
+            employeeId,
         });
 
         // Determine user role (default to Staff)
@@ -210,6 +220,14 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
 
         const oldValue = { ...staff.toObject() };
 
+        // Check for duplicate employeeId if it's being updated
+        if (req.body.employeeId && req.body.employeeId !== staff.employeeId) {
+            const existingStaffId = await Staff.findOne({ employeeId: req.body.employeeId });
+            if (existingStaffId) {
+                return res.status(400).json({ message: 'Employee ID already exists. Please use a unique ID.' });
+            }
+        }
+
         // Check if hourly rate is being updated
         if (req.body.hourlyRate && req.body.hourlyRate !== staff.hourlyRate) {
             staff.hourlyRateHistory.push({
@@ -250,6 +268,50 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
 
         res.json({
             success: true,
+            data: staff,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   PUT /api/staff/:id/reactivate
+// @desc    Reactivate staff
+// @access  Private (Admin only)
+router.put('/:id/reactivate', protect, isAdmin, async (req, res) => {
+    try {
+        const staff = await Staff.findById(req.params.id);
+
+        if (!staff) {
+            return res.status(404).json({ message: 'Staff not found' });
+        }
+
+        const oldValue = { ...staff.toObject() };
+
+        staff.employmentStatus = 'Active';
+        await staff.save();
+
+        // Reactivate user account
+        await User.findOneAndUpdate(
+            { staffRef: staff._id },
+            { isActive: true }
+        );
+
+        // Log audit
+        await logAudit({
+            userId: req.user._id,
+            action: 'UPDATE',
+            resource: 'Staff',
+            resourceId: staff._id,
+            description: `Reactivated staff: ${staff.fullName}`,
+            oldValue,
+            newValue: staff,
+            req,
+        });
+
+        res.json({
+            success: true,
+            message: 'Staff reactivated successfully',
             data: staff,
         });
     } catch (error) {

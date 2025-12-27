@@ -427,17 +427,7 @@ export const Reports: React.FC = () => {
                     <div className="card mb-3">
                         <div className="report-header">
                             <h3>{reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report Summary</h3>
-                            <div className="action-buttons">
-                                <button onClick={exportToPDF} className="btn btn-secondary btn-sm">
-                                    📄 Export PDF
-                                </button>
-                                <button onClick={exportToCSV} className="btn btn-secondary btn-sm">
-                                    📥 Export CSV
-                                </button>
-                                <button onClick={printReport} className="btn btn-secondary btn-sm">
-                                    🖨️ Print
-                                </button>
-                            </div>
+
                         </div>
 
                         <div className="report-stats">
