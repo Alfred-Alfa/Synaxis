@@ -7,8 +7,6 @@ import {
     getRoomMessages,
     sendMessage,
     markAsRead,
-    sendMessage,
-    markAsRead,
     getUnreadCount,
     uploadFile,
 } from '../controllers/chatController.js';
