@@ -45,6 +45,12 @@ const messageSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        attachments: [{
+            url: String,
+            name: String,
+            type: String,
+            size: Number
+        }]
     },
     {
         timestamps: true,

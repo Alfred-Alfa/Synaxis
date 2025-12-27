@@ -126,10 +126,10 @@ export const initializeSocket = (httpServer) => {
         /**
          * Send a message
          */
-        socket.on('send_message', async ({ roomId, messageText }) => {
+        socket.on('send_message', async ({ roomId, messageText, attachments }) => {
             try {
-                if (!messageText || !messageText.trim()) {
-                    socket.emit('error', { message: 'Message text is required' });
+                if ((!messageText || !messageText.trim()) && (!attachments || attachments.length === 0)) {
+                    socket.emit('error', { message: 'Message text or attachment is required' });
                     return;
                 }
 
@@ -149,7 +149,8 @@ export const initializeSocket = (httpServer) => {
                     roomId,
                     senderId: userId,
                     senderName,
-                    messageText: messageText.trim(),
+                    messageText: messageText ? messageText.trim() : '',
+                    attachments: attachments || [],
                     readBy: [{ userId }],
                 });
 

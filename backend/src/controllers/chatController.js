@@ -204,10 +204,10 @@ export const getRoomMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
     try {
         const { roomId } = req.params;
-        const { messageText } = req.body;
+        const { messageText, attachments } = req.body;
 
-        if (!messageText || !messageText.trim()) {
-            return res.status(400).json({ message: 'Message text is required' });
+        if ((!messageText || !messageText.trim()) && (!attachments || attachments.length === 0)) {
+            return res.status(400).json({ message: 'Message text or attachment is required' });
         }
 
         // Verify user is member of the room
@@ -229,7 +229,8 @@ export const sendMessage = async (req, res) => {
             roomId,
             senderId: req.user._id,
             senderName,
-            messageText: messageText.trim(),
+            messageText: messageText ? messageText.trim() : '',
+            attachments: attachments || [],
             readBy: [{ userId: req.user._id }],
         });
 
@@ -250,6 +251,33 @@ export const sendMessage = async (req, res) => {
     } catch (error) {
         console.error('Error sending message:', error);
         res.status(500).json({ message: 'Failed to send message' });
+    }
+};
+
+/**
+ * @desc    Upload file for chat
+ * @route   POST /api/chat/upload
+ * @access  Private
+ */
+export const uploadFile = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        // Return file URL and metadata
+        // Assuming public access or served via static middleware
+        const fileUrl = `/uploads/${req.file.filename}`;
+
+        res.json({
+            url: fileUrl,
+            name: req.file.originalname,
+            type: req.file.mimetype,
+            size: req.file.size
+        });
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        res.status(500).json({ message: 'Failed to upload file' });
     }
 };
 

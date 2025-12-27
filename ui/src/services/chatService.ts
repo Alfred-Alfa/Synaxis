@@ -35,6 +35,12 @@ export interface Message {
     messageType: 'text' | 'system';
     readBy: Array<{ userId: string; readAt: Date }>;
     isDeleted: boolean;
+    attachments?: Array<{
+        url: string;
+        name: string;
+        type: string;
+        size: number;
+    }>;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -106,9 +112,29 @@ export const markAsRead = async (roomId: string, messageIds: string[]): Promise<
     await api.put(`/chat/rooms/${roomId}/read`, { messageIds });
 };
 
+// File attachment interface
+export interface Attachment {
+    url: string;
+    name: string;
+    type: string;
+    size: number;
+}
+
 /**
- * Get unread count for all rooms
+ * Upload a file for chat
  */
+export const uploadChatFile = async (file: File): Promise<Attachment> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await api.post('/chat/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};
+
 export const getUnreadCount = async (): Promise<UnreadCount> => {
     const response = await api.get('/chat/unread-count');
     return response.data;

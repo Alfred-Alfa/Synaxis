@@ -25,7 +25,28 @@ interface ChatContextType {
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-const SOCKET_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const getSocketUrl = () => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+
+    // Case 1: VITE_API_URL is not set (undefined or empty)
+    if (!apiUrl) {
+        return 'http://localhost:5000';
+    }
+
+    // Case 2: VITE_API_URL is an absolute URL (http://... or https://...)
+    if (apiUrl.startsWith('http')) {
+        // Remove trailing slash if present
+        const cleanUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+        // Remove /api suffix if present
+        return cleanUrl.replace(/\/api$/, '');
+    }
+
+    // Case 3: VITE_API_URL is a relative path (e.g. "/api")
+    // In production (same origin), the socket should connect to the root "/"
+    return '/';
+};
+
+const SOCKET_URL = getSocketUrl();
 const NOTIFICATION_SOUND_PATH = '/sounds/chat-notification.mp3';
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
