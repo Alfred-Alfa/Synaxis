@@ -60,6 +60,11 @@ export interface Site {
     client?: string;
     status: 'Active' | 'Inactive';
     otRate?: number;
+    coordinates?: {
+        latitude: number;
+        longitude: number;
+    };
+    radius?: number;
     createdAt: string;
     updatedAt: string;
 }
