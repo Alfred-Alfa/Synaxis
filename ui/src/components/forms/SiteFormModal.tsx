@@ -25,6 +25,9 @@ export const SiteFormModal: React.FC<SiteFormModalProps> = ({ site, onClose }) =
         location: site?.location || '',
         client: site?.client || '',
         otRate: site?.otRate?.toString() || '',
+        latitude: site?.coordinates?.latitude?.toString() || '',
+        longitude: site?.coordinates?.longitude?.toString() || '',
+        radius: site?.radius?.toString() || '100',
     });
 
     const [loading, setLoading] = useState(false);
@@ -48,6 +51,9 @@ export const SiteFormModal: React.FC<SiteFormModalProps> = ({ site, onClose }) =
                 location: formData.location || undefined,
                 client: formData.client || undefined,
                 otRate: formData.otRate ? parseFloat(formData.otRate) : undefined,
+                latitude: formData.latitude,
+                longitude: formData.longitude,
+                radius: formData.radius
             };
 
             if (isEdit) {
@@ -157,7 +163,7 @@ export const SiteFormModal: React.FC<SiteFormModalProps> = ({ site, onClose }) =
                         <div className="form-section">
                             <h3 className="section-title">
                                 <MapPin size={18} />
-                                Location
+                                Location & Geofencing
                             </h3>
                             <div className="input-group">
                                 <label htmlFor="location">Site Address</label>
@@ -172,6 +178,52 @@ export const SiteFormModal: React.FC<SiteFormModalProps> = ({ site, onClose }) =
                                         placeholder="e.g., 123 Main St, City, Country"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="form-grid">
+                                <div className="input-group">
+                                    <label htmlFor="latitude">Latitude</label>
+                                    <div className="input-wrapper">
+                                        <input
+                                            id="latitude"
+                                            name="latitude"
+                                            type="number"
+                                            step="any"
+                                            value={formData.latitude}
+                                            onChange={handleChange}
+                                            placeholder="e.g. 34.0522"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="input-group">
+                                    <label htmlFor="longitude">Longitude</label>
+                                    <div className="input-wrapper">
+                                        <input
+                                            id="longitude"
+                                            name="longitude"
+                                            type="number"
+                                            step="any"
+                                            value={formData.longitude}
+                                            onChange={handleChange}
+                                            placeholder="e.g. -118.2437"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="input-group">
+                                <label htmlFor="radius">Geofence Radius (meters)</label>
+                                <div className="input-wrapper">
+                                    <input
+                                        id="radius"
+                                        name="radius"
+                                        type="number"
+                                        min="10"
+                                        value={formData.radius}
+                                        onChange={handleChange}
+                                        placeholder="Default: 100"
+                                    />
+                                </div>
+                                <p className="input-hint">Staff must be within this distance to check in.</p>
                             </div>
                         </div>
                     </div>
