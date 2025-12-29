@@ -172,6 +172,53 @@ router.post('/logout', protect, async (req, res) => {
     }
 });
 
+// @route   PUT /api/auth/update-password
+// @desc    Update password
+// @access  Private
+router.put('/update-password', protect, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        // Validate input
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Please provide current and new password' });
+        }
+
+        // Get user with password
+        const user = await User.findById(req.user._id).select('+password');
+
+        // Check if current password matches
+        const isMatch = await user.matchPassword(currentPassword);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Incorrect current password' });
+        }
+
+        // Update password
+        user.password = newPassword;
+        // Also mark as not first login anymore if they are changing password
+        user.isFirstLogin = false;
+        await user.save();
+
+        // Log audit
+        await logAudit({
+            userId: user._id,
+            action: 'UPDATE',
+            resource: 'User',
+            resourceId: user._id,
+            description: 'User updated their password',
+            req,
+        });
+
+        res.json({
+            success: true,
+            message: 'Password updated successfully',
+        });
+    } catch (error) {
+        console.error('Update password error:', error);
+        res.status(500).json({ message: 'Server error updating password' });
+    }
+});
+
 // @route   POST /api/auth/create-admin
 // @desc    Create a new admin user (SuperAdmin only)
 // @access  Private (SuperAdmin only)

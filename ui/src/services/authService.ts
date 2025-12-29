@@ -26,4 +26,10 @@ export const authService = {
         localStorage.removeItem('hrms_token');
         localStorage.removeItem('hrms_user');
     },
+
+    // Update password
+    updatePassword: async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> => {
+        const response = await api.put('/auth/update-password', { currentPassword, newPassword });
+        return response.data;
+    },
 };
