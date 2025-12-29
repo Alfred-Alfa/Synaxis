@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, Users, Bell, BellOff, Volume2, VolumeX, X, Plus, Paperclip, FileText } from 'lucide-react';
+import { MessageCircle, Send, Users, Bell, BellOff, Volume2, VolumeX, X, Plus } from 'lucide-react';
 import { useChat } from '../../contexts/ChatContext';
 import {
     getEmployees,
@@ -7,13 +7,11 @@ import {
     getOrCreateDirectRoom,
     getRoomMessages,
     createGroupRoom,
-    uploadChatFile,
 } from '../../services/chatService';
 import type {
     Employee,
     ChatRoom,
     Message,
-    Attachment,
 } from '../../services/chatService';
 import './ChatPage.css';
 
@@ -46,9 +44,6 @@ export const ChatPage: React.FC = () => {
     const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
     const [groupName, setGroupName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [attachments, setAttachments] = useState<Attachment[]>([]);
-    const [isUploading, setIsUploading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -246,16 +241,14 @@ export const ChatPage: React.FC = () => {
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if ((!messageText.trim() && attachments.length === 0) || !socket || !activeRoom) return;
+        if (!messageText.trim() || !socket || !activeRoom) return;
 
         socket.emit('send_message', {
             roomId: activeRoom,
             messageText: messageText.trim(),
-            attachments,
         });
 
         setMessageText('');
-        setAttachments([]);
 
         if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
@@ -290,7 +283,25 @@ export const ChatPage: React.FC = () => {
             return room.name || 'Unnamed Group';
         }
 
-        const otherMember = room.members.find((m: any) => m._id !== currentUser?._id);
+        // Handle case where currentUser might be null or undefined
+        if (!currentUser) return 'Loading...';
+
+        // Robust ID comparison: Convert both to string to ensure matching
+        // currentUser can have ._id or .id depending on how it was saved
+        const currentUserId = (currentUser._id || currentUser.id || '').toString();
+
+        const otherMember = room.members.find((m: any) => {
+            const memberId = (m._id || m.id).toString();
+            return memberId !== currentUserId;
+        });
+
+        // Fallback: If no other member found (e.g. self-chat or bug), try to show the first member that isn't me, or just the first member name
+        if (!otherMember) {
+             // If members array is populated with objects, try to find one that doesn't match current ID string
+             const fallback = room.members.find((m: any) => String(m._id || m.id) !== currentUserId);
+             return fallback?.staffRef?.name || fallback?.email || 'Unknown User';
+        }
+
         return otherMember?.staffRef?.name || otherMember?.email || 'Unknown User';
     };
 
@@ -300,31 +311,7 @@ export const ChatPage: React.FC = () => {
     const getMessagePreview = (room: ChatRoom): string => {
         if (!room.lastMessage) return 'No messages yet';
         const msg = room.lastMessage as any;
-        if (msg.attachments && msg.attachments.length > 0) {
-            return `📎 ${msg.attachments.length} attachment${msg.attachments.length > 1 ? 's' : ''}`;
-        }
         return msg.messageText?.substring(0, 50) || '';
-    };
-
-    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            setIsUploading(true);
-            try {
-                const attachment = await uploadChatFile(file);
-                setAttachments(prev => [...prev, attachment]);
-            } catch (error) {
-                console.error('Failed to upload file:', error);
-                alert('Failed to upload file');
-            } finally {
-                setIsUploading(false);
-                if (fileInputRef.current) fileInputRef.current.value = '';
-            }
-        }
-    };
-
-    const removeAttachment = (index: number) => {
-        setAttachments(prev => prev.filter((_, i) => i !== index));
     };
 
     return (
@@ -441,22 +428,6 @@ export const ChatPage: React.FC = () => {
                                                                 minute: '2-digit',
                                                             })}
                                                         </div>
-                                                        {msg.attachments && msg.attachments.length > 0 && (
-                                                            <div className="message-attachments">
-                                                                {msg.attachments.map((att, i) => (
-                                                                    <div key={i} className="attachment-item">
-                                                                        {att.type.startsWith('image/') ? (
-                                                                            <img src={att.url} alt={att.name} className="attachment-image" />
-                                                                        ) : (
-                                                                            <a href={att.url} target="_blank" rel="noopener noreferrer" className="attachment-link">
-                                                                                <FileText size={16} />
-                                                                                <span>{att.name}</span>
-                                                                            </a>
-                                                                        )}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
                                             );
@@ -469,53 +440,20 @@ export const ChatPage: React.FC = () => {
                                 )}
                             </div>
 
-                            {/* Attachments Preview */}
-                            {attachments.length > 0 && (
-                                <div className="attachments-preview">
-                                    {attachments.map((att, i) => (
-                                        <div key={i} className="attachment-preview-item">
-                                            <span className="attachment-name">{att.name}</span>
-                                            <button
-                                                type="button"
-                                                className="remove-attachment"
-                                                onClick={() => removeAttachment(i)}
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
                             {/* Input */}
                             <form className="message-input-form" onSubmit={handleSendMessage}>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    style={{ display: 'none' }}
-                                    onChange={handleFileSelect}
-                                />
-                                <button
-                                    type="button"
-                                    className="icon-button attachment-button"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={!isConnected || isUploading}
-                                    title="Attach file"
-                                >
-                                    <Paperclip size={20} />
-                                </button>
                                 <input
                                     type="text"
                                     className="message-input"
                                     placeholder="Type a message..."
                                     value={messageText}
                                     onChange={handleTyping}
-                                // disabled={!isConnected} // Allow typing even if connecting
+                                    disabled={!isConnected}
                                 />
                                 <button
                                     type="submit"
                                     className="send-button"
-                                    disabled={(!messageText.trim() && attachments.length === 0) || !isConnected}
+                                    disabled={!messageText.trim() || !isConnected}
                                 >
                                     <Send size={20} />
                                 </button>
@@ -596,7 +534,7 @@ export const ChatPage: React.FC = () => {
                             <button
                                 className="create-group-button"
                                 onClick={handleCreateGroup}
-                                disabled={!groupName.trim() || selectedEmployees.length < 1}
+                                disabled={!groupName.trim() || selectedEmployees.length < 2}
                             >
                                 Create Group
                             </button>
