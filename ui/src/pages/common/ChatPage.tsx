@@ -215,7 +215,7 @@ export const ChatPage: React.FC = () => {
      * Create group chat
      */
     const handleCreateGroup = async () => {
-        if (!groupName.trim() || selectedEmployees.length < 2) {
+        if (!groupName.trim() || selectedEmployees.length < 1) {
             alert('Please enter a group name and select at least 2 members');
             return;
         }
@@ -534,7 +534,7 @@ export const ChatPage: React.FC = () => {
                             <button
                                 className="create-group-button"
                                 onClick={handleCreateGroup}
-                                disabled={!groupName.trim() || selectedEmployees.length < 2}
+                                disabled={!groupName.trim() || selectedEmployees.length < 1}
                             >
                                 Create Group
                             </button>
