@@ -93,9 +93,9 @@ export const createGroupRoom = async (req, res) => {
     try {
         const { name, memberIds } = req.body;
 
-        if (!name || !memberIds || memberIds.length < 1) {
+        if (!name || !memberIds || memberIds.length < 2) {
             return res.status(400).json({
-                message: 'Group name and at least 1 member are required'
+                message: 'Group name and at least 2 members are required'
             });
         }
 
@@ -125,7 +125,7 @@ export const createGroupRoom = async (req, res) => {
 };
 
 /**
- * @desc    Get all chat rooms for current user
+ * @desc    Get all chat rooms for current user with unread counts
  * @route   GET /api/chat/rooms
  * @access  Private
  */
@@ -141,9 +141,42 @@ export const getUserRooms = async (req, res) => {
                 populate: { path: 'staffRef', select: 'name position' }
             })
             .populate('lastMessage')
-            .sort({ lastMessageAt: -1, createdAt: -1 });
+            .sort({ lastMessageAt: -1, createdAt: -1 })
+            .lean(); // Use lean() to get plain JavaScript objects we can modify
 
-        res.json(rooms);
+        // Get unread counts for these rooms
+        const roomIds = rooms.map(room => room._id);
+
+        const unreadCounts = await Message.aggregate([
+            {
+                $match: {
+                    roomId: { $in: roomIds },
+                    senderId: { $ne: req.user._id }, // Incoming messages only
+                    'readBy.userId': { $ne: req.user._id }, // Not read by current user
+                    isDeleted: false,
+                },
+            },
+            {
+                $group: {
+                    _id: '$roomId',
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        // Map counts to rooms
+        const unreadMap = {};
+        unreadCounts.forEach(item => {
+            unreadMap[item._id.toString()] = item.count;
+        });
+
+        const roomsWithUnread = rooms.map(room => ({
+            ...room,
+            id: room._id, // Ensure 'id' is present as per spec (optional but good practice)
+            unreadCount: unreadMap[room._id.toString()] || 0,
+        }));
+
+        res.json(roomsWithUnread);
     } catch (error) {
         console.error('Error fetching rooms:', error);
         res.status(500).json({ message: 'Failed to fetch chat rooms' });
@@ -204,10 +237,10 @@ export const getRoomMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
     try {
         const { roomId } = req.params;
-        const { messageText, attachments } = req.body;
+        const { messageText } = req.body;
 
-        if ((!messageText || !messageText.trim()) && (!attachments || attachments.length === 0)) {
-            return res.status(400).json({ message: 'Message text or attachment is required' });
+        if (!messageText || !messageText.trim()) {
+            return res.status(400).json({ message: 'Message text is required' });
         }
 
         // Verify user is member of the room
@@ -229,8 +262,7 @@ export const sendMessage = async (req, res) => {
             roomId,
             senderId: req.user._id,
             senderName,
-            messageText: messageText ? messageText.trim() : '',
-            attachments: attachments || [],
+            messageText: messageText.trim(),
             readBy: [{ userId: req.user._id }],
         });
 
@@ -255,34 +287,7 @@ export const sendMessage = async (req, res) => {
 };
 
 /**
- * @desc    Upload file for chat
- * @route   POST /api/chat/upload
- * @access  Private
- */
-export const uploadFile = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ message: 'No file uploaded' });
-        }
-
-        // Return file URL and metadata
-        // Assuming public access or served via static middleware
-        const fileUrl = `/uploads/${req.file.filename}`;
-
-        res.json({
-            url: fileUrl,
-            name: req.file.originalname,
-            type: req.file.mimetype,
-            size: req.file.size
-        });
-    } catch (error) {
-        console.error('Error uploading file:', error);
-        res.status(500).json({ message: 'Failed to upload file' });
-    }
-};
-
-/**
- * @desc    Mark messages as read
+ * @desc    Mark specific messages as read (Batch)
  * @route   PUT /api/chat/rooms/:roomId/read
  * @access  Private
  */
@@ -318,6 +323,50 @@ export const markAsRead = async (req, res) => {
     } catch (error) {
         console.error('Error marking messages as read:', error);
         res.status(500).json({ message: 'Failed to mark messages as read' });
+    }
+};
+
+/**
+ * @desc    Mark all messages in a room as read
+ * @route   POST /api/chat/rooms/:roomId/read
+ * @access  Private
+ */
+export const markRoomAsRead = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+
+        // Verify user is member of the room
+        const room = await ChatRoom.findById(roomId);
+        if (!room) {
+            return res.status(404).json({ message: 'Chat room not found' });
+        }
+
+        if (!room.isMember(req.user._id)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Update all unread messages in this room for this user
+        // We only update messages where the user is NOT the sender and hasn't read it yet
+        await Message.updateMany(
+            {
+                roomId: roomId,
+                senderId: { $ne: req.user._id },
+                'readBy.userId': { $ne: req.user._id },
+            },
+            {
+                $push: {
+                    readBy: {
+                        userId: req.user._id,
+                        readAt: new Date(),
+                    },
+                },
+            }
+        );
+
+        res.json({ message: 'All messages in room marked as read' });
+    } catch (error) {
+        console.error('Error marking room as read:', error);
+        res.status(500).json({ message: 'Failed to mark room as read' });
     }
 };
 
