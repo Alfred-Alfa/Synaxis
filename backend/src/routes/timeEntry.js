@@ -341,12 +341,53 @@ router.get('/current/status', protect, async (req, res) => {
     }
 });
 
+import Site from '../models/Site.js';
+
+// Helper function to calculate distance in meters
+function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return d * 1000; // Distance in meters
+}
+
+function deg2rad(deg) {
+    return deg * (Math.PI / 180);
+}
+
 // @route   POST /api/time-entries/check-in
 // @desc    Check in to a site
 // @access  Private (Staff only)
 router.post('/check-in', protect, async (req, res) => {
     try {
         const { siteId, latitude, longitude } = req.body;
+
+        // Verify Geofence
+        if (latitude && longitude) {
+            const site = await Site.findById(siteId);
+            if (site && site.coordinates && site.coordinates.latitude && site.coordinates.longitude) {
+                const distance = getDistanceFromLatLonInM(
+                    parseFloat(latitude),
+                    parseFloat(longitude),
+                    site.coordinates.latitude,
+                    site.coordinates.longitude
+                );
+
+                const allowedRadius = site.radius || 100; // Default 100m if not set
+
+                if (distance > allowedRadius) {
+                    return res.status(400).json({
+                        message: `You are too far from the site location. Distance: ${Math.round(distance)}m. Allowed: ${allowedRadius}m.`
+                    });
+                }
+            }
+        }
 
         // Check if already checked in
         const existingActive = await TimeEntry.findOne({
@@ -368,7 +409,10 @@ router.post('/check-in', protect, async (req, res) => {
             siteId,
             jobDescription: 'Checked In via Dashboard', // Default description
             status: 'Active',
-            // Location could be stored if we added fields, for now ignores lat/long
+            checkInLocation: (latitude && longitude) ? {
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude)
+            } : undefined
         });
 
         // Log audit
@@ -395,6 +439,8 @@ router.post('/check-in', protect, async (req, res) => {
 // @access  Private (Staff only)
 router.post('/check-out', protect, async (req, res) => {
     try {
+        const { latitude, longitude } = req.body; // Extract location from checkout request
+
         const activeEntry = await TimeEntry.findOne({
             staffId: req.user.staffRef,
             status: 'Active'
@@ -418,6 +464,14 @@ router.post('/check-out', protect, async (req, res) => {
         activeEntry.endTime = endTime;
         activeEntry.totalHours = parseFloat(diff.toFixed(2));
         activeEntry.status = 'Pending'; // Move to Pending for approval
+        
+        // Store checkout location
+        if (latitude && longitude) {
+            activeEntry.checkOutLocation = {
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude)
+            };
+        }
 
         // Allow updating description on checkout if provided?
         if (req.body.jobDescription) {
