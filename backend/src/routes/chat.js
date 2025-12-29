@@ -7,11 +7,10 @@ import {
     getRoomMessages,
     sendMessage,
     markAsRead,
+    markRoomAsRead,
     getUnreadCount,
-    uploadFile,
 } from '../controllers/chatController.js';
 import { protect } from '../middleware/auth.js';
-import upload from '../config/multer.js';
 
 const router = express.Router();
 
@@ -32,12 +31,10 @@ router.get('/rooms', protect, getUserRooms);
 // Messages
 router.get('/rooms/:roomId/messages', protect, getRoomMessages);
 router.post('/rooms/:roomId/messages', protect, sendMessage);
-router.put('/rooms/:roomId/read', protect, markAsRead);
+router.put('/rooms/:roomId/read', protect, markAsRead); // Batch mark specific messages
+router.post('/rooms/:roomId/read', protect, markRoomAsRead); // Mark all in room
 
 // Unread count
 router.get('/unread-count', protect, getUnreadCount);
-
-// File upload
-router.post('/upload', protect, upload.single('file'), uploadFile);
 
 export default router;
