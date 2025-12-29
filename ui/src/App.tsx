@@ -36,6 +36,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ChatProvider } from './contexts/ChatContext';
 import { ChatPage } from './pages/common/ChatPage';
 import { ChatBubble } from './components/chat/ChatBubble';
+import { AccountDeletionPolicy } from './pages/AccountDeletionPolicy';
 
 // ...
 function App() {
@@ -49,6 +50,7 @@ function App() {
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+              <Route path="/delete-account" element={<AccountDeletionPolicy />} />
 
               {/* Admin Routes */}
               <Route path="/admin/*" element={
