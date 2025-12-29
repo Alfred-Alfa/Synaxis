@@ -15,6 +15,14 @@ const siteSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
+        coordinates: {
+            latitude: { type: Number },
+            longitude: { type: Number }
+        },
+        radius: {
+            type: Number,
+            default: 100, // meters
+        },
         status: {
             type: String,
             enum: ['Active', 'Inactive'],
