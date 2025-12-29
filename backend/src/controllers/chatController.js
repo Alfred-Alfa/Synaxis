@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import ChatRoom from '../models/ChatRoom.js';
 import Message from '../models/Message.js';
 import User from '../models/User.js';
@@ -93,17 +94,29 @@ export const createGroupRoom = async (req, res) => {
     try {
         const { name, memberIds } = req.body;
 
-        if (!name || !memberIds || memberIds.length < 2) {
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: 'Group name is required' });
+        }
+
+        if (!memberIds || !Array.isArray(memberIds) || memberIds.length < 1) {
             return res.status(400).json({
-                message: 'Group name and at least 2 members are required'
+                message: 'Please select at least 1 other member'
             });
         }
 
+        // Validate ObjectIds
+        const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+        const validMemberIds = memberIds.filter(isValidObjectId);
+
+        if (validMemberIds.length !== memberIds.length) {
+            return res.status(400).json({ message: 'Invalid member IDs provided' });
+        }
+
         // Add current user to members and admins
-        const members = [...new Set([req.user._id.toString(), ...memberIds])];
+        const members = [...new Set([req.user._id.toString(), ...validMemberIds])];
 
         const room = await ChatRoom.create({
-            name,
+            name: name.trim(),
             type: 'group',
             members,
             admins: [req.user._id],
