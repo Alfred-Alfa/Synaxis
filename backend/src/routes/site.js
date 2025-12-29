@@ -50,13 +50,18 @@ router.get('/:id', protect, async (req, res) => {
 // @access  Private (Admin only)
 router.post('/', protect, isAdmin, async (req, res) => {
     try {
-        const { name, location, client, otRate } = req.body;
+        const { name, location, client, otRate, latitude, longitude, radius } = req.body;
 
         const site = await Site.create({
             name,
             location,
             client,
             otRate: otRate ? parseFloat(otRate) : undefined,
+            coordinates: (latitude && longitude) ? {
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude)
+            } : undefined,
+            radius: radius ? parseInt(radius) : 100
         });
 
         await logAudit({
@@ -93,7 +98,13 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
 
         Object.keys(req.body).forEach(key => {
             if (req.body[key] !== undefined) {
-                site[key] = req.body[key];
+                if (key === 'latitude' || key === 'longitude') {
+                    // Handle coordinates update
+                    if (!site.coordinates) site.coordinates = {};
+                    site.coordinates[key] = parseFloat(req.body[key]);
+                } else {
+                    site[key] = req.body[key];
+                }
             }
         });
 
