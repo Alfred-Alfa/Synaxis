@@ -35,6 +35,14 @@ const timeEntrySchema = new mongoose.Schema(
             ref: 'Site',
             required: [true, 'Site/Project is required'],
         },
+        checkInLocation: {
+            latitude: Number,
+            longitude: Number
+        },
+        checkOutLocation: {
+            latitude: Number,
+            longitude: Number
+        },
         jobDescription: {
             type: String,
             // Job description might be optional during initial check-in, but required for checkout?
@@ -113,3 +121,4 @@ timeEntrySchema.pre('save', function (next) {
 const TimeEntry = mongoose.model('TimeEntry', timeEntrySchema);
 
 export default TimeEntry;
+
