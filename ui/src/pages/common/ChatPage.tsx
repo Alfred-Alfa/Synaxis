@@ -504,15 +504,22 @@ export const ChatPage: React.FC = () => {
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="group-form">
-                            <input
-                                type="text"
-                                className="group-name-input"
-                                placeholder="Group name"
-                                value={groupName}
-                                onChange={e => setGroupName(e.target.value)}
-                            />
-                            <div className="employee-list">
+                        <div className="group-form" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                            <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color, #e0e0e0)' }}>
+                                <input
+                                    type="text"
+                                    className="group-name-input"
+                                    placeholder="Group name"
+                                    value={groupName}
+                                    onChange={e => setGroupName(e.target.value)}
+                                    style={{ width: '100%' }}
+                                />
+                                <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem' }}>
+                                    Select at least 1 member to create a group.
+                                </p>
+                            </div>
+                            
+                            <div className="employee-list" style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
                                 {employees.map(emp => (
                                     <div
                                         key={emp._id}
@@ -531,13 +538,17 @@ export const ChatPage: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                            <button
-                                className="create-group-button"
-                                onClick={handleCreateGroup}
-                                disabled={!groupName.trim() || selectedEmployees.length < 1}
-                            >
-                                Create Group
-                            </button>
+                            
+                            <div style={{ padding: '1rem', borderTop: '1px solid var(--border-color, #e0e0e0)', background: '#f9f9f9', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                <button
+                                    className="create-group-button"
+                                    onClick={handleCreateGroup}
+                                    disabled={!groupName.trim() || selectedEmployees.length < 1}
+                                    style={{ width: '100%' }}
+                                >
+                                    Create Group ({selectedEmployees.length} selected)
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
