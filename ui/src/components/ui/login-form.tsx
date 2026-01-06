@@ -1,207 +1,12 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { User, Lock, ArrowRight } from 'lucide-react';
+import React from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
+import {
+    Ripple,
+    AuthTabs,
+    TechOrbitDisplay,
+} from './modern-animated-sign-in';
 
-// Vertex shader source code
-const vertexSmokeySource = `
-  attribute vec4 a_position;
-  void main() {
-    gl_Position = a_position;
-  }
-`;
-
-// Fragment shader source code for the smokey background effect
-const fragmentSmokeySource = `
-precision mediump float;
-
-uniform vec2 iResolution;
-uniform float iTime;
-uniform vec2 iMouse;
-uniform vec3 u_color;
-
-void mainImage(out vec4 fragColor, in vec2 fragCoord){
-    vec2 uv = fragCoord / iResolution;
-    vec2 centeredUV = (2.0 * fragCoord - iResolution.xy) / min(iResolution.x, iResolution.y);
-
-    float time = iTime * 0.5;
-
-    // Normalize mouse input (0.0 - 1.0) and remap to -1.0 ~ 1.0
-    vec2 mouse = iMouse / iResolution;
-    vec2 rippleCenter = 2.0 * mouse - 1.0;
-
-    vec2 distortion = centeredUV;
-    // Apply distortion for a wavy, smokey effect
-    for (float i = 1.0; i < 8.0; i++) {
-        distortion.x += 0.5 / i * cos(i * 2.0 * distortion.y + time + rippleCenter.x * 3.1415);
-        distortion.y += 0.5 / i * cos(i * 2.0 * distortion.x + time + rippleCenter.y * 3.1415);
-    }
-
-    // Create a glowing wave pattern
-    float wave = abs(sin(distortion.x + distortion.y + time));
-    float glow = smoothstep(0.9, 0.2, wave);
-
-    fragColor = vec4(u_color * glow, 1.0);
-}
-
-void main() {
-    mainImage(gl_FragColor, gl_FragCoord.xy);
-}
-`;
-
-/**
- * Valid blur sizes supported by Tailwind CSS.
- */
-type BlurSize = "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
-
-/**
- * Props for the SmokeyBackground component.
- */
-interface SmokeyBackgroundProps {
-    backdropBlurAmount?: string;
-    color?: string;
-    className?: string;
-}
-
-/**
- * A mapping from blur size names to Tailwind CSS classes.
- */
-const blurClassMap: Record<BlurSize, string> = {
-    none: "backdrop-blur-none",
-    sm: "backdrop-blur-sm",
-    md: "backdrop-blur-md",
-    lg: "backdrop-blur-lg",
-    xl: "backdrop-blur-xl",
-    "2xl": "backdrop-blur-2xl",
-    "3xl": "backdrop-blur-3xl",
-};
-
-/**
- * A React component that renders an interactive WebGL shader background.
- */
-export function SmokeyBackground({
-    backdropBlurAmount = "sm",
-    color = "#1E40AF", // Default dark blue
-    className = "",
-}: SmokeyBackgroundProps): React.JSX.Element {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    const [isHovering, setIsHovering] = useState(false);
-
-    // Helper to convert hex color to RGB (0-1 range)
-    const hexToRgb = (hex: string): [number, number, number] => {
-        const r = parseInt(hex.substring(1, 3), 16) / 255;
-        const g = parseInt(hex.substring(3, 5), 16) / 255;
-        const b = parseInt(hex.substring(5, 7), 16) / 255;
-        return [r, g, b];
-    };
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const gl = canvas.getContext("webgl");
-        if (!gl) {
-            console.error("WebGL not supported");
-            return;
-        }
-
-        const compileShader = (type: number, source: string): WebGLShader | null => {
-            const shader = gl.createShader(type);
-            if (!shader) return null;
-            gl.shaderSource(shader, source);
-            gl.compileShader(shader);
-            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-                console.error("Shader compilation error:", gl.getShaderInfoLog(shader));
-                gl.deleteShader(shader);
-                return null;
-            }
-            return shader;
-        };
-
-        const vertexShader = compileShader(gl.VERTEX_SHADER, vertexSmokeySource);
-        const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentSmokeySource);
-        if (!vertexShader || !fragmentShader) return;
-
-        const program = gl.createProgram();
-        if (!program) return;
-        gl.attachShader(program, vertexShader);
-        gl.attachShader(program, fragmentShader);
-        gl.linkProgram(program);
-
-        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            console.error("Program linking error:", gl.getProgramInfoLog(program));
-            return;
-        }
-
-        gl.useProgram(program);
-
-        const positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
-
-        const positionLocation = gl.getAttribLocation(program, "a_position");
-        gl.enableVertexAttribArray(positionLocation);
-        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-        const iResolutionLocation = gl.getUniformLocation(program, "iResolution");
-        const iTimeLocation = gl.getUniformLocation(program, "iTime");
-        const iMouseLocation = gl.getUniformLocation(program, "iMouse");
-        const uColorLocation = gl.getUniformLocation(program, "u_color");
-
-        let startTime = Date.now();
-        const [r, g, b] = hexToRgb(color);
-        gl.uniform3f(uColorLocation, r, g, b);
-
-        const render = () => {
-            const width = canvas.clientWidth;
-            const height = canvas.clientHeight;
-            canvas.width = width;
-            canvas.height = height;
-            gl.viewport(0, 0, width, height);
-
-            const currentTime = (Date.now() - startTime) / 1000;
-
-            gl.uniform2f(iResolutionLocation, width, height);
-            gl.uniform1f(iTimeLocation, currentTime);
-            gl.uniform2f(iMouseLocation, isHovering ? mousePosition.x : width / 2, isHovering ? height - mousePosition.y : height / 2);
-
-            gl.drawArrays(gl.TRIANGLES, 0, 6);
-            requestAnimationFrame(render);
-        };
-
-        const handleMouseMove = (event: MouseEvent) => {
-            const rect = canvas.getBoundingClientRect();
-            setMousePosition({ x: event.clientX - rect.left, y: event.clientY - rect.top });
-        };
-        const handleMouseEnter = () => setIsHovering(true);
-        const handleMouseLeave = () => setIsHovering(false);
-
-        canvas.addEventListener("mousemove", handleMouseMove);
-        canvas.addEventListener("mouseenter", handleMouseEnter);
-        canvas.addEventListener("mouseleave", handleMouseLeave);
-
-        render();
-
-        return () => {
-            canvas.removeEventListener("mousemove", handleMouseMove);
-            canvas.removeEventListener("mouseenter", handleMouseEnter);
-            canvas.removeEventListener("mouseleave", handleMouseLeave);
-        };
-    }, [isHovering, mousePosition, color]);
-
-    const finalBlurClass = blurClassMap[backdropBlurAmount as BlurSize] || blurClassMap["sm"];
-
-    return (
-        <div className={`absolute inset-0 w-full h-full overflow-hidden ${className}`}>
-            <canvas ref={canvasRef} className="w-full h-full" />
-            <div className={`absolute inset-0 ${finalBlurClass}`}></div>
-        </div>
-    );
-}
-
-/**
- * Props for the LoginForm component.
- */
 interface LoginFormProps {
     email?: string;
     setEmail?: (val: string) => void;
@@ -213,106 +18,235 @@ interface LoginFormProps {
     onForgotPassword?: () => void;
 }
 
-/**
- * A glassmorphism-style login form component (Redesigned Corporate Style).
- */
+interface OrbitIcon {
+    component: () => ReactNode;
+    className: string;
+    duration?: number;
+    delay?: number;
+    radius?: number;
+    path?: boolean;
+    reverse?: boolean;
+}
+
+const iconsArray: OrbitIcon[] = [
+    {
+        component: () => (
+            <img
+                width={100}
+                height={100}
+                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg'
+                alt='HTML5'
+            />
+        ),
+        className: 'size-[30px] border-none bg-transparent',
+        duration: 20,
+        delay: 20,
+        radius: 100,
+        path: false,
+        reverse: false,
+    },
+    {
+        component: () => (
+            <img
+                width={100}
+                height={100}
+                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg'
+                alt='CSS3'
+            />
+        ),
+        className: 'size-[30px] border-none bg-transparent',
+        duration: 20,
+        delay: 10,
+        radius: 100,
+        path: false,
+        reverse: false,
+    },
+    {
+        component: () => (
+            <img
+                width={100}
+                height={100}
+                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg'
+                alt='TypeScript'
+            />
+        ),
+        className: 'size-[50px] border-none bg-transparent',
+        radius: 210,
+        duration: 20,
+        path: false,
+        reverse: false,
+    },
+    {
+        component: () => (
+            <img
+                width={100}
+                height={100}
+                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg'
+                alt='JavaScript'
+            />
+        ),
+        className: 'size-[50px] border-none bg-transparent',
+        radius: 210,
+        duration: 20,
+        delay: 20,
+        path: false,
+        reverse: false,
+    },
+    {
+        component: () => (
+            <img
+                width={100}
+                height={100}
+                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg'
+                alt='TailwindCSS'
+            />
+        ),
+        className: 'size-[30px] border-none bg-transparent',
+        duration: 20,
+        delay: 20,
+        radius: 150,
+        path: false,
+        reverse: true,
+    },
+    {
+        component: () => (
+            <img
+                width={100}
+                height={100}
+                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg'
+                alt='Nextjs'
+            />
+        ),
+        className: 'size-[30px] border-none bg-transparent',
+        duration: 20,
+        delay: 10,
+        radius: 150,
+        path: false,
+        reverse: true,
+    },
+    {
+        component: () => (
+            <img
+                width={100}
+                height={100}
+                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg'
+                alt='React'
+            />
+        ),
+        className: 'size-[50px] border-none bg-transparent',
+        radius: 270,
+        duration: 20,
+        path: false,
+        reverse: true,
+    },
+    {
+        component: () => (
+            <img
+                width={100}
+                height={100}
+                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/figma/figma-original.svg'
+                alt='Figma'
+            />
+        ),
+        className: 'size-[50px] border-none bg-transparent',
+        radius: 270,
+        duration: 20,
+        delay: 60,
+        path: false,
+        reverse: true,
+    },
+    {
+        component: () => (
+            <img
+                width={100}
+                height={100}
+                src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/git/git-original.svg'
+                alt='Git'
+            />
+        ),
+        className: 'size-[50px] border-none bg-transparent',
+        radius: 320,
+        duration: 20,
+        delay: 20,
+        path: false,
+        reverse: false,
+    },
+];
+
 export function LoginForm({
-    email,
     setEmail,
-    password,
     setPassword,
     onSubmit,
     loading,
     error,
     onForgotPassword
 }: LoginFormProps) {
+
+    const handleForgotPassword = (
+        event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>
+    ) => {
+        event.preventDefault();
+        if (onForgotPassword) onForgotPassword();
+    };
+
+    const handleInputChange = (
+        event: ChangeEvent<HTMLInputElement>,
+        type: 'email' | 'password'
+    ) => {
+        const value = event.target.value;
+        if (type === 'email' && setEmail) setEmail(value);
+        if (type === 'password' && setPassword) setPassword(value);
+    };
+
+    const formFields = {
+        header: 'Welcome back',
+        subHeader: 'Sign in to your account',
+        fields: [
+            {
+                label: 'Email',
+                required: true,
+                type: 'email' as const,
+                placeholder: 'Enter your email address',
+                onChange: (event: ChangeEvent<HTMLInputElement>) =>
+                    handleInputChange(event, 'email'),
+            },
+            {
+                label: 'Password',
+                required: true,
+                type: 'password' as const,
+                placeholder: 'Enter your password',
+                onChange: (event: ChangeEvent<HTMLInputElement>) =>
+                    handleInputChange(event, 'password'),
+            },
+        ],
+        submitButton: loading ? 'Signing in...' : 'Sign in',
+        textVariantButton: 'Forgot password?',
+        errorField: error
+    };
+
+    const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        // The AnimatedForm handles validation internally then calls this
+        if (onSubmit) onSubmit(event);
+    };
+
     return (
-        <div className="w-full max-w-md bg-slate-950/40 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl relative z-10 overflow-hidden ring-1 ring-white/5">
-            <div className="px-12 py-16 flex flex-col gap-10">
-                {/* Header */}
-                <div className="text-center space-y-3">
-                    <h2 className="text-4xl font-bold text-white tracking-tight drop-shadow-sm">Welcome Back</h2>
-                    <p className="text-slate-300 font-medium text-lg">Sign in to continue</p>
-                </div>
+        <div className="w-full flex h-screen bg-background text-foreground overflow-hidden">
+            <section className='flex w-full max-lg:justify-center'>
+                {/* Left Side */}
+                <span className='flex flex-col justify-center w-1/2 max-lg:hidden relative bg-black/5 dark:bg-white/5'>
+                    <Ripple mainCircleSize={100} />
+                    <TechOrbitDisplay iconsArray={iconsArray} text="Sentinal HRMS" />
+                </span>
 
-                {/* Error */}
-                {error && (
-                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 text-sm text-center backdrop-blur-sm">
-                        {error}
-                    </div>
-                )}
-
-                {/* Form */}
-                <form onSubmit={onSubmit} className="flex flex-col gap-8">
-                    <div className="space-y-6">
-                        {/* Email Input Wrapper */}
-                        <div className="group flex items-center bg-slate-900/50 border border-slate-700/50 rounded-2xl px-5 h-16 transition-all duration-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-slate-900/80 hover:border-slate-600/50">
-                            <User className="text-slate-400 group-focus-within:text-blue-400 transition-colors" size={22} />
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail && setEmail(e.target.value)}
-                                className="flex-1 bg-transparent border-none text-white text-lg placeholder:text-slate-500 focus:ring-0 py-4 pl-4 h-full w-full"
-                                placeholder="Email Address"
-                                required
-                            />
-                            {/* Autofill Styles Override */}
-                            <style>{`
-                                input:-webkit-autofill,
-                                input:-webkit-autofill:hover, 
-                                input:-webkit-autofill:focus, 
-                                input:-webkit-autofill:active{
-                                    -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
-                                    -webkit-text-fill-color: white !important;
-                                    transition: background-color 5000s ease-in-out 0s;
-                                }
-                            `}</style>
-                        </div>
-
-                        {/* Password Input Wrapper */}
-                        <div className="group flex items-center bg-slate-900/50 border border-slate-700/50 rounded-2xl px-5 h-16 transition-all duration-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-slate-900/80 hover:border-slate-600/50">
-                            <Lock className="text-slate-400 group-focus-within:text-blue-400 transition-colors" size={22} />
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword && setPassword(e.target.value)}
-                                className="flex-1 bg-transparent border-none text-white text-lg placeholder:text-slate-500 focus:ring-0 py-4 pl-4 h-full w-full"
-                                placeholder="Password"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="space-y-8">
-                        <div className="flex items-center justify-end">
-                            <button
-                                type="button"
-                                onClick={onForgotPassword}
-                                className="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200"
-                            >
-                                Forgot Password?
-                            </button>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full flex items-center justify-center h-14 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800/50 disabled:cursor-not-allowed rounded-2xl text-white font-bold text-lg tracking-wide transition-all duration-300 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:shadow-blue-500/30"
-                        >
-                            {loading ? 'Signing in...' : 'Sign In'}
-                            <ArrowRight className="ml-2 h-5 w-5" />
-                        </button>
-                    </div>
-                </form>
-
-                {/* Footer */}
-                <div className="text-center pt-2">
-                    <p className="text-sm text-slate-400 font-medium">
-                        Don't have an account? <span className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer select-none">Please contact the administrator</span>
-                    </p>
-                </div>
-            </div>
+                {/* Right Side */}
+                <span className='w-1/2 h-full flex flex-col justify-center items-center max-lg:w-full max-lg:px-[10%]'>
+                    <AuthTabs
+                        formFields={formFields}
+                        goTo={handleForgotPassword}
+                        handleSubmit={handleFormSubmit}
+                    />
+                </span>
+            </section>
         </div>
     );
 }
