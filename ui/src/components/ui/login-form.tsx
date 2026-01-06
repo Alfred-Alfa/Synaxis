@@ -227,7 +227,7 @@ export function LoginForm({
     onForgotPassword
 }: LoginFormProps) {
     return (
-        <div className="w-full max-w-md px-10 py-12 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl flex flex-col gap-8 relative z-10">
+        <div className="w-full max-w-md px-14 py-16 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl flex flex-col gap-8 relative z-10">
             {/* Header Block */}
             <div className="text-center space-y-2">
                 <h2 className="text-4xl font-bold !text-white leading-tight drop-shadow-md">Welcome Back</h2>
@@ -243,7 +243,7 @@ export function LoginForm({
 
             {/* Form Block */}
             <form onSubmit={onSubmit} className="flex flex-col gap-8">
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-6">
                     {/* Email Input - Clean Style */}
                     <div className="relative">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -291,7 +291,7 @@ export function LoginForm({
                 </div>
 
                 {/* Action Block */}
-                <div className="flex flex-col gap-6 mt-4">
+                <div className="flex flex-col gap-6 mt-8">
                     <div className="flex items-center justify-between">
                         <button
                             type="button"
