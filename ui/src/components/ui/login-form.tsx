@@ -253,7 +253,7 @@ export function LoginForm({
                             type="email"
                             value={email}
                             onChange={(e) => setEmail && setEmail(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-14 pr-4 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 fixed-autofill-background transition-colors"
+                            className="w-full h-14 bg-white/5 border border-white/10 rounded-xl pl-16 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 fixed-autofill-background transition-colors"
                             placeholder="Email Address"
                             required
                         />
@@ -266,6 +266,7 @@ export function LoginForm({
                                 input:-webkit-autofill:active{
                                     -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
                                     -webkit-text-fill-color: white !important;
+                                    padding-left: 64px !important;
                                     transition: background-color 5000s ease-in-out 0s;
                                 }
                             `}</style>
@@ -280,7 +281,7 @@ export function LoginForm({
                             type="password"
                             value={password}
                             onChange={(e) => setPassword && setPassword(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-14 pr-4 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+                            className="w-full h-14 bg-white/5 border border-white/10 rounded-xl pl-16 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
                             placeholder="Password"
                             required
                         />
