@@ -254,6 +254,7 @@ export function LoginForm({
                             value={email}
                             onChange={(e) => setEmail && setEmail(e.target.value)}
                             className="w-full h-14 bg-white/5 border border-white/10 rounded-xl pl-16 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 fixed-autofill-background transition-colors"
+                            style={{ paddingLeft: '4rem' }}
                             placeholder="Email Address"
                             required
                         />
@@ -282,6 +283,7 @@ export function LoginForm({
                             value={password}
                             onChange={(e) => setPassword && setPassword(e.target.value)}
                             className="w-full h-14 bg-white/5 border border-white/10 rounded-xl pl-16 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+                            style={{ paddingLeft: '4rem' }}
                             placeholder="Password"
                             required
                         />
