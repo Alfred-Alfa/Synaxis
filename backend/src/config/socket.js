@@ -87,6 +87,12 @@ export const initializeSocket = (httpServer) => {
             activeUsersStatus.set(userId, 'online');
         }
 
+        // Update user presence in database
+        User.findByIdAndUpdate(userId, {
+            presenceStatus: 'online',
+            lastSeen: new Date()
+        }).catch(err => console.error('Error updating presence:', err));
+
         // Send all current user statuses to the new client
         socket.emit('initial_statuses', Array.from(activeUsersStatus.entries()));
 
@@ -125,6 +131,13 @@ export const initializeSocket = (httpServer) => {
         socket.on('update_status', ({ status }) => {
             if (['online', 'away'].includes(status)) {
                 activeUsersStatus.set(userId, status);
+
+                // Update in database
+                User.findByIdAndUpdate(userId, {
+                    presenceStatus: status,
+                    lastSeen: new Date()
+                }).catch(err => console.error('Error updating status:', err));
+
                 // Broadcast to everyone
                 io.emit('user_status_change', { userId, status });
             }
@@ -261,15 +274,17 @@ export const initializeSocket = (httpServer) => {
                 activeUsers.get(userId).delete(socket.id);
                 if (activeUsers.get(userId).size === 0) {
                     activeUsers.delete(userId);
-                    activeUsers.delete(userId);
                     activeUsersStatus.delete(userId);
 
                     // User is completely offline
                     const lastSeen = new Date();
                     io.emit('user_status_change', { userId, status: 'offline', lastSeen });
 
-                    // Update lastSeen in DB
-                    User.findByIdAndUpdate(userId, { lastSeen }).catch(err => {
+                    // Update lastSeen and presence status in DB
+                    User.findByIdAndUpdate(userId, {
+                        lastSeen,
+                        presenceStatus: 'offline'
+                    }).catch(err => {
                         console.error('Error updating lastSeen:', err);
                     });
                 }

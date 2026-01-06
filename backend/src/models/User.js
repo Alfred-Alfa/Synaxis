@@ -46,6 +46,12 @@ const userSchema = new mongoose.Schema(
             type: Date,
             default: Date.now,
         },
+        // Presence System (Phase 3)
+        presenceStatus: {
+            type: String,
+            enum: ['online', 'away', 'offline'],
+            default: 'offline',
+        },
     },
     {
         timestamps: true,
