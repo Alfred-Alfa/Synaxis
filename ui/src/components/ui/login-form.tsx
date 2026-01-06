@@ -32,6 +32,23 @@ const iconsArray: OrbitIcon[] = [
     {
         component: () => (
             <img
+                width={80}
+                height={80}
+                src='/assets/logo.png'
+                alt='Company Logo'
+                className='rounded-full'
+            />
+        ),
+        className: 'size-[80px] border-none bg-transparent',
+        duration: 20,
+        delay: 0,
+        radius: 150,
+        path: false,
+        reverse: false,
+    },
+    {
+        component: () => (
+            <img
                 width={100}
                 height={100}
                 src='https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg'
