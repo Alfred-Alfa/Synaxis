@@ -101,6 +101,7 @@ export const ChatPage: React.FC = () => {
      */
     useEffect(() => {
         if (showEmployeeList || showGroupCreate) {
+            setGroupSearchQuery('');
             loadEmployees();
         }
     }, [showEmployeeList, showGroupCreate]);
@@ -955,23 +956,64 @@ export const ChatPage: React.FC = () => {
             {showEmployeeList && (
                 <div className="modal-overlay" onClick={() => setShowEmployeeList(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>Select Employee</h3>
+                        <div className="modal-header" style={{ borderBottom: 'none', paddingBottom: 0 }}>
+                            <h3>New Chat</h3>
                             <button className="close-button" onClick={() => setShowEmployeeList(false)}>
                                 <X size={20} />
                             </button>
                         </div>
-                        <div className="employee-list">
-                            {employees.map(emp => (
-                                <div
-                                    key={emp._id}
-                                    className="employee-item"
-                                    onClick={() => handleSelectEmployee(emp._id)}
-                                >
-                                    <div className="employee-name">{emp.name}</div>
-                                    <div className="employee-position">{emp.position}</div>
-                                </div>
-                            ))}
+
+                        <div style={{ padding: '16px 24px', borderBottom: '1px solid #f3f4f6' }}>
+                            <div style={{ position: 'relative' }}>
+                                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+                                <input
+                                    type="text"
+                                    placeholder="Search people..."
+                                    value={groupSearchQuery}
+                                    onChange={e => setGroupSearchQuery(e.target.value)}
+                                    autoFocus
+                                    style={{ width: '100%', padding: '10px 12px 10px 36px', fontSize: '14px', borderRadius: '8px', border: '1px solid #e5e7eb', background: '#f9fafb', outline: 'none' }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="employee-list" style={{ flex: 1, overflowY: 'auto' }}>
+                            {employees
+                                .filter(emp => emp.name.toLowerCase().includes(groupSearchQuery.toLowerCase()))
+                                .map(emp => {
+                                    const status = onlineUsers[emp._id]?.status;
+                                    return (
+                                        <div
+                                            key={emp._id}
+                                            onClick={() => handleSelectEmployee(emp._id)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '12px',
+                                                padding: '12px 24px',
+                                                cursor: 'pointer',
+                                                transition: 'background 0.2s',
+                                                borderBottom: '1px solid #f9fafb'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                        >
+                                            <UserAvatar
+                                                userId={emp._id}
+                                                name={emp.name}
+                                                size="medium"
+                                                showOnline={true}
+                                                status={status}
+                                            />
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ fontWeight: 500, color: '#111827' }}>{emp.name}</div>
+                                                <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                                                    {emp.position} • {getPresenceText(status || 'offline')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                         </div>
                     </div>
                 </div>

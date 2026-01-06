@@ -328,13 +328,15 @@
 
 .modal-content {
     background: var(--card-background, #ffffff);
-    border-radius: 12px;
+    border-radius: 16px;
     width: 90%;
     max-width: 500px;
-    max-height: 80vh;
+    height: 650px;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
 }
 
 .modal-header {
@@ -401,8 +403,10 @@
 .group-form {
     display: flex;
     flex-direction: column;
-    padding: 1rem;
-    gap: 1rem;
+    padding: 0;
+    gap: 0;
+    height: 100%;
+    overflow: hidden;
 }
 
 .group-name-input {
