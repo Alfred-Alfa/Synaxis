@@ -15,6 +15,18 @@ const settingsSchema = new mongoose.Schema(
             type: String,
             default: 'Company Name',
         },
+        companyEmail: {
+            type: String,
+            default: '',
+        },
+        phoneCountryCode: {
+            type: String,
+            default: '+1',
+        },
+        companyPhone: {
+            type: String,
+            default: '',
+        },
         companyAddress: {
             street: String,
             city: String,
