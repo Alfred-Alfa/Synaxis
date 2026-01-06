@@ -49,8 +49,8 @@ const LoginUI = ({ email, setEmail, password, setPassword, onSubmit, loading, er
             try {
                 const response = await settingsService.get()
                 if (response.success && response.data) {
-                    if (response.data.logo) {
-                        setCompanyLogo(response.data.logo)
+                    if (response.data.companyLogo) {
+                        setCompanyLogo(response.data.companyLogo)
                     }
                     if (response.data.companyName) {
                         setCompanyName(response.data.companyName)
