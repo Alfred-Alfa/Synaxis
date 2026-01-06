@@ -569,11 +569,7 @@ const EmailConfigSection: React.FC = () => {
         setSaving(true);
 
         // Validation
-        if (!config.from_email.endsWith('@webgeon.com')) {
-            setMessage({ type: 'error', text: 'Sender email must be from @webgeon.com domain.' });
-            setSaving(false);
-            return;
-        }
+        // Domain validation removed for multi-tenancy support
 
         try {
             const payload = {
@@ -707,7 +703,6 @@ const EmailConfigSection: React.FC = () => {
                             placeholder="hrms@webgeon.com"
                             required
                         />
-                        <p className="helper-text mt-1 text-xs">Must end with @webgeon.com</p>
                     </div>
                 </div>
 

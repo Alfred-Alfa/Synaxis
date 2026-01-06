@@ -149,12 +149,8 @@ router.put('/email', protect, isAdmin, async (req, res) => {
         const settings = await Settings.getSingleton();
 
         // 1. Domain Validation
-        // Ensure from_email matches the allowed domain (e.g., @webgeon.com)
-        if (!from_email.endsWith('@webgeon.com')) {
-            return res.status(400).json({
-                message: 'Invalid domain. Email must be from @webgeon.com'
-            });
-        }
+        // Removed strict domain check for multi-tenancy support
+        // if (!from_email.endsWith('@webgeon.com')) { ... }
 
         // 2. Encrypt Password
         // Only encrypt if password is provided (not mask)
