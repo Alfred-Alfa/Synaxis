@@ -126,6 +126,11 @@ router.post('/', protect, isAdmin, async (req, res) => {
             employeeId // Added employeeId
         } = req.body;
 
+        // ** DOMAIN RESTRICTION CHECK **
+        if (!email || !email.endsWith('@webgeon.com')) {
+            return res.status(400).json({ message: 'Access restricted to @webgeon.com emails only' });
+        }
+
         // Check if staff with email already exists
         const existingStaff = await Staff.findOne({ email });
         if (existingStaff) {

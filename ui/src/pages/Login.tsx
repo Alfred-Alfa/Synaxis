@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ForgotPasswordModal } from '../components/auth/ForgotPasswordModal';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import './Login.css';
 
 export const Login: React.FC = () => {
@@ -41,76 +42,91 @@ export const Login: React.FC = () => {
 
     return (
         <div className="login-container">
-            <div className="login-card slide-up">
-                <div className="login-header">
-                    <h1>HRMS</h1>
-                    <p>Welcome back! Please login to your account.</p>
-                </div>
-
-                {error && (
-                    <div className="error-alert">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="login-form">
-                    <div className="form-group">
-                        <label htmlFor="email" className="form-label">
-                            Email Address
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            className="input"
-                            placeholder="your.email@company.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            autoFocus
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                            <label htmlFor="password" className="form-label" style={{ marginBottom: 0 }}>
-                                Password
-                            </label>
-                            <button
-                                type="button"
-                                className="text-sm text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer"
-                                onClick={() => setShowForgotModal(true)}
-                                style={{ color: 'var(--primary-color)' }}
-                            >
-                                Forgot Password?
-                            </button>
+            <div className="login-wrapper">
+                <div className="login-card fade-in">
+                    <div className="login-header">
+                        <div className="brand-logo-small">
+                            <div className="logo-square">W</div>
                         </div>
-                        <input
-                            id="password"
-                            type="password"
-                            className="input"
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        <h1>Webgeon HRMS</h1>
+                        <p>Enter your credentials to access your account</p>
                     </div>
 
-                    <button
-                        type="submit"
-                        className="btn btn-primary btn-block"
-                        disabled={loading}
-                    >
-                        {loading ? 'Logging in...' : 'Login'}
-                    </button>
-                </form>
+                    {error && (
+                        <div className="error-alert">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            {error}
+                        </div>
+                    )}
 
-                <div className="login-footer">
-                    <p className="text-muted">
-                        First time here? Contact your administrator to create an account.
-                    </p>
+                    <form onSubmit={handleSubmit} className="login-form">
+                        <div className="form-group">
+                            <label htmlFor="email" className="form-label">
+                                Email Address
+                            </label>
+                            <div className="input-with-icon">
+                                <Mail className="input-icon" size={18} />
+                                <input
+                                    id="email"
+                                    type="email"
+                                    className="input icon-padding"
+                                    placeholder="name@company.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    autoFocus
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <div className="password-label-row">
+                                <label htmlFor="password" className="form-label">
+                                    Password
+                                </label>
+                            </div>
+                            <div className="input-with-icon">
+                                <Lock className="input-icon" size={18} />
+                                <input
+                                    id="password"
+                                    type="password"
+                                    className="input icon-padding"
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="forgot-password-link">
+                                <button
+                                    type="button"
+                                    className="text-link"
+                                    onClick={() => setShowForgotModal(true)}
+                                >
+                                    Forgot password?
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="btn btn-primary btn-block btn-login"
+                            disabled={loading}
+                        >
+                            {loading ? 'Signing in...' : 'Sign in'}
+                            {!loading && <ArrowRight size={18} />}
+                        </button>
+                    </form>
+
+                    <div className="login-footer">
+                        <p className="footer-copyright">
+                            © 2026 Webgeon Results Pvt Ltd
+                        </p>
+                    </div>
                 </div>
             </div>
 

@@ -14,6 +14,11 @@ router.post('/register', async (req, res) => {
     try {
         const { email, password, role, staffRef } = req.body;
 
+        // ** DOMAIN RESTRICTION CHECK **
+        if (!email || !email.endsWith('@webgeon.com')) {
+            return res.status(400).json({ message: 'Access restricted to @webgeon.com emails only' });
+        }
+
         // Check if any user exists
         const userCount = await User.countDocuments();
 
@@ -225,6 +230,11 @@ router.put('/update-password', protect, async (req, res) => {
 router.post('/create-admin', protect, isSuperAdmin, async (req, res) => {
     try {
         const { email, password, name } = req.body;
+
+        // ** DOMAIN RESTRICTION CHECK **
+        if (!email || !email.endsWith('@webgeon.com')) {
+            return res.status(400).json({ message: 'Access restricted to @webgeon.com emails only' });
+        }
 
         // Validate input
         if (!email || !password) {
