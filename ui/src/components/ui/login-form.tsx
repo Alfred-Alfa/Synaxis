@@ -252,7 +252,7 @@ export function LoginForm({
                             id="floating_email"
                             value={email}
                             onChange={(e) => setEmail && setEmail(e.target.value)}
-                            className="block w-full px-4 pt-6 pb-2 text-white bg-transparent border-none appearance-none focus:outline-none focus:ring-0 peer text-base"
+                            className="block w-full px-4 pt-7 pb-3 text-white bg-transparent border-none appearance-none focus:outline-none focus:ring-0 peer text-base [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#1a202c_inset] [&:-webkit-autofill]:-webkit-text-fill-color:white rounded-xl"
                             placeholder=" "
                             required
                         />
@@ -260,8 +260,8 @@ export function LoginForm({
                             htmlFor="floating_email"
                             className="absolute left-4 text-gray-400 transition-all duration-200 transform origin-[0] pointer-events-none flex items-center gap-2
                             peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100
-                            peer-focus:top-2 peer-focus:translate-y-0 peer-focus:scale-75 peer-focus:text-blue-400
-                            peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:translate-y-0 peer-not-placeholder-shown:scale-75"
+                            peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-0 peer-focus:text-blue-400
+                            peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:scale-75 peer-not-placeholder-shown:-translate-y-0"
                         >
                             <User size={18} />
                             Email Address
@@ -276,7 +276,7 @@ export function LoginForm({
                             id="floating_password"
                             value={password}
                             onChange={(e) => setPassword && setPassword(e.target.value)}
-                            className="block w-full px-4 pt-6 pb-2 text-white bg-transparent border-none appearance-none focus:outline-none focus:ring-0 peer text-base"
+                            className="block w-full px-4 pt-7 pb-3 text-white bg-transparent border-none appearance-none focus:outline-none focus:ring-0 peer text-base [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#1a202c_inset] [&:-webkit-autofill]:-webkit-text-fill-color:white rounded-xl"
                             placeholder=" "
                             required
                         />
@@ -284,8 +284,8 @@ export function LoginForm({
                             htmlFor="floating_password"
                             className="absolute left-4 text-gray-400 transition-all duration-200 transform origin-[0] pointer-events-none flex items-center gap-2
                             peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100
-                            peer-focus:top-2 peer-focus:translate-y-0 peer-focus:scale-75 peer-focus:text-blue-400
-                            peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:translate-y-0 peer-not-placeholder-shown:scale-75"
+                            peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-0 peer-focus:text-blue-400
+                            peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:scale-75 peer-not-placeholder-shown:-translate-y-0"
                         >
                             <Lock size={18} />
                             Password
@@ -320,6 +320,6 @@ export function LoginForm({
             <p className="text-center text-sm text-gray-300 leading-relaxed mt-2">
                 Don't have an account? <a href="#" className="font-semibold text-blue-400 hover:text-blue-300 transition-colors ml-1 underline decoration-blue-400/30 underline-offset-4">Sign Up</a>
             </p>
-        </div >
+        </div>
     );
 }
