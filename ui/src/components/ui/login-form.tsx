@@ -214,7 +214,7 @@ interface LoginFormProps {
 }
 
 /**
- * A glassmorphism-style login form component with animated labels.
+ * A glassmorphism-style login form component (Redesigned Corporate Style).
  */
 export function LoginForm({
     email,
@@ -227,96 +227,92 @@ export function LoginForm({
     onForgotPassword
 }: LoginFormProps) {
     return (
-        <div className="w-full max-w-md px-14 py-16 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl flex flex-col gap-8 relative z-10">
-            {/* Header Block */}
-            <div className="text-center space-y-2">
-                <h2 className="text-4xl font-bold !text-white leading-tight drop-shadow-md">Welcome Back</h2>
-                <p className="text-base text-gray-200 leading-relaxed font-medium pb-2">Sign in to continue</p>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-                <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-100 text-sm leading-relaxed backdrop-blur-sm">
-                    {error}
+        <div className="w-full max-w-md bg-slate-950/40 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl relative z-10 overflow-hidden ring-1 ring-white/5">
+            <div className="px-12 py-16 flex flex-col gap-10">
+                {/* Header */}
+                <div className="text-center space-y-3">
+                    <h2 className="text-4xl font-bold text-white tracking-tight drop-shadow-sm">Welcome Back</h2>
+                    <p className="text-slate-300 font-medium text-lg">Sign in to continue</p>
                 </div>
-            )}
 
-            {/* Form Block */}
-            <form onSubmit={onSubmit} className="flex flex-col gap-8">
-                <div className="flex flex-col gap-6">
-                    {/* Email Input - Clean Style */}
-                    <div className="relative">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                            <User size={20} />
-                        </div>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail && setEmail(e.target.value)}
-                            className="w-full h-14 bg-white/5 border border-white/10 rounded-xl pl-16 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 fixed-autofill-background transition-colors"
-                            style={{ paddingLeft: '4rem' }}
-                            placeholder="Email Address"
-                            required
-                        />
-                        {/* Custom Autofill handling via class above and global/inline styles if needed, 
-                            but using the shadow utility class directly on input is safer */}
-                        <style>{`
+                {/* Error */}
+                {error && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 text-sm text-center backdrop-blur-sm">
+                        {error}
+                    </div>
+                )}
+
+                {/* Form */}
+                <form onSubmit={onSubmit} className="flex flex-col gap-8">
+                    <div className="space-y-6">
+                        {/* Email Input Wrapper */}
+                        <div className="group flex items-center bg-slate-900/50 border border-slate-700/50 rounded-2xl px-5 h-16 transition-all duration-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-slate-900/80 hover:border-slate-600/50">
+                            <User className="text-slate-400 group-focus-within:text-blue-400 transition-colors" size={22} />
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail && setEmail(e.target.value)}
+                                className="flex-1 bg-transparent border-none text-white text-lg placeholder:text-slate-500 focus:ring-0 py-4 pl-4 h-full w-full"
+                                placeholder="Email Address"
+                                required
+                            />
+                            {/* Autofill Styles Override */}
+                            <style>{`
                                 input:-webkit-autofill,
                                 input:-webkit-autofill:hover, 
                                 input:-webkit-autofill:focus, 
                                 input:-webkit-autofill:active{
                                     -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
                                     -webkit-text-fill-color: white !important;
-                                    padding-left: 64px !important;
                                     transition: background-color 5000s ease-in-out 0s;
                                 }
                             `}</style>
-                    </div>
-
-                    {/* Password Input - Clean Style */}
-                    <div className="relative">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                            <Lock size={20} />
                         </div>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword && setPassword(e.target.value)}
-                            className="w-full h-14 bg-white/5 border border-white/10 rounded-xl pl-16 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
-                            style={{ paddingLeft: '4rem' }}
-                            placeholder="Password"
-                            required
-                        />
-                    </div>
-                </div>
 
-                {/* Action Block */}
-                <div className="flex flex-col gap-6 mt-8">
-                    <div className="flex items-center justify-between">
+                        {/* Password Input Wrapper */}
+                        <div className="group flex items-center bg-slate-900/50 border border-slate-700/50 rounded-2xl px-5 h-16 transition-all duration-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-slate-900/80 hover:border-slate-600/50">
+                            <Lock className="text-slate-400 group-focus-within:text-blue-400 transition-colors" size={22} />
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword && setPassword(e.target.value)}
+                                className="flex-1 bg-transparent border-none text-white text-lg placeholder:text-slate-500 focus:ring-0 py-4 pl-4 h-full w-full"
+                                placeholder="Password"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="space-y-8">
+                        <div className="flex items-center justify-end">
+                            <button
+                                type="button"
+                                onClick={onForgotPassword}
+                                className="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200"
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
+
                         <button
-                            type="button"
-                            onClick={onForgotPassword}
-                            className="text-sm font-medium text-blue-300 hover:text-white transition-colors duration-200 ml-auto"
+                            type="submit"
+                            disabled={loading}
+                            className="w-full flex items-center justify-center h-14 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800/50 disabled:cursor-not-allowed rounded-2xl text-white font-bold text-lg tracking-wide transition-all duration-300 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:shadow-blue-500/30"
                         >
-                            Forgot Password?
+                            {loading ? 'Signing in...' : 'Sign In'}
+                            <ArrowRight className="ml-2 h-5 w-5" />
                         </button>
                     </div>
+                </form>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="group w-full flex items-center justify-center py-4 px-4 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-not-allowed rounded-xl text-white text-lg font-bold tracking-wide focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 transition-all duration-300 shadow-lg shadow-blue-900/40 active:scale-[0.98]"
-                    >
-                        {loading ? 'Signing in...' : 'Sign In'}
-                        <ArrowRight className="ml-2 h-5 w-5 transform group-hover:translate-x-1 transition-transform" />
-                    </button>
+                {/* Footer */}
+                <div className="text-center pt-2">
+                    <p className="text-sm text-slate-400 font-medium">
+                        Don't have an account? <span className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer select-none">Please contact the administrator</span>
+                    </p>
                 </div>
-            </form>
-
-            {/* Secondary Link */}
-            <p className="text-center text-sm text-gray-300 leading-relaxed mt-2">
-                Don't have an account? <span className="text-blue-400 font-medium ml-1">Please contact the administrator</span>
-            </p>
+            </div>
         </div>
     );
 }
