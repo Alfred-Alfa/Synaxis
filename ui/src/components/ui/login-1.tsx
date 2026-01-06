@@ -7,56 +7,31 @@ interface InputProps {
     label?: string;
     placeholder?: string;
     icon?: React.ReactNode;
-    [key: string]: any;
+    type?: string;
+    value?: string;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    required?: boolean;
 }
 
-const AppInput = (props: InputProps) => {
-    const { label, placeholder, icon, ...rest } = props;
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    const [isHovering, setIsHovering] = useState(false);
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        setMousePosition({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-        });
-    };
-
+const AppInput = ({ label, placeholder, icon, type = "text", value, onChange, required }: InputProps) => {
     return (
-        <div className="w-full min-w-[200px] relative">
-            {label &&
-                <label className='block mb-2 text-sm font-medium text-[var(--color-text-primary)]'>
+        <div className="w-full space-y-2">
+            {label && (
+                <label className="block text-sm font-semibold text-slate-300 ml-1">
                     {label}
                 </label>
-            }
-            <div className="relative w-full group">
+            )}
+            <div className="relative group">
                 <input
-                    className="peer relative z-10 h-12 w-full rounded-xl bg-[var(--color-surface)]/50 px-4 font-normal text-[var(--color-text-primary)] outline-none transition-all duration-300 ease-in-out focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-text-primary)]/20 placeholder:text-[var(--color-text-secondary)]/50 border border-white/5 shadow-inner"
+                    type={type}
+                    value={value}
+                    onChange={onChange}
+                    required={required}
+                    className="w-full h-12 bg-slate-900/50 border border-slate-700/50 text-white rounded-xl px-4 py-2 outline-none transition-all duration-300 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 hover:border-slate-600 placeholder:text-slate-500"
                     placeholder={placeholder}
-                    onMouseMove={handleMouseMove}
-                    onMouseEnter={() => setIsHovering(true)}
-                    onMouseLeave={() => setIsHovering(false)}
-                    {...rest}
                 />
-                {isHovering && (
-                    <>
-                        <div
-                            className="absolute pointer-events-none top-0 left-0 right-0 h-[1px] z-20 rounded-t-xl overflow-hidden opacity-50"
-                            style={{
-                                background: `radial-gradient(40px circle at ${mousePosition.x}px 0px, var(--color-text-primary) 0%, transparent 80%)`,
-                            }}
-                        />
-                        <div
-                            className="absolute pointer-events-none bottom-0 left-0 right-0 h-[1px] z-20 rounded-b-xl overflow-hidden opacity-50"
-                            style={{
-                                background: `radial-gradient(40px circle at ${mousePosition.x}px 1px, var(--color-text-primary) 0%, transparent 80%)`,
-                            }}
-                        />
-                    </>
-                )}
                 {icon && (
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-[var(--color-text-secondary)]">
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors">
                         {icon}
                     </div>
                 )}
@@ -76,98 +51,118 @@ interface LoginUIProps {
 }
 
 const LoginUI = ({ email, setEmail, password, setPassword, onSubmit, loading, error }: LoginUIProps) => {
-    const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-    const [isHovering, setIsHovering] = useState(false);
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        const leftSection = e.currentTarget.getBoundingClientRect();
-        setMousePosition({
-            x: e.clientX - leftSection.left,
-            y: e.clientY - leftSection.top
-        });
-    };
-
-    const handleMouseEnter = () => {
-        setIsHovering(true);
-    };
-
-    const handleMouseLeave = () => {
-        setIsHovering(false);
-    };
+    const [isHovered, setIsHovered] = useState(false);
 
     return (
-        <div className="h-screen w-[100%] bg-[var(--color-bg)] flex items-center justify-center p-4">
-            <div className='card w-[80%] lg:w-[70%] md:w-[65%] flex justify-between h-[600px] bg-[var(--color-surface)]/20 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl'>
-                <div
-                    className='w-full lg:w-1/2 px-6 lg:px-16 left h-full relative flex flex-col justify-center'
-                    onMouseMove={handleMouseMove}
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}>
-                    <div
-                        className={`absolute pointer-events-none w-[600px] h-[600px] bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-full blur-[100px] transition-opacity duration-500 ${isHovering ? 'opacity-100' : 'opacity-0'
-                            }`}
-                        style={{
-                            transform: `translate(${mousePosition.x - 300}px, ${mousePosition.y - 300}px)`,
-                            transition: 'transform 0.15s ease-out'
-                        }}
-                    />
-                    <div className="form-container relative z-10">
-                        <div className="text-center mb-10">
-                            <h1 className='text-4xl font-bold tracking-tight' style={{ color: 'var(--color-heading)' }}>Welcome back</h1>
-                            <p className="text-[var(--color-text-secondary)] mt-2">Please enter your credentials</p>
+        <div className="min-h-screen w-full bg-[#05070a] flex items-center justify-center p-6 relative overflow-hidden">
+            {/* Background Decorative Elements */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[120px]" />
+
+            <div
+                className="w-full max-w-[1000px] bg-slate-900/40 backdrop-blur-2xl border border-slate-800 rounded-[2.5rem] flex flex-col lg:flex-row overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)]"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
+                {/* Left Side: Form */}
+                <div className="flex-1 p-8 lg:p-16 flex flex-col justify-center relative">
+                    <div className="mb-10 text-center lg:text-left">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-600 rounded-xl mb-6 shadow-lg shadow-blue-600/20">
+                            <span className="text-white text-2xl font-bold">W</span>
+                        </div>
+                        <h1 className="text-4xl font-bold text-white tracking-tight">Welcome back</h1>
+                        <p className="text-slate-400 mt-3 text-lg">Enter your details to access your account</p>
+                    </div>
+
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-sm animate-in fade-in slide-in-from-top-2">
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {error}
+                        </div>
+                    )}
+
+                    <form className="space-y-6" onSubmit={onSubmit}>
+                        <AppInput
+                            label="Email Address"
+                            placeholder="name@company.com"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail && setEmail(e.target.value)}
+                            required
+                            icon={
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                                </svg>
+                            }
+                        />
+                        <AppInput
+                            label="Password"
+                            placeholder="••••••••••••"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword && setPassword(e.target.value)}
+                            required
+                            icon={
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            }
+                        />
+
+                        <div className="flex items-center justify-end">
+                            <button type="button" className="text-sm font-semibold text-blue-500 hover:text-blue-400 transition-colors">
+                                Forgot password?
+                            </button>
                         </div>
 
-                        {error && (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm py-3 px-4 rounded-xl mb-6 text-center animate-shake">
-                                {error}
-                            </div>
-                        )}
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full group relative h-12 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all duration-300 shadow-lg shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+                        >
+                            {loading ? (
+                                <div className="flex items-center gap-2">
+                                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                    <span>Verifying...</span>
+                                </div>
+                            ) : (
+                                "Sign In"
+                            )}
+                        </button>
+                    </form>
 
-                        <form className='grid gap-6' onSubmit={onSubmit}>
-                            <div className='grid gap-4'>
-                                <AppInput
-                                    placeholder="Email address"
-                                    type="email"
-                                    value={email}
-                                    onChange={(e: any) => setEmail && setEmail(e.target.value)}
-                                    required
-                                />
-                                <AppInput
-                                    placeholder="Password"
-                                    type="password"
-                                    value={password}
-                                    onChange={(e: any) => setPassword && setPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-end">
-                                <a href="#" className='text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors'>Forgot your password?</a>
-                            </div>
-
-                            <div className='mt-2'>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full group/button relative h-12 inline-flex justify-center items-center overflow-hidden rounded-xl bg-[var(--color-bg-2)] text-sm font-semibold text-[var(--color-bg)] transition-all duration-300 ease-in-out hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-white/5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
-                                    <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-15deg)_translateX(-100%)] group-hover/button:duration-700 group-hover/button:[transform:skew(-15deg)_translateX(100%)]">
-                                        <div className="relative h-full w-12 bg-white/30" />
-                                    </div>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                    <p className="mt-8 text-center lg:text-left text-slate-500 text-sm">
+                        © 2026 Webgeon Results Pvt Ltd
+                    </p>
                 </div>
 
-                <div className='hidden lg:block w-1/2 right h-full overflow-hidden relative'>
+                {/* Right Side: Visual */}
+                <div className="hidden lg:block w-[45%] relative bg-slate-900 overflow-hidden">
                     <img
-                        src='https://images.pexels.com/photos/7102037/pexels-photo-7102037.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
-                        alt="Background"
-                        className="w-full h-full object-cover opacity-40 hover:scale-105 transition-transform duration-[5s] ease-out"
+                        src="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                        className={`w-full h-full object-cover opacity-60 transition-transform duration-[10s] ease-in-out ${isHovered ? 'scale-110' : 'scale-100'}`}
+                        alt="Corporate"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[var(--color-surface)]/80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+                    <div className="absolute bottom-12 left-12 right-12">
+                        <div className="backdrop-blur-md bg-white/5 border border-white/10 p-6 rounded-2xl">
+                            <p className="text-white text-lg font-medium italic opacity-90">
+                                "The most powerful HR management system for modern teams."
+                            </p>
+                            <div className="flex items-center gap-3 mt-4">
+                                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold text-white">W</div>
+                                <div>
+                                    <p className="text-white text-sm font-semibold">Webgeon HRMS</p>
+                                    <p className="text-slate-400 text-xs text-uppercase tracking-wider">ENTERPRISE EDITION</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
