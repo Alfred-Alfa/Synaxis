@@ -1,12 +1,13 @@
 import React from 'react';
-import { getInitials, getAvatarColor } from '../../utils/chatHelpers';
+import { getInitials, getAvatarColor, getPresenceColor } from '../../utils/chatHelpers';
 
 interface UserAvatarProps {
     userId: string;
     name: string;
     size?: 'small' | 'medium' | 'large';
     showOnline?: boolean;
-    isOnline?: boolean;
+    isOnline?: boolean; // Deprecated in favor of status
+    status?: string; // Phase 4 status
     onClick?: () => void;
 }
 
@@ -20,6 +21,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     size = 'medium',
     showOnline = false,
     isOnline = false,
+    status,
     onClick
 }) => {
     const initials = getInitials(name);
@@ -32,6 +34,14 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     };
 
     const dimensions = sizeMap[size];
+
+    // Determine status color
+    let statusColor = '#9ca3af'; // Default Grey
+    if (status) {
+        statusColor = getPresenceColor(status);
+    } else if (isOnline) {
+        statusColor = '#10b981'; // Green
+    }
 
     return (
         <div
@@ -66,11 +76,11 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
                         width: dimensions.indicator,
                         height: dimensions.indicator,
                         borderRadius: '50%',
-                        background: isOnline ? '#10b981' : '#6b7280',
+                        background: statusColor,
                         border: '2px solid white',
                         boxShadow: '0 0 4px rgba(0,0,0,0.1)'
                     }}
-                    title={isOnline ? 'Online' : 'Offline'}
+                    title={status || (isOnline ? 'Online' : 'Offline')}
                 />
             )}
         </div>

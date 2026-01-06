@@ -4,7 +4,6 @@ import { useChat } from '../../contexts/ChatContext';
 import {
     getUserRooms,
     getRoomMessages,
-    sendMessage,
     markAsRead,
 } from '../../services/chatService';
 import type {
@@ -53,8 +52,28 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
 
         const handleReceiveMessage = ({ message, roomId }: { message: Message; roomId: string }) => {
             // Update message list if looking at this room
+            // Update message list if looking at this room
             if (view === 'ROOM' && currentRoom?._id === roomId) {
-                setMessages(prev => [...prev, message]);
+                setMessages(prev => {
+                    // 1. Prevent duplicates
+                    if (prev.some(m => m._id === message._id)) return prev;
+
+                    // 2. Optimistic Replacement
+                    const tempMatchIndex = prev.findIndex(m =>
+                        m._id.startsWith('temp-') &&
+                        m.messageText === message.messageText &&
+                        String(typeof m.senderId === 'object' ? (m.senderId as any)._id : m.senderId) ===
+                        String(typeof message.senderId === 'object' ? (message.senderId as any)._id : message.senderId)
+                    );
+
+                    if (tempMatchIndex !== -1) {
+                        const newMessages = [...prev];
+                        newMessages[tempMatchIndex] = message;
+                        return newMessages;
+                    }
+
+                    return [...prev, message];
+                });
 
                 // Mark as read immediately if drawer is open on this room
                 if (isOpen && message.senderId !== currentUser._id) {
@@ -127,14 +146,39 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!messageText.trim() || !currentRoom) return;
+        if (!messageText.trim() || !currentRoom || !socket) return;
+
+        const text = messageText.trim();
+        const currentUserId = currentUser?._id || currentUser?.id;
+
+        // Optimistic Update
+        const tempId = `temp-${Date.now()}`;
+        const optimisticMessage: Message = {
+            _id: tempId,
+            roomId: currentRoom._id,
+            senderId: currentUserId,
+            senderName: currentUser?.name || 'Me',
+            messageText: text,
+            messageType: 'text',
+            readBy: [],
+            isDeleted: false,
+            createdAt: new Date(),
+            updatedAt: new Date(), // Added for compatibility
+        };
+
+        setMessages(prev => [...prev, optimisticMessage]);
+        setMessageText('');
 
         setIsSending(true);
         try {
-            await sendMessage(currentRoom._id, messageText);
-            setMessageText('');
+            // Use socket instead of API for consistency with ChatPage
+            socket.emit('send_message', {
+                roomId: currentRoom._id,
+                messageText: text,
+            });
         } catch (error) {
             console.error('Failed to send message:', error);
+            // Revert on error could be added here
         } finally {
             setIsSending(false);
         }
@@ -252,7 +296,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
                                                 name={roomName}
                                                 size="medium"
                                                 showOnline={room.type !== 'group'}
-                                                isOnline={status === 'online' || status === 'away'}
+                                                status={status || 'offline'}
                                             />
                                         </div>
 
@@ -349,8 +393,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
                                 </div>
                             ) : (
                                 messages.map(msg => {
-                                    const isOwn = msg.senderId === currentUser._id ||
-                                        (typeof msg.senderId === 'object' && (msg.senderId as any)._id === currentUser._id);
+                                    // Robust ID comparison
+                                    const msgSenderId = typeof msg.senderId === 'object'
+                                        ? (msg.senderId as any)._id
+                                        : msg.senderId;
+                                    const currentUserId = currentUser?._id || currentUser?.id;
+                                    const isOwn = String(msgSenderId) === String(currentUserId);
                                     return (
                                         <div
                                             key={msg._id}

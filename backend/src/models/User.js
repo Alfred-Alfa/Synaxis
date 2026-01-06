@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema(
         // Presence System (Phase 3)
         presenceStatus: {
             type: String,
-            enum: ['online', 'away', 'offline'],
+            enum: ['online', 'away', 'busy', 'brb', 'offline'],
             default: 'offline',
         },
     },

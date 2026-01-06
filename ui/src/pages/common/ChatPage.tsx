@@ -660,9 +660,7 @@ export const ChatPage: React.FC = () => {
                                             name={displayName}
                                             size="medium"
                                             showOnline={room.type !== 'group'}
-                                            isOnline={room.type !== 'group' ?
-                                                onlineUsers[room.members.find((m: any) => m._id !== currentUser?._id)?._id]?.status === 'online'
-                                                : false}
+                                            status={status}
                                         />
 
                                         {/* Room Info */}
@@ -805,9 +803,9 @@ export const ChatPage: React.FC = () => {
                                         name={getRoomDisplayName(currentRoom)}
                                         size="medium"
                                         showOnline={currentRoom.type !== 'group'}
-                                        isOnline={currentRoom.type !== 'group' ?
-                                            onlineUsers[currentRoom.members.find((m: any) => m._id !== currentUser._id)?._id]?.status === 'online'
-                                            : false}
+                                        status={currentRoom.type !== 'group' ?
+                                            onlineUsers[currentRoom.members.find((m: any) => m._id !== currentUser?._id)?._id]?.status
+                                            : undefined}
                                     />
                                     <div>
                                         <div className="room-title">{getRoomDisplayName(currentRoom)}</div>

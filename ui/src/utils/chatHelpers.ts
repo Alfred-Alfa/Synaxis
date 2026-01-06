@@ -132,11 +132,14 @@ export function matchesSearch(chatName: string, searchQuery: string): boolean {
 /**
  * Get presence status color
  */
-export function getPresenceColor(status: 'online' | 'away' | 'offline' | string): string {
+export function getPresenceColor(status: 'online' | 'away' | 'busy' | 'brb' | 'offline' | string): string {
     switch (status) {
         case 'online':
             return '#10b981'; // Green
+        case 'busy':
+            return '#ef4444'; // Red
         case 'away':
+        case 'brb':
             return '#f59e0b'; // Orange
         case 'offline':
         default:
@@ -147,12 +150,16 @@ export function getPresenceColor(status: 'online' | 'away' | 'offline' | string)
 /**
  * Get presence status text
  */
-export function getPresenceText(status: 'online' | 'away' | 'offline' | string, lastSeen?: Date | string): string {
+export function getPresenceText(status: 'online' | 'away' | 'busy' | 'brb' | 'offline' | string, lastSeen?: Date | string): string {
     switch (status) {
         case 'online':
             return 'Online';
         case 'away':
             return 'Away';
+        case 'busy':
+            return 'Do Not Disturb';
+        case 'brb':
+            return 'Be Right Back';
         case 'offline':
             return lastSeen ? `Last seen ${formatLastSeen(lastSeen)}` : 'Offline';
         default:
