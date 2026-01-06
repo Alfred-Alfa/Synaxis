@@ -227,71 +227,71 @@ export function LoginForm({
     onForgotPassword
 }: LoginFormProps) {
     return (
-        <div className="w-full max-w-md px-10 py-12 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl">
+        <div className="w-full max-w-md px-10 py-12 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl flex flex-col gap-8">
             {/* Header Block */}
-            <div className="text-center mb-8">
+            <div className="text-center">
                 <h2 className="text-4xl font-bold text-white leading-tight">Welcome Back</h2>
-                <p className="mt-3 text-base text-gray-300 leading-relaxed">Sign in to continue</p>
+                <p className="mt-3 text-base text-gray-200 leading-relaxed">Sign in to continue</p>
             </div>
 
             {/* Error Message */}
             {error && (
-                <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm leading-relaxed">
+                <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm leading-relaxed">
                     {error}
                 </div>
             )}
 
             {/* Form Block */}
-            <form onSubmit={onSubmit} className="mb-8">
-                <div className="space-y-5">
+            <form onSubmit={onSubmit} className="flex flex-col gap-6">
+                <div className="flex flex-col gap-5">
                     {/* Email Input with Animated Label */}
-                    <div className="relative z-0 pt-1">
+                    <div className="relative z-0 group">
                         <input
                             type="email"
                             id="floating_email"
                             value={email}
                             onChange={(e) => setEmail && setEmail(e.target.value)}
-                            className="block py-3 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+                            className="block py-4 px-0 w-full text-base text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
                             placeholder=" "
                             required
                         />
                         <label
                             htmlFor="floating_email"
-                            className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                            className="absolute text-base text-gray-300 duration-300 transform -translate-y-6 scale-75 top-4 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                         >
-                            <User className="inline-block mr-2 -mt-1" size={16} />
+                            <User className="inline-block mr-2 -mt-1" size={18} />
                             Email Address
                         </label>
                     </div>
 
                     {/* Password Input with Animated Label */}
-                    <div className="relative z-0 pt-1">
+                    <div className="relative z-0 group">
                         <input
                             type="password"
                             id="floating_password"
                             value={password}
                             onChange={(e) => setPassword && setPassword(e.target.value)}
-                            className="block py-3 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+                            className="block py-4 px-0 w-full text-base text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
                             placeholder=" "
                             required
                         />
                         <label
                             htmlFor="floating_password"
-                            className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                            className="absolute text-base text-gray-300 duration-300 transform -translate-y-6 scale-75 top-4 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
                         >
-                            <Lock className="inline-block mr-2 -mt-1" size={16} />
+                            <Lock className="inline-block mr-2 -mt-1" size={18} />
                             Password
                         </label>
                     </div>
                 </div>
 
                 {/* Action Block */}
-                <div className="mt-6">
-                    <div className="flex items-center justify-between mb-5">
+                <div className="flex flex-col gap-6 mt-2">
+                    <div className="flex items-center justify-between">
                         <button
                             type="button"
                             onClick={onForgotPassword}
-                            className="text-sm text-gray-300 hover:text-white transition leading-normal"
+                            className="text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200"
                         >
                             Forgot Password?
                         </button>
@@ -300,7 +300,7 @@ export function LoginForm({
                     <button
                         type="submit"
                         disabled={loading}
-                        className="group w-full flex items-center justify-center py-4 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed rounded-lg text-white text-base font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 transition-all duration-300 leading-none"
+                        className="group w-full flex items-center justify-center py-4 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed rounded-lg text-white text-base font-bold tracking-wide focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 transition-all duration-300 shadow-lg shadow-blue-600/20"
                     >
                         {loading ? 'Signing in...' : 'Sign In'}
                         <ArrowRight className="ml-2 h-5 w-5 transform group-hover:translate-x-1 transition-transform" />
@@ -309,8 +309,8 @@ export function LoginForm({
             </form>
 
             {/* Secondary Link */}
-            <p className="text-center text-sm text-gray-400 leading-relaxed pt-2">
-                Don't have an account? <a href="#" className="font-semibold text-blue-400 hover:text-blue-300 transition">Sign Up</a>
+            <p className="text-center text-sm text-gray-400 leading-relaxed">
+                Don't have an account? <a href="#" className="font-semibold text-blue-400 hover:text-blue-300 transition-colors ml-1">Sign Up</a>
             </p>
         </div>
     );
