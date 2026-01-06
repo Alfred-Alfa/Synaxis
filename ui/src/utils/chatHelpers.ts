@@ -128,3 +128,34 @@ export function matchesSearch(chatName: string, searchQuery: string): boolean {
 
     return chatName.toLowerCase().includes(searchQuery.toLowerCase());
 }
+
+/**
+ * Get presence status color
+ */
+export function getPresenceColor(status: 'online' | 'away' | 'offline' | string): string {
+    switch (status) {
+        case 'online':
+            return '#10b981'; // Green
+        case 'away':
+            return '#f59e0b'; // Orange
+        case 'offline':
+        default:
+            return '#9ca3af'; // Grey
+    }
+}
+
+/**
+ * Get presence status text
+ */
+export function getPresenceText(status: 'online' | 'away' | 'offline' | string, lastSeen?: Date | string): string {
+    switch (status) {
+        case 'online':
+            return 'Online';
+        case 'away':
+            return 'Away';
+        case 'offline':
+            return lastSeen ? `Last seen ${formatLastSeen(lastSeen)}` : 'Offline';
+        default:
+            return 'Offline';
+    }
+}

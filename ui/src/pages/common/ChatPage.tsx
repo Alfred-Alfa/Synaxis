@@ -30,6 +30,7 @@ import {
     formatChatTimestamp,
     truncateMessage,
     matchesSearch,
+    getPresenceText,
 } from '../../utils/chatHelpers';
 import './ChatPage.css';
 
@@ -50,6 +51,7 @@ export const ChatPage: React.FC = () => {
         toggleSoundMute,
         notificationPermission,
         requestNotificationPermission,
+        onlineUsers, // Phase 3: Presence tracking
     } = useChat();
 
     const [rooms, setRooms] = useState<ChatRoom[]>([]);
@@ -617,7 +619,10 @@ export const ChatPage: React.FC = () => {
                                             userId={room._id}
                                             name={displayName}
                                             size="medium"
-                                            showOnline={false}
+                                            showOnline={room.type !== 'group'}
+                                            isOnline={room.type !== 'group' ?
+                                                onlineUsers[room.members.find((m: any) => m._id !== currentUser?._id)?._id]?.status === 'online'
+                                                : false}
                                         />
 
                                         {/* Room Info */}
@@ -758,13 +763,25 @@ export const ChatPage: React.FC = () => {
                                         userId={currentRoom._id}
                                         name={getRoomDisplayName(currentRoom)}
                                         size="medium"
-                                        showOnline={false}
+                                        showOnline={currentRoom.type !== 'group'}
+                                        isOnline={currentRoom.type !== 'group' ?
+                                            onlineUsers[currentRoom.members.find((m: any) => m._id !== currentUser._id)?._id]?.status === 'online'
+                                            : false}
                                     />
                                     <div>
                                         <div className="room-title">{getRoomDisplayName(currentRoom)}</div>
-                                        {currentRoom.type === 'group' && (
+                                        {currentRoom.type === 'group' ? (
                                             <div className="room-members" style={{ fontSize: '12px', color: '#6b7280' }}>
                                                 {currentRoom.members.length} members
+                                            </div>
+                                        ) : (
+                                            <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                                                {(() => {
+                                                    const other = currentRoom.members.find((m: any) => m._id !== currentUser._id);
+                                                    if (!other) return 'Offline';
+                                                    const status = onlineUsers[other._id]?.status || 'offline';
+                                                    return getPresenceText(status, onlineUsers[other._id]?.lastSeen);
+                                                })()}
                                             </div>
                                         )}
                                     </div>

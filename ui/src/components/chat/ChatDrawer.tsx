@@ -12,7 +12,7 @@ import type {
     Message,
 } from '../../services/chatService';
 import { UserAvatar } from './UserAvatar';
-import { formatChatTimestamp, truncateMessage } from '../../utils/chatHelpers';
+import { formatChatTimestamp, truncateMessage, getPresenceText } from '../../utils/chatHelpers';
 import './ChatDrawer.css';
 
 interface ChatDrawerProps {
@@ -186,7 +186,12 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
                                     <span style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 'normal' }}>
                                         {currentRoom.type === 'group'
                                             ? getRoomStatus(currentRoom)
-                                            : ((s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Offline')(getRoomStatus(currentRoom))}
+                                            : (() => {
+                                                const other = currentRoom.members.find((m: any) => m._id !== currentUser._id);
+                                                if (!other) return 'Offline';
+                                                const status = onlineUsers[other._id]?.status || 'offline';
+                                                return getPresenceText(status, onlineUsers[other._id]?.lastSeen);
+                                            })()}
                                     </span>
                                 )}
                             </div>
