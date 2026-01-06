@@ -61,6 +61,43 @@ router.post('/', protect, upload.single('attachment'), async (req, res) => {
             reason,
         } = req.body;
 
+        // Validate and convert otHours to a valid number
+        let validOtHours = 0;
+
+        if (otHours !== undefined && otHours !== null && otHours !== '') {
+            validOtHours = Number(otHours);
+
+            // Explicitly check for NaN
+            if (isNaN(validOtHours)) {
+                return res.status(400).json({
+                    message: 'Invalid OT hours value. Please provide valid start/end time or enter OT hours manually.'
+                });
+            }
+
+            // Ensure positive value
+            if (validOtHours <= 0) {
+                return res.status(400).json({
+                    message: 'OT hours must be greater than 0'
+                });
+            }
+        } else if (startTime && endTime) {
+            // Calculate from times if otHours not provided
+            const start = new Date(`1970-01-01T${startTime}:00`);
+            const end = new Date(`1970-01-01T${endTime}:00`);
+            const diffMs = end - start;
+            validOtHours = diffMs / (1000 * 60 * 60);
+
+            if (validOtHours <= 0) {
+                return res.status(400).json({
+                    message: 'End time must be greater than start time'
+                });
+            }
+        } else {
+            return res.status(400).json({
+                message: 'Please provide either start/end time or OT hours'
+            });
+        }
+
         const isAdminUser = req.user.role === 'Admin' || req.user.role === 'SuperAdmin';
 
         const overtime = await Overtime.create({
@@ -68,7 +105,7 @@ router.post('/', protect, upload.single('attachment'), async (req, res) => {
             date,
             startTime,
             endTime,
-            otHours: parseFloat(otHours),
+            otHours: validOtHours,
             siteId,
             reason,
             attachment: req.file ? { path: req.file.path } : undefined,
@@ -92,7 +129,7 @@ router.post('/', protect, upload.single('attachment'), async (req, res) => {
         if (!isAdminUser) {
             await notifyAdmins({
                 title: 'New Overtime Request',
-                message: `New overtime request for ${otHours} hours`,
+                message: `New overtime request for ${validOtHours.toFixed(2)} hours`,
                 link: '/admin/overtime',
                 type: 'INFO',
             });
@@ -124,6 +161,25 @@ router.put('/:id', protect, async (req, res) => {
 
         if (overtime.status !== 'Pending') {
             return res.status(400).json({ message: `Cannot update ${overtime.status} overtime` });
+        }
+
+        // Validate otHours if it's being updated
+        if (req.body.otHours !== undefined) {
+            const otHoursValue = Number(req.body.otHours);
+
+            if (isNaN(otHoursValue)) {
+                return res.status(400).json({
+                    message: 'Invalid OT hours value'
+                });
+            }
+
+            if (otHoursValue <= 0) {
+                return res.status(400).json({
+                    message: 'OT hours must be greater than 0'
+                });
+            }
+
+            req.body.otHours = otHoursValue;
         }
 
         Object.keys(req.body).forEach(key => {
