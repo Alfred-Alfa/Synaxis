@@ -25,6 +25,22 @@ export const settingsService = {
         });
         return response.data;
     },
+
+    // Email Configuration
+    getEmailConfig: async (): Promise<ApiResponse<any>> => {
+        const response = await api.get('/settings/email');
+        return response.data;
+    },
+
+    updateEmailConfig: async (data: any): Promise<ApiResponse<any>> => {
+        const response = await api.put('/settings/email', data);
+        return response.data;
+    },
+
+    testEmailConfig: async (email: string): Promise<ApiResponse<any>> => {
+        const response = await api.post('/settings/email/test', { test_email: email });
+        return response.data;
+    },
 };
 
 export const auditLogService = {

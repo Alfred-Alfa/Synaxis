@@ -8,7 +8,9 @@ import {
     Shield,
     Save,
     Upload,
-    Plus
+    Plus,
+    Mail,
+    CheckCircle2
 } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
@@ -508,6 +510,262 @@ export const SettingsPage: React.FC = () => {
                     </table>
                 </div>
             </section>
+
+            {/* Email Configuration Section */}
+            <EmailConfigSection />
         </div>
+    );
+};
+
+// Sub-component for Email Configuration
+const EmailConfigSection: React.FC = () => {
+    const [config, setConfig] = useState({
+        smtp_host: 'smtp.zeptomail.in',
+        smtp_port: '587',
+        smtp_user: 'emailapikey',
+        smtp_pass: '',
+        from_email: '',
+        from_name: '',
+        is_verified: false,
+        is_active: false
+    });
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [testing, setTesting] = useState(false);
+    const [testEmail, setTestEmail] = useState('');
+    const [showTestModal, setShowTestModal] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+    useEffect(() => {
+        loadEmailConfig();
+    }, []);
+
+    const loadEmailConfig = async () => {
+        try {
+            setLoading(true);
+            const response = await settingsService.getEmailConfig();
+            if (response.data) {
+                setConfig({
+                    ...response.data,
+                    smtp_pass: response.data.smtp_pass_masked || '', // Don't show real encrypted pass
+                    smtp_port: response.data.smtp_port.toString()
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load email config', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setConfig(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setMessage(null);
+        setSaving(true);
+
+        // Validation
+        if (!config.from_email.endsWith('@webgeon.com')) {
+            setMessage({ type: 'error', text: 'Sender email must be from @webgeon.com domain.' });
+            setSaving(false);
+            return;
+        }
+
+        try {
+            const payload = {
+                ...config,
+                smtp_port: parseInt(config.smtp_port)
+            };
+            const response = await settingsService.updateEmailConfig(payload);
+            setMessage({ type: 'success', text: response.message || 'Configuration saved.' });
+            loadEmailConfig(); // Reload to get updated status
+        } catch (error: any) {
+            setMessage({
+                type: 'error',
+                text: error.response?.data?.message || 'Failed to save configuration.'
+            });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleTest = async () => {
+        if (!testEmail) return;
+        setTesting(true);
+        setMessage(null);
+
+        try {
+            const response = await settingsService.testEmailConfig(testEmail);
+            setMessage({ type: 'success', text: response.message || 'Test email sent successfully.' });
+            loadEmailConfig(); // Reload to confirm verified status
+            setShowTestModal(false);
+        } catch (error: any) {
+            setMessage({
+                type: 'error',
+                text: error.response?.data?.message || 'Test failed. Check your credentials.'
+            });
+        } finally {
+            setTesting(false);
+        }
+    };
+
+    if (loading) return <div className="p-4 text-center">Loading email settings...</div>;
+
+    return (
+        <section className="card mt-4 section-card">
+            <div className="card-header-simple mb-4">
+                <div className="d-flex align-items-center gap-2">
+                    <Mail size={20} className="section-icon" />
+                    <div>
+                        <h3 className="m-0">Email Configuration</h3>
+                        <p className="text-muted text-sm m-0">Configure SMTP settings (ZeptoMail context supported).</p>
+                    </div>
+                </div>
+                <div className="ml-auto">
+                    {config.is_verified ? (
+                        <span className="badge badge-success d-flex align-items-center gap-1">
+                            <CheckCircle2 size={14} /> Verified & Active
+                        </span>
+                    ) : (
+                        <span className="badge badge-warning">Not Verified</span>
+                    )}
+                </div>
+            </div>
+
+            {message && (
+                <div className={`alert alert-${message.type} mb-4`}>
+                    {message.text}
+                </div>
+            )}
+
+            <form onSubmit={handleSave}>
+                <div className="form-grid-2">
+                    <div className="form-group">
+                        <label className="form-label">SMTP Host</label>
+                        <input
+                            name="smtp_host"
+                            className="input"
+                            value={config.smtp_host}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">SMTP Port</label>
+                        <input
+                            name="smtp_port"
+                            className="input"
+                            value={config.smtp_port}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">SMTP User</label>
+                        <input
+                            name="smtp_user"
+                            className="input"
+                            value={config.smtp_user}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">SMTP Password (API Key)</label>
+                        <input
+                            name="smtp_pass"
+                            type="password"
+                            className="input"
+                            value={config.smtp_pass}
+                            // Don't auto-fill if masked
+                            onChange={handleChange}
+                            placeholder={config.is_verified || config.smtp_pass === '********' ? '********' : 'Enter API Key'}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Sender Name</label>
+                        <input
+                            name="from_name"
+                            className="input"
+                            value={config.from_name}
+                            onChange={handleChange}
+                            placeholder="e.g. Acme HR"
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Sender Email</label>
+                        <input
+                            name="from_email"
+                            className="input"
+                            value={config.from_email}
+                            onChange={handleChange}
+                            placeholder="hrms@webgeon.com"
+                            required
+                        />
+                        <p className="helper-text mt-1 text-xs">Must end with @webgeon.com</p>
+                    </div>
+                </div>
+
+                <div className="form-actions d-flex justify-content-end gap-3 mt-4">
+                    <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={() => setShowTestModal(true)}
+                        disabled={saving}
+                    >
+                        Send Test Email
+                    </button>
+                    <button
+                        type="submit"
+                        className="btn btn-primary icon-btn-text"
+                        disabled={saving}
+                    >
+                        <Save size={18} />
+                        {saving ? 'Saving...' : 'Save Configuration'}
+                    </button>
+                </div>
+            </form>
+
+            {/* Test Email Modal */}
+            {showTestModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ maxWidth: '400px' }}>
+                        <h3>Send Test Email</h3>
+                        <p className="text-muted mb-4">Enter an email address to verify your SMTP configuration.</p>
+
+                        <div className="form-group mb-4">
+                            <label className="form-label">Recipient Email</label>
+                            <input
+                                className="input"
+                                value={testEmail}
+                                onChange={(e) => setTestEmail(e.target.value)}
+                                placeholder="you@example.com"
+                            />
+                        </div>
+
+                        <div className="d-flex justify-content-end gap-2">
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => setShowTestModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                onClick={handleTest}
+                                disabled={testing || !testEmail}
+                            >
+                                {testing ? 'Sending...' : 'Send Test'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </section>
     );
 };
