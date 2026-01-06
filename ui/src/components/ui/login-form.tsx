@@ -58,7 +58,7 @@ const iconsArray: OrbitIcon[] = [
         ),
         className: 'size-[60px] border-none bg-transparent',
         duration: 20,
-        delay: 7,
+        delay: 5,
         radius: 180,
         path: false,
         reverse: false,
@@ -75,7 +75,24 @@ const iconsArray: OrbitIcon[] = [
         ),
         className: 'size-[60px] border-none bg-transparent',
         duration: 20,
-        delay: 14,
+        delay: 10,
+        radius: 180,
+        path: false,
+        reverse: false,
+    },
+    {
+        component: () => (
+            <img
+                width={70}
+                height={70}
+                src='/assets/logo-atmost.png'
+                alt='Atmost Synergy Logo'
+                className='rounded-full'
+            />
+        ),
+        className: 'size-[70px] border-none bg-transparent',
+        duration: 20,
+        delay: 15,
         radius: 180,
         path: false,
         reverse: false,
