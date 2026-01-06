@@ -1,5 +1,5 @@
 // import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/layout/Layout';
@@ -37,6 +37,16 @@ import { ChatProvider } from './contexts/ChatContext';
 import { ChatPage } from './pages/common/ChatPage';
 import { ChatBubble } from './components/chat/ChatBubble';
 import { AccountDeletionPolicy } from './pages/AccountDeletionPolicy';
+
+// Component to conditionally render ChatBubble
+const ConditionalChatBubble = () => {
+  const location = useLocation();
+  const publicPaths = ['/login', '/reset-password', '/delete-account'];
+  const isPublicPage = publicPaths.some(path => location.pathname.startsWith(path));
+
+  if (isPublicPage) return null;
+  return <ChatBubble />;
+};
 
 // ...
 function App() {
@@ -100,7 +110,7 @@ function App() {
               <Route path="*" element={<Navigate to="/login" replace />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
-            <ChatBubble />
+            <ConditionalChatBubble />
           </Router>
         </ChatProvider>
       </ThemeProvider>
