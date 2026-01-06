@@ -42,6 +42,33 @@ const chatRoomSchema = new mongoose.Schema(
             type: Boolean,
             default: true,
         },
+        // Chat Management Features (Per-User)
+        // Users who have archived this chat
+        archivedBy: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        }],
+        // Users who have pinned this chat
+        pinnedBy: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        }],
+        // Users who have muted notifications for this chat
+        mutedBy: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        }],
+        // Soft delete - users who have deleted this chat from their view
+        deletedBy: [{
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User',
+            },
+            deletedAt: {
+                type: Date,
+                default: Date.now,
+            },
+        }],
     },
     {
         timestamps: true,

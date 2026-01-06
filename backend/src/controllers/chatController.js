@@ -144,9 +144,13 @@ export const createGroupRoom = async (req, res) => {
  */
 export const getUserRooms = async (req, res) => {
     try {
+        const userId = req.user._id;
+
         const rooms = await ChatRoom.find({
-            members: req.user._id,
+            members: userId,
             isActive: true,
+            // Exclude rooms user has deleted
+            'deletedBy.userId': { $ne: userId },
         })
             .populate('members', 'email staffRef')
             .populate({
@@ -155,7 +159,7 @@ export const getUserRooms = async (req, res) => {
             })
             .populate('lastMessage')
             .sort({ lastMessageAt: -1, createdAt: -1 })
-            .lean(); // Use lean() to get plain JavaScript objects we can modify
+            .lean();
 
         // Get unread counts for these rooms
         const roomIds = rooms.map(room => room._id);
@@ -164,8 +168,8 @@ export const getUserRooms = async (req, res) => {
             {
                 $match: {
                     roomId: { $in: roomIds },
-                    senderId: { $ne: req.user._id }, // Incoming messages only
-                    'readBy.userId': { $ne: req.user._id }, // Not read by current user
+                    senderId: { $ne: userId },
+                    'readBy.userId': { $ne: userId },
                     isDeleted: false,
                 },
             },
@@ -185,8 +189,12 @@ export const getUserRooms = async (req, res) => {
 
         const roomsWithUnread = rooms.map(room => ({
             ...room,
-            id: room._id, // Ensure 'id' is present as per spec (optional but good practice)
+            id: room._id,
             unreadCount: unreadMap[room._id.toString()] || 0,
+            // Add user-specific flags
+            isArchived: room.archivedBy?.some(id => id.toString() === userId.toString()) || false,
+            isPinned: room.pinnedBy?.some(id => id.toString() === userId.toString()) || false,
+            isMuted: room.mutedBy?.some(id => id.toString() === userId.toString()) || false,
         }));
 
         res.json(roomsWithUnread);
@@ -359,7 +367,6 @@ export const markRoomAsRead = async (req, res) => {
         }
 
         // Update all unread messages in this room for this user
-        // We only update messages where the user is NOT the sender and hasn't read it yet
         await Message.updateMany(
             {
                 roomId: roomId,
@@ -431,5 +438,286 @@ export const getUnreadCount = async (req, res) => {
     } catch (error) {
         console.error('Error fetching unread count:', error);
         res.status(500).json({ message: 'Failed to fetch unread count' });
+    }
+};
+
+// ===== CHAT ACTION CONTROLLERS (PHASE 2) =====
+
+/**
+ * @desc    Archive a chat room
+ * @route   POST /api/chat/rooms/:roomId/archive
+ * @access  Private
+ */
+export const archiveRoom = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const userId = req.user._id;
+
+        const room = await ChatRoom.findById(roomId);
+        if (!room || !room.isMember(userId)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Add user to archivedBy array if not already there
+        await ChatRoom.findByIdAndUpdate(roomId, {
+            $addToSet: { archivedBy: userId }
+        });
+
+        res.json({ message: 'Chat archived successfully' });
+    } catch (error) {
+        console.error('Error archiving room:', error);
+        res.status(500).json({ message: 'Failed to archive chat' });
+    }
+};
+
+/**
+ * @desc    Unarchive a chat room
+ * @route   POST /api/chat/rooms/:roomId/unarchive
+ * @access  Private
+ */
+export const unarchiveRoom = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const userId = req.user._id;
+
+        const room = await ChatRoom.findById(roomId);
+        if (!room || !room.isMember(userId)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Remove user from archivedBy array
+        await ChatRoom.findByIdAndUpdate(roomId, {
+            $pull: { archivedBy: userId }
+        });
+
+        res.json({ message: 'Chat unarchived successfully' });
+    } catch (error) {
+        console.error('Error unarchiving room:', error);
+        res.status(500).json({ message: 'Failed to unarchive chat' });
+    }
+};
+
+/**
+ * @desc    Pin a chat room
+ * @route   POST /api/chat/rooms/:roomId/pin
+ * @access  Private
+ */
+export const pinRoom = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const userId = req.user._id;
+
+        const room = await ChatRoom.findById(roomId);
+        if (!room || !room.isMember(userId)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await ChatRoom.findByIdAndUpdate(roomId, {
+            $addToSet: { pinnedBy: userId }
+        });
+
+        res.json({ message: 'Chat pinned successfully' });
+    } catch (error) {
+        console.error('Error pinning room:', error);
+        res.status(500).json({ message: 'Failed to pin chat' });
+    }
+};
+
+/**
+ * @desc    Unpin a chat room
+ * @route   POST /api/chat/rooms/:roomId/unpin
+ * @access  Private
+ */
+export const unpinRoom = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const userId = req.user._id;
+
+        const room = await ChatRoom.findById(roomId);
+        if (!room || !room.isMember(userId)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await ChatRoom.findByIdAndUpdate(roomId, {
+            $pull: { pinnedBy: userId }
+        });
+
+        res.json({ message: 'Chat unpinned successfully' });
+    } catch (error) {
+        console.error('Error unpinning room:', error);
+        res.status(500).json({ message: 'Failed to unpin chat' });
+    }
+};
+
+/**
+ * @desc    Mute a chat room
+ * @route   POST /api/chat/rooms/:roomId/mute
+ * @access  Private
+ */
+export const muteRoom = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const userId = req.user._id;
+
+        const room = await ChatRoom.findById(roomId);
+        if (!room || !room.isMember(userId)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await ChatRoom.findByIdAndUpdate(roomId, {
+            $addToSet: { mutedBy: userId }
+        });
+
+        res.json({ message: 'Chat muted successfully' });
+    } catch (error) {
+        console.error('Error muting room:', error);
+        res.status(500).json({ message: 'Failed to mute chat' });
+    }
+};
+
+/**
+ * @desc    Unmute a chat room
+ * @route   POST /api/chat/rooms/:roomId/unmute
+ * @access  Private
+ */
+export const unmuteRoom = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const userId = req.user._id;
+
+        const room = await ChatRoom.findById(roomId);
+        if (!room || !room.isMember(userId)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await ChatRoom.findByIdAndUpdate(roomId, {
+            $pull: { mutedBy: userId }
+        });
+
+        res.json({ message: 'Chat unmuted successfully' });
+    } catch (error) {
+        console.error('Error unmuting room:', error);
+        res.status(500).json({ message: 'Failed to unmute chat' });
+    }
+};
+
+/**
+ * @desc    Soft delete a chat room for current user
+ * @route   DELETE /api/chat/rooms/:roomId
+ * @access  Private
+ */
+export const deleteRoom = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const userId = req.user._id;
+
+        const room = await ChatRoom.findById(roomId);
+        if (!room || !room.isMember(userId)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Add user to deletedBy array (soft delete)
+        await ChatRoom.findByIdAndUpdate(roomId, {
+            $addToSet: {
+                deletedBy: {
+                    userId,
+                    deletedAt: new Date()
+                }
+            }
+        });
+
+        res.json({ message: 'Chat deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting room:', error);
+        res.status(500).json({ message: 'Failed to delete chat' });
+    }
+};
+
+/**
+ * @desc    Clear chat history for current user
+ * @route   POST /api/chat/rooms/:roomId/clear-history
+ * @access  Private
+ */
+export const clearRoomHistory = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const userId = req.user._id;
+
+        const room = await ChatRoom.findById(roomId);
+        if (!room || !room.isMember(userId)) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        // Mark all messages as deleted for this user
+        // Note: This doesn't actually delete messages, just marks them as deleted
+        // for this specific user. Other users can still see them.
+        await Message.updateMany(
+            { roomId },
+            {
+                $addToSet: {
+                    deletedFor: userId
+                }
+            }
+        );
+
+        res.json({ message: 'Chat history cleared successfully' });
+    } catch (error) {
+        console.error('Error clearing history:', error);
+        res.status(500).json({ message: 'Failed to clear chat history' });
+    }
+};
+
+/**
+ * @desc    Leave a group chat
+ * @route   POST /api/chat/rooms/:roomId/leave
+ * @access  Private
+ */
+export const leaveGroup = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const userId = req.user._id;
+
+        const room = await ChatRoom.findById(roomId);
+        if (!room) {
+            return res.status(404).json({ message: 'Chat room not found' });
+        }
+
+        if (room.type !== 'group') {
+            return res.status(400).json({ message: 'Can only leave group chats' });
+        }
+
+        if (!room.isMember(userId)) {
+            return res.status(403).json({ message: 'Not a member of this group' });
+        }
+
+        // Remove user from members and admins
+        await ChatRoom.findByIdAndUpdate(roomId, {
+            $pull: {
+                members: userId,
+                admins: userId
+            }
+        });
+
+        // If no members left, deactivate the room
+        const updatedRoom = await ChatRoom.findById(roomId);
+        if (updatedRoom.members.length === 0) {
+            updatedRoom.isActive = false;
+            await updatedRoom.save();
+        }
+
+        // Create a system message
+        await Message.create({
+            roomId,
+            senderId: userId,
+            senderName: 'System',
+            messageText: `${req.user.email} left the group`,
+            isSystem: true,
+            readBy: [{ userId }],
+        });
+
+        res.json({ message: 'Left group successfully' });
+    } catch (error) {
+        console.error('Error leaving group:', error);
+        res.status(500).json({ message: 'Failed to leave group' });
     }
 };
