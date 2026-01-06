@@ -6,6 +6,19 @@ import { DocumentUploadModal } from '../../components/forms/DocumentUploadModal'
 import './StaffManagement.css';
 import { settingsService } from '../../services/settingsService';
 import { passwordService } from '../../services/passwordService';
+import {
+    RefreshCw,
+    Plus,
+    Search,
+    Key,
+    Pencil,
+    FileText,
+    Trash2,
+    CheckCircle,
+    User,
+    Shield,
+    Crown
+} from 'lucide-react';
 
 export const StaffManagement: React.FC = () => {
     const [staff, setStaff] = useState<Staff[]>([]);
@@ -36,10 +49,6 @@ export const StaffManagement: React.FC = () => {
                 staffService.getAll(),
                 settingsService.get()
             ]);
-            console.log('Staff data from API:', response.data);
-            response.data?.forEach((s: Staff) => {
-                console.log(`${s.fullName}: role = ${s.role}`);
-            });
             setStaff(response.data || []);
             if (settingsRes.data?.currency) {
                 setCurrencySymbol(getCurrencySymbol(settingsRes.data.currency));
@@ -151,52 +160,55 @@ export const StaffManagement: React.FC = () => {
     });
 
     if (loading) {
-        return <div className="loading">Loading staff...</div>;
+        return <div className="loading-state">Loading staff directory...</div>;
     }
 
     return (
-        <div className="staff-management fade-in">
-            <div className="page-header">
+        <div className="page-container fade-in">
+            <div className="page-header-row">
                 <div>
                     <h1>Staff Management</h1>
-                    <p className="text-muted">Manage employee information and access</p>
+                    <p className="text-muted">Manage employee information and system access</p>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div className="page-actions">
                     <button
                         onClick={handleSyncUsers}
                         className="btn btn-secondary"
                         title="Sync Staff-User Accounts"
                     >
-                        🔄 Sync Users
+                        <RefreshCw size={16} />
+                        Sync Users
                     </button>
                     <button onClick={handleAdd} className="btn btn-primary">
-                        + Add Staff
+                        <Plus size={16} />
+                        Add Staff
                     </button>
                 </div>
             </div>
 
             {error && (
-                <div className="error-alert mb-3">
+                <div className="alert alert-error mb-4">
                     {error}
                 </div>
             )}
 
-            <div className="card mb-3">
-                <div className="staff-filters">
-                    <input
-                        type="text"
-                        className="input"
-                        placeholder="Search by name or email..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ maxWidth: '300px' }}
-                    />
+            <div className="card filter-card mb-4">
+                <div className="filter-row">
+                    <div className="search-wrapper">
+                        <Search className="search-icon" size={16} />
+                        <input
+                            type="text"
+                            className="input search-input"
+                            placeholder="Search by name or email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
 
                     <select
-                        className="select"
+                        className="select status-select"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as any)}
-                        style={{ maxWidth: '200px' }}
                     >
                         <option value="all">All Status</option>
                         <option value="Active">Active</option>
@@ -205,20 +217,20 @@ export const StaffManagement: React.FC = () => {
                 </div>
             </div>
 
-            <div className="card">
-                <div className="staff-count mb-3">
-                    <strong>{filteredStaff.length}</strong> staff members found
+            <div className="card table-card">
+                <div className="card-header-row">
+                    <div className="record-count">
+                        <strong>{filteredStaff.length}</strong> staff members found
+                    </div>
                 </div>
 
                 {filteredStaff.length === 0 ? (
                     <div className="empty-state">
-                        <p>No staff members found</p>
-                        <button onClick={handleAdd} className="btn btn-primary mt-2">
-                            Add First Staff Member
-                        </button>
+                        <User size={48} className="text-muted" />
+                        <p>No staff members found.</p>
                     </div>
                 ) : (
-                    <div className="table-responsive">
+                    <div className="table-container">
                         <table className="table">
                             <thead>
                                 <tr>
@@ -227,7 +239,7 @@ export const StaffManagement: React.FC = () => {
                                     <th>Email</th>
                                     <th>Designation</th>
                                     <th>Hourly Rate</th>
-                                    <th>Documents</th>
+                                    <th>Docs</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -236,38 +248,41 @@ export const StaffManagement: React.FC = () => {
                                 {filteredStaff.map((staffMember) => (
                                     <tr key={staffMember._id}>
                                         <td>
-                                            <span style={{ fontFamily: 'monospace', fontWeight: 500 }}>
+                                            <span className="mono-text">
                                                 {staffMember.employeeId || '-'}
                                             </span>
                                         </td>
                                         <td>
-                                            <div className="staff-name">
-                                                {staffMember.fullName}
-                                                {staffMember.role && staffMember.role !== 'Staff' && (
-                                                    <span
-                                                        className={`role-badge role-badge-${staffMember.role.toLowerCase()}`}
-                                                        title={`Role: ${staffMember.role}`}
-                                                    >
-                                                        {staffMember.role === 'SuperAdmin' ? '👑' : '🛡️'} {staffMember.role}
-                                                    </span>
+                                            <div className="staff-info-cell">
+                                                <div className="staff-name-row">
+                                                    {staffMember.fullName}
+                                                    {staffMember.role && staffMember.role !== 'Staff' && (
+                                                        <span
+                                                            className={`role-badge ${staffMember.role === 'SuperAdmin' ? 'super-admin' : 'admin'}`}
+                                                            title={staffMember.role}
+                                                        >
+                                                            {staffMember.role === 'SuperAdmin' ? <Crown size={12} /> : <Shield size={12} />}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {staffMember.phone && (
+                                                    <div className="text-muted text-xs">{staffMember.phone}</div>
                                                 )}
                                             </div>
-                                            {staffMember.phone && (
-                                                <div className="text-muted text-sm">{staffMember.phone}</div>
-                                            )}
                                         </td>
                                         <td>{staffMember.email}</td>
                                         <td>{staffMember.designation || '-'}</td>
-                                        <td className="text-primary">
-                                            <strong>{currencySymbol}{staffMember.hourlyRate.toFixed(2)}/hr</strong>
+                                        <td className="font-medium">
+                                            {currencySymbol}{staffMember.hourlyRate.toFixed(2)}/hr
                                         </td>
                                         <td>
                                             {staffMember.documents && staffMember.documents.length > 0 ? (
-                                                <span className="badge badge-primary">
-                                                    📄 {staffMember.documents.length}
-                                                </span>
+                                                <div className="doc-count">
+                                                    <FileText size={14} />
+                                                    {staffMember.documents.length}
+                                                </div>
                                             ) : (
-                                                <span className="text-muted">-</span>
+                                                <span className="text-muted text-center block">-</span>
                                             )}
                                         </td>
                                         <td>
@@ -276,44 +291,43 @@ export const StaffManagement: React.FC = () => {
                                             </span>
                                         </td>
                                         <td>
-                                            <div className="action-buttons" style={{ gap: '0.5rem' }}>
+                                            <div className="action-buttons">
                                                 <button
                                                     onClick={() => handleResetPassword(staffMember)}
-                                                    className="btn-icon"
+                                                    className="icon-btn"
                                                     title="Reset Password"
                                                 >
-                                                    🔑
+                                                    <Key size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleEdit(staffMember)}
-                                                    className="btn-icon"
-                                                    title="Edit Staff"
+                                                    className="icon-btn"
+                                                    title="Edit Details"
                                                 >
-                                                    ✏️
+                                                    <Pencil size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleUploadDocument(staffMember)}
-                                                    className="btn-icon"
+                                                    className="icon-btn"
                                                     title="Manage Documents"
                                                 >
-                                                    📄
+                                                    <FileText size={16} />
                                                 </button>
                                                 {staffMember.employmentStatus === 'Active' ? (
                                                     <button
                                                         onClick={() => handleDelete(staffMember._id)}
-                                                        className="btn-icon btn-icon-danger"
-                                                        title="Deactivate Staff"
+                                                        className="icon-btn danger"
+                                                        title="Deactivate"
                                                     >
-                                                        🗑️
+                                                        <Trash2 size={16} />
                                                     </button>
                                                 ) : (
                                                     <button
                                                         onClick={() => handleReactivate(staffMember._id, staffMember.fullName)}
-                                                        className="btn-icon"
-                                                        title="Reactivate Staff"
-                                                        style={{ color: '#10b981' }}
+                                                        className="icon-btn success"
+                                                        title="Reactivate"
                                                     >
-                                                        ✅
+                                                        <CheckCircle size={16} />
                                                     </button>
                                                 )}
                                             </div>

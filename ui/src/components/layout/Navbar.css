@@ -1,102 +1,67 @@
 .navbar {
-    background: var(--surface-primary);
     height: 64px;
-    padding: 0 1.5rem;
+    background-color: var(--surface-primary);
+    /* White/Dark */
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    padding: 0 var(--spacing-lg);
     position: sticky;
     top: 0;
-    z-index: 40;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-    border-bottom: 1px solid var(--border-color);
+    z-index: 900;
 }
 
-.navbar-brand {
+.navbar-left {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
 }
 
-.navbar-logo {
-    height: 32px;
-    width: auto;
-    object-fit: contain;
-}
-
-.navbar-logo-placeholder {
-    width: 32px;
-    height: 32px;
-    background: var(--primary-color);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-.navbar-brand h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0;
-    letter-spacing: -0.025em;
+.mobile-menu-btn {
+    display: none;
+    margin-right: var(--spacing-md);
 }
 
 .navbar-actions {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
 }
 
 .nav-icon-btn {
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s ease;
-    position: relative;
-}
-
-.mobile-menu-btn {
-    display: none;
-}
-
-@media (max-width: 768px) {
-    .mobile-menu-btn {
-        display: flex;
-        margin-right: 0.5rem;
-    }
 }
 
 .nav-icon-btn:hover {
-    background: var(--bg-secondary);
-    color: var(--primary-color);
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .notification-btn {
-    margin-right: 0.5rem;
+    position: relative;
 }
 
 .notification-badge {
     position: absolute;
-    top: 6px;
-    right: 6px;
-    min-width: 16px;
+    top: 4px;
+    right: 4px;
+    width: 16px;
     height: 16px;
-    padding: 0 4px;
-    border-radius: 8px;
-    background: #ef4444;
+    background-color: var(--error);
     color: white;
-    font-size: 0.65rem;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -106,45 +71,52 @@
 .divider-vertical {
     width: 1px;
     height: 24px;
-    background: var(--border-color);
-    margin: 0 0.75rem;
+    background-color: var(--border-color);
+    margin: 0 var(--spacing-sm);
 }
 
 .user-profile-section {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--spacing-sm);
 }
 
-.user-text {
+.user-avatar-circle {
+    width: 32px;
+    height: 32px;
+    background-color: var(--brand-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-info {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    line-height: 1.2;
-    margin-right: 0.5rem;
 }
 
 .user-name {
-    font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
+    font-weight: 600;
     color: var(--text-primary);
-    text-transform: capitalize;
+    line-height: 1.2;
 }
 
-.user-role-label {
+.user-role {
     font-size: 0.75rem;
     color: var(--text-secondary);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    line-height: 1.2;
 }
 
-.profile-btn:hover {
-    background: var(--primary-light);
-    color: var(--primary-color);
-}
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .mobile-menu-btn {
+        display: block;
+    }
 
-.logout-btn:hover {
-    background: #fee2e2;
-    color: #ef4444;
+    .user-info {
+        display: none;
+    }
 }

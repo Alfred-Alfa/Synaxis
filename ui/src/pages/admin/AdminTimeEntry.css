@@ -1,23 +1,68 @@
-.admin-time-entry {
-    max-width: 1400px;
+/* Admin Time Entry Styles */
+
+.status-badge-large {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--radius-full);
+    font-weight: 600;
 }
 
-.pending-badge {
-    animation: pulse 2s ease-in-out infinite;
+.status-badge-large.warning {
+    background-color: #fef3c7;
+    color: #d97706;
+    border: 1px solid #fcd34d;
 }
 
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.7;
-    }
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
 }
 
-.staff-name {
-    font-weight: 500;
+.date-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex {
+    display: flex;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.gap-1 {
+    gap: 4px;
+}
+
+.ml-5 {
+    margin-left: 1.25rem;
+}
+
+.description-cell {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-secondary);
+}
+
+.travel-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+}
+
+.btn-xs {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    height: 24px;
 }

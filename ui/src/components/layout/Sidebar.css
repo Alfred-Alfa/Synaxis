@@ -1,128 +1,117 @@
 .sidebar {
-    width: 260px;
-    background: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
-    height: calc(100vh - 73px);
-    position: sticky;
-    top: 65px;
-    height: calc(100vh - 65px);
-    overflow-y: auto;
-    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease-in-out;
-}
-
-/* Sidebar header, logo, and company name styles removed as they are moved to Navbar */
-
-.sidebar-nav {
-    padding: var(--spacing-xs, 8px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    transition: transform 0.3s ease-in-out;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    border-right: 1px solid var(--border-color);
+}
+
+.sidebar-header {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--spacing-lg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--brand-color);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: var(--spacing-md);
+}
+
+.logo-text {
+    font-size: 1.125rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #fff;
+}
+
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md) 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    /* Slight gap between items */
 }
 
 .sidebar-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 12px;
-    border-radius: var(--radius-md);
+    padding: 10px 20px;
+    color: var(--text-light);
     text-decoration: none;
-    color: var(--text-primary);
     transition: all 0.2s ease;
+    font-size: 0.9rem;
     font-weight: 500;
-    min-height: 38px;
-    /* Ensure good clickable area */
+    border-left: 3px solid transparent;
 }
 
 .sidebar-link:hover {
     background-color: var(--sidebar-hover);
+    color: #fff;
 }
 
 .sidebar-link.active {
-    background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
-    color: white;
-    box-shadow: var(--shadow-sm);
+    background-color: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+    border-left-color: var(--brand-color);
 }
 
 .sidebar-icon {
-    font-size: 1rem;
-    /* Slightly smaller icon */
+    margin-right: var(--spacing-md);
+    opacity: 0.8;
 }
 
-.sidebar-label {
-    font-size: 0.85rem;
+.sidebar-link.active .sidebar-icon {
+    opacity: 1;
+    color: var(--brand-color);
 }
 
-/* Overlay for mobile */
+/* Scrollbar within sidebar */
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile styles */
 .sidebar-overlay {
     display: none;
     position: fixed;
-    top: 65px;
+    top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 90;
-    backdrop-filter: blur(2px);
-}
-
-@media (max-width: 1024px) {
-    .sidebar {
-        width: 70px;
-    }
-
-    .sidebar-nav {
-        padding: var(--spacing-xs);
-        align-items: center;
-    }
-
-    .sidebar-label {
-        display: none;
-    }
-
-    .sidebar-link {
-        justify-content: center;
-        padding: var(--spacing-sm);
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        /* Circular hover effect for icon-only */
-    }
+    z-index: 999;
 }
 
 @media (max-width: 768px) {
     .sidebar {
-        display: block;
-        position: fixed;
-        left: 0;
-        width: 260px;
-        /* Full width properties on mobile open */
         transform: translateX(-100%);
-        z-index: 100;
-        background: var(--sidebar-bg);
-        border-right: 1px solid var(--border-color);
     }
 
     .sidebar.open {
         transform: translateX(0);
-    }
-
-    /* Restore label visibility on mobile since it's a drawer */
-    .sidebar-label {
-        display: block;
-    }
-
-    .sidebar-nav {
-        padding: var(--spacing-sm);
-        align-items: stretch;
-        /* Align items normally */
-    }
-
-    .sidebar-link {
-        justify-content: flex-start;
-        padding: 12px;
-        width: auto;
-        height: auto;
-        border-radius: var(--radius-md);
     }
 
     .sidebar-overlay.open {

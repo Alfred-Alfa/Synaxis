@@ -21,7 +21,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }, [user]);
 
     const handlePasswordChanged = async () => {
-        // Refresh user data to get updated isFirstLogin status
         if (refreshUser) {
             await refreshUser();
         }
@@ -29,12 +28,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     };
 
     return (
-        <div className="app-layout">
-            <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-            <div className="app-content">
-                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-                <main className="main-content">
-                    {children}
+        <div className="layout-root">
+            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+            <div className="layout-main">
+                <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+                <main className="layout-content">
+                    <div className="content-container">
+                        {children}
+                    </div>
                 </main>
             </div>
 

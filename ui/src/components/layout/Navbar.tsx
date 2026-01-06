@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { settingsService } from '../../services/settingsService';
 import { notificationService } from '../../services/notificationService';
 import { Bell, Moon, Sun, LogOut, User as UserIcon, Menu } from 'lucide-react';
 import './Navbar.css';
@@ -16,12 +15,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
     const { theme, toggleTheme } = useTheme();
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const [companyName, setCompanyName] = useState('HRMS');
-    const [companyLogo, setCompanyLogo] = useState('');
     const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
-        loadSettings();
         // Initial load
         loadNotifications();
 
@@ -29,18 +25,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
         const interval = setInterval(loadNotifications, 60000);
         return () => clearInterval(interval);
     }, []);
-
-    const loadSettings = async () => {
-        try {
-            const response = await settingsService.get();
-            if (response.data) {
-                setCompanyName(response.data.companyName || 'HRMS');
-                setCompanyLogo(response.data.companyLogo || '');
-            }
-        } catch (error) {
-            console.error('Failed to load settings:', error);
-        }
-    };
 
     const loadNotifications = async () => {
         try {
@@ -69,27 +53,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
 
     return (
         <nav className="navbar">
-            <div className="navbar-brand">
+            <div className="navbar-left">
                 <button
                     className="nav-icon-btn mobile-menu-btn"
                     onClick={onToggleSidebar}
                     aria-label="Toggle Sidebar"
                 >
-                    <Menu size={24} />
+                    <Menu size={20} />
                 </button>
-
-                {companyLogo ? (
-                    <img
-                        src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/uploads/${companyLogo}`}
-                        alt={companyName}
-                        className="navbar-logo"
-                    />
-                ) : (
-                    <div className="navbar-logo-placeholder">
-                        <span className="navbar-logo-icon">🏢</span>
-                    </div>
-                )}
-                <h2>{companyName}</h2>
             </div>
 
             <div className="navbar-actions">
@@ -98,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
                     onClick={toggleTheme}
                     title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
                 >
-                    {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                    {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
                 </button>
 
                 <button
@@ -106,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
                     onClick={goToNotifications}
                     title="Notifications"
                 >
-                    <Bell size={20} />
+                    <Bell size={18} />
                     {unreadCount > 0 && (
                         <span className="notification-badge">{unreadCount}</span>
                     )}
@@ -115,25 +86,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
                 <div className="divider-vertical"></div>
 
                 <div className="user-profile-section">
-                    <div className="user-text">
-                        <span className="user-name">{user?.email?.split('@')[0]}</span>
-                        <span className="user-role-label">{user?.role}</span>
+                    <div className="user-avatar-circle">
+                        <UserIcon size={16} color="white" />
                     </div>
-
-                    <button
-                        className="nav-icon-btn profile-btn"
-                        onClick={() => navigate(user?.role === 'Staff' ? '/staff/profile' : '/admin/profile')}
-                        title="My Profile"
-                    >
-                        <UserIcon size={20} />
-                    </button>
+                    <div className="user-info">
+                        <span className="user-name">{user?.email?.split('@')[0]}</span>
+                        <span className="user-role">{user?.role}</span>
+                    </div>
 
                     <button
                         className="nav-icon-btn logout-btn"
                         onClick={handleLogout}
                         title="Logout"
+                        style={{ marginLeft: '12px' }}
                     >
-                        <LogOut size={20} />
+                        <LogOut size={16} />
                     </button>
                 </div>
             </div>

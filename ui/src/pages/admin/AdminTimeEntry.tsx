@@ -5,6 +5,16 @@ import type { TimeEntry, Site, Staff } from '../../types';
 import { ApprovalModal } from '../../components/common/ApprovalModal';
 import { TimeEntryFormModal } from '../../components/forms/TimeEntryFormModal';
 import './AdminTimeEntry.css';
+import {
+    Clock,
+    CheckCircle,
+    XCircle,
+    MapPin,
+    Car,
+    Calendar,
+    Filter,
+    FileText
+} from 'lucide-react';
 
 export const AdminTimeEntry: React.FC = () => {
     const [entries, setEntries] = useState<TimeEntry[]>([]);
@@ -107,101 +117,114 @@ export const AdminTimeEntry: React.FC = () => {
     const pendingCount = entries.filter(e => e.status === 'Pending').length;
 
     if (loading) {
-        return <div className="loading">Loading time entries...</div>;
+        return <div className="loading-state">Loading time entries...</div>;
     }
 
     return (
-        <div className="admin-time-entry fade-in">
-            <div className="page-header">
+        <div className="page-container fade-in">
+            <div className="page-header-row">
                 <div>
-                    <h1>Time Entry Approval</h1>
-                    <p className="text-muted">Review and approve staff time entries</p>
+                    <h1>Time Entries</h1>
+                    <p className="text-muted">Review and approve staff hours</p>
                 </div>
                 {pendingCount > 0 && (
-                    <div className="pending-badge">
-                        <span className="badge badge-warning" style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
-                            {pendingCount} Pending
-                        </span>
+                    <div className="status-badge-large warning">
+                        <Clock size={20} />
+                        <span>{pendingCount} Pending</span>
                     </div>
                 )}
             </div>
 
-            {error && (
-                <div className="error-alert mb-3">
-                    {error}
-                </div>
-            )}
+            {error && <div className="alert alert-error mb-4">{error}</div>}
 
-            <div className="card mb-3">
-                <div className="entry-filters">
-                    <select
-                        className="select"
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as any)}
-                        style={{ maxWidth: '200px' }}
-                    >
-                        <option value="all">All Status</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
+            <div className="card filter-card mb-4">
+                <div className="filter-row">
+                    <div className="filter-group">
+                        <Filter size={16} className="text-muted" />
+                        <span className="text-sm font-medium">Filter Status:</span>
+                        <select
+                            className="select status-select"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                        >
+                            <option value="all">All Records</option>
+                            <option value="Pending">Pending Review</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div className="card">
-                <div className="entry-count mb-3">
-                    <strong>{filteredEntries.length}</strong> time entries found
+            <div className="card table-card">
+                <div className="card-header-row">
+                    <div className="record-count">
+                        <strong>{filteredEntries.length}</strong> records found
+                    </div>
                 </div>
 
                 {filteredEntries.length === 0 ? (
                     <div className="empty-state">
-                        <p>No time entries to review</p>
+                        <Clock size={48} className="text-muted" />
+                        <p>No time entries found matching filter.</p>
                     </div>
                 ) : (
-                    <div className="table-responsive">
+                    <div className="table-container">
                         <table className="table">
                             <thead>
                                 <tr>
-                                    <th>Staff</th>
-                                    <th>Date</th>
-                                    <th>Site/Project</th>
-                                    <th>Hours</th>
+                                    <th>Staff Member</th>
+                                    <th>Date & Time</th>
+                                    <th>Site / Project</th>
+                                    <th>Duration</th>
                                     <th>Description</th>
                                     <th>Travel</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredEntries.map((entry) => (
                                     <tr key={entry._id}>
                                         <td>
-                                            <div className="staff-name">{getStaffName(entry.staffId)}</div>
+                                            <span className="font-medium text-primary">
+                                                {getStaffName(entry.staffId)}
+                                            </span>
                                         </td>
                                         <td>
-                                            <div className="entry-date">
-                                                {new Date(entry.date).toLocaleDateString()}
-                                            </div>
-                                            {entry.startTime && entry.endTime && (
-                                                <div className="text-muted text-sm">
-                                                    {entry.startTime} - {entry.endTime}
+                                            <div className="date-cell">
+                                                <div className="flex items-center gap-1">
+                                                    <Calendar size={14} className="text-muted" />
+                                                    {new Date(entry.date).toLocaleDateString()}
                                                 </div>
-                                            )}
-                                        </td>
-                                        <td>{getSiteName(entry.siteId)}</td>
-                                        <td className="text-primary">
-                                            <strong>{entry.totalHours ? `${entry.totalHours.toFixed(2)} hrs` : 'In Progress'}</strong>
+                                                {entry.startTime && entry.endTime && (
+                                                    <div className="text-xs text-muted ml-5">
+                                                        {entry.startTime} - {entry.endTime}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
                                         <td>
-                                            <div className="entry-description">{entry.jobDescription}</div>
+                                            <div className="flex items-center gap-1 text-sm">
+                                                <MapPin size={14} className="text-muted" />
+                                                {getSiteName(entry.siteId)}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className="font-bold text-gray-800">
+                                                {entry.totalHours ? `${entry.totalHours.toFixed(2)}h` : 'Running...'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="description-cell" title={entry.jobDescription}>
+                                                {entry.jobDescription}
+                                            </div>
                                         </td>
                                         <td>
                                             {entry.ownTransport ? (
-                                                <div className="text-sm">
-                                                    🚗 ${entry.travelDetails?.amount || 0}
-                                                    {entry.travelDetails?.distance && (
-                                                        <div className="text-muted">{entry.travelDetails.distance}</div>
-                                                    )}
+                                                <div className="travel-pill">
+                                                    <Car size={12} />
+                                                    <span>${entry.travelDetails?.amount || 0}</span>
                                                 </div>
                                             ) : (
                                                 <span className="text-muted">-</span>
@@ -209,33 +232,23 @@ export const AdminTimeEntry: React.FC = () => {
                                         </td>
                                         <td>
                                             <span className={`badge badge-${entry.status === 'Approved' ? 'success' :
-                                                entry.status === 'Rejected' ? 'danger' :
-                                                    entry.status === 'Active' ? 'info' : 'warning'
+                                                    entry.status === 'Rejected' ? 'danger' :
+                                                        entry.status === 'Active' ? 'info' : 'warning'
                                                 }`}>
+                                                {entry.status === 'Approved' && <CheckCircle size={12} />}
+                                                {entry.status === 'Rejected' && <XCircle size={12} />}
+                                                {entry.status === 'Pending' && <Clock size={12} />}
                                                 {entry.status}
                                             </span>
-                                            {entry.status === 'Rejected' && entry.rejectionReason && (
-                                                <div className="text-sm text-danger mt-1">
-                                                    {entry.rejectionReason}
-                                                </div>
-                                            )}
-                                            {entry.status === 'Approved' && entry.approvedAt && (
-                                                <div className="text-sm text-muted mt-1">
-                                                    {new Date(entry.approvedAt).toLocaleDateString()}
-                                                </div>
-                                            )}
                                         </td>
                                         <td>
                                             {entry.status === 'Pending' && (
-                                                <div className="action-buttons">
-                                                    <button
-                                                        onClick={() => setEditingEntry(entry)}
-                                                        className="btn btn-primary btn-sm"
-                                                        title="Review and Edit"
-                                                    >
-                                                        Review
-                                                    </button>
-                                                </div>
+                                                <button
+                                                    onClick={() => setEditingEntry(entry)}
+                                                    className="btn btn-primary btn-xs"
+                                                >
+                                                    Review
+                                                </button>
                                             )}
                                         </td>
                                     </tr>

@@ -5,6 +5,15 @@ import { timeEntryService } from '../../services/timeEntryService';
 import { overtimeService } from '../../services/overtimeService';
 import { leaveService } from '../../services/leaveService';
 import type { Staff, TimeEntry, Overtime, Leave } from '../../types';
+import {
+  Users,
+  Clock,
+  Timer,
+  Calendar,
+  ArrowRight,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
 import './AdminDashboard.css';
 
 export const AdminDashboard: React.FC = () => {
@@ -64,268 +73,159 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const getTotalPending = () => {
-    return stats.pendingTimeEntries + stats.pendingOvertime + stats.pendingLeave;
-  };
-
   const getStaffName = (staffId: string | any) => {
     if (typeof staffId === 'object' && staffId?.fullName) return staffId.fullName;
     return 'Staff Member';
   };
 
   if (loading) {
-    return <div className="loading">Loading dashboard...</div>;
+    return (
+      <div className="dashboard-loading">
+        <div className="spinner"></div>
+        <span>Loading Dashboard...</span>
+      </div>
+    );
   }
 
   return (
-    <div className="dashboard fade-in">
+    <div className="dashboard-container">
       <div className="dashboard-header">
-        <h1>Admin Dashboard</h1>
-        <p className="text-muted">Welcome back! Here's your overview</p>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon icon-blue">
-            <span style={{ fontSize: '2rem' }}>👥</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.activeStaff}</div>
-            <div className="stat-label">Active Staff</div>
-            <div className="stat-sublabel">{stats.totalStaff} total</div>
-          </div>
+        <div>
+          <h1>Dashboard</h1>
+          <p className="text-muted">Overview of your workforce and pending tasks.</p>
         </div>
-
-        <div className="stat-card">
-          <div className="stat-icon icon-yellow">
-            <span style={{ fontSize: '2rem' }}>⏰</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.pendingTimeEntries}</div>
-            <div className="stat-label">Pending Time Entries</div>
-            <div className="stat-sublabel">Awaiting approval</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon icon-pink">
-            <span style={{ fontSize: '2rem' }}>💼</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.pendingOvertime}</div>
-            <div className="stat-label">Pending OT Requests</div>
-            <div className="stat-sublabel">Awaiting approval</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon icon-green">
-            <span style={{ fontSize: '2rem' }}>🏖️</span>
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.pendingLeave}</div>
-            <div className="stat-label">Pending Leave</div>
-            <div className="stat-sublabel">Awaiting approval</div>
-          </div>
+        <div className="date-display">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
       </div>
 
-      {/* Pending Approvals Widget */}
-      {getTotalPending() > 0 && (
-        <div className="card mb-3">
-          <div className="card-header">
-            <h3>Pending Approvals ({getTotalPending()})</h3>
+      {/* KPI Cards */}
+      <div className="kpi-grid">
+        <div className="kpi-card" onClick={() => navigate('/admin/staff')}>
+          <div className="kpi-icon-wrapper blue">
+            <Users size={24} />
           </div>
-
-          {stats.pendingTimeEntries > 0 && (
-            <div className="pending-section">
-              <div className="pending-section-header">
-                <h4>Time Entries ({stats.pendingTimeEntries})</h4>
-                <button onClick={() => navigate('/admin/time-entries')} className="btn btn-sm btn-secondary">
-                  View All
-                </button>
-              </div>
-              <div className="pending-list">
-                {pendingItems.timeEntries.map((entry) => (
-                  <div key={entry._id} className="pending-item">
-                    <div className="pending-item-content">
-                      <strong>{getStaffName(entry.staffId)}</strong>
-                      <span className="text-muted">
-                        {new Date(entry.date).toLocaleDateString()} - {entry.totalHours.toFixed(2)} hrs
-                      </span>
-                    </div>
-                    <span className="badge badge-warning">Pending</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {stats.pendingOvertime > 0 && (
-            <div className="pending-section">
-              <div className="pending-section-header">
-                <h4>Overtime Requests ({stats.pendingOvertime})</h4>
-                <button onClick={() => navigate('/admin/overtime')} className="btn btn-sm btn-secondary">
-                  View All
-                </button>
-              </div>
-              <div className="pending-list">
-                {pendingItems.overtime.map((ot) => (
-                  <div key={ot._id} className="pending-item">
-                    <div className="pending-item-content">
-                      <strong>{getStaffName(ot.staffId)}</strong>
-                      <span className="text-muted">
-                        {new Date(ot.date).toLocaleDateString()} - {ot.otHours.toFixed(2)} hrs
-                      </span>
-                    </div>
-                    <span className="badge badge-warning">Pending</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {stats.pendingLeave > 0 && (
-            <div className="pending-section">
-              <div className="pending-section-header">
-                <h4>Leave Applications ({stats.pendingLeave})</h4>
-                <button onClick={() => navigate('/admin/leave')} className="btn btn-sm btn-secondary">
-                  View All
-                </button>
-              </div>
-              <div className="pending-list">
-                {pendingItems.leave.map((leave) => (
-                  <div key={leave._id} className="pending-item">
-                    <div className="pending-item-content">
-                      <strong>{getStaffName(leave.staffId)}</strong>
-                      <span className="text-muted">
-                        {new Date(leave.startDate).toLocaleDateString()} - {leave.totalDays} days
-                      </span>
-                    </div>
-                    <span className={`badge badge-${leave.leaveType === 'Paid' ? 'success' :
-                      leave.leaveType === 'Sick' ? 'warning' : 'secondary'
-                      }`}>
-                      {leave.leaveType}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Charts & Visualizations */}
-      <div className="card mb-3">
-        <div className="card-header">
-          <h3>Analytics Overview</h3>
+          <div className="kpi-content">
+            <div className="kpi-value">{stats.activeStaff}</div>
+            <div className="kpi-label">Active Staff</div>
+          </div>
         </div>
 
-        <div className="charts-grid">
-          {/* Approval Status Breakdown */}
-          <div className="chart-section">
-            <h4>Pending Approvals Breakdown</h4>
-            <div className="donut-chart">
-              <div className="donut-segment donut-time" style={{
-                '--percentage': getTotalPending() > 0 ? (stats.pendingTimeEntries / getTotalPending() * 100) : 0
-              } as any}>
-              </div>
-              <div className="donut-center">
-                <div className="donut-value">{getTotalPending()}</div>
-                <div className="donut-label">Total</div>
-              </div>
-            </div>
-            <div className="chart-legend">
-              <div className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: '#f59e0b' }}></span>
-                <span>Time Entries: {stats.pendingTimeEntries}</span>
-              </div>
-              <div className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: '#ec4899' }}></span>
-                <span>Overtime: {stats.pendingOvertime}</span>
-              </div>
-              <div className="legend-item">
-                <span className="legend-color" style={{ backgroundColor: '#10b981' }}></span>
-                <span>Leave: {stats.pendingLeave}</span>
-              </div>
-            </div>
+        <div className="kpi-card" onClick={() => navigate('/admin/time-entries')}>
+          <div className="kpi-icon-wrapper amber">
+            <Clock size={24} />
           </div>
+          <div className="kpi-content">
+            <div className="kpi-value">{stats.pendingTimeEntries}</div>
+            <div className="kpi-label">Pending Time Entries</div>
+          </div>
+        </div>
 
-          {/* Staff Status Distribution */}
-          <div className="chart-section">
-            <h4>Staff Distribution</h4>
-            <div className="progress-chart">
-              <div className="progress-bar-wrapper">
-                <div className="progress-label">
-                  <span>Active Staff</span>
-                  <span>{stats.activeStaff}</span>
-                </div>
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill progress-active"
-                    style={{ width: `${stats.totalStaff > 0 ? (stats.activeStaff / stats.totalStaff * 100) : 0}%` }}
-                  ></div>
-                </div>
-              </div>
-              <div className="progress-bar-wrapper">
-                <div className="progress-label">
-                  <span>Inactive Staff</span>
-                  <span>{stats.totalStaff - stats.activeStaff}</span>
-                </div>
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill progress-inactive"
-                    style={{ width: `${stats.totalStaff > 0 ? ((stats.totalStaff - stats.activeStaff) / stats.totalStaff * 100) : 0}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-            <div className="chart-summary">
-              Total: <strong>{stats.totalStaff}</strong> staff members
-            </div>
+        <div className="kpi-card" onClick={() => navigate('/admin/overtime')}>
+          <div className="kpi-icon-wrapper orange">
+            <Timer size={24} />
+          </div>
+          <div className="kpi-content">
+            <div className="kpi-value">{stats.pendingOvertime}</div>
+            <div className="kpi-label">Pending Overtime</div>
+          </div>
+        </div>
+
+        <div className="kpi-card" onClick={() => navigate('/admin/leave')}>
+          <div className="kpi-icon-wrapper green">
+            <Calendar size={24} />
+          </div>
+          <div className="kpi-content">
+            <div className="kpi-value">{stats.pendingLeave}</div>
+            <div className="kpi-label">Pending Leave</div>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="card">
-        <div className="card-header">
-          <h3>Quick Actions</h3>
+      <div className="dashboard-content-grid">
+        {/* Left Column: Pending Actions */}
+        <div className="dashboard-section main-section">
+          <div className="section-header">
+            <h3>Pending Approvals</h3>
+          </div>
+
+          <div className="card-flat">
+            {stats.pendingTimeEntries === 0 && stats.pendingOvertime === 0 && stats.pendingLeave === 0 ? (
+              <div className="empty-state">
+                <CheckCircle2 size={48} className="text-muted" />
+                <p>All caught up! No pending approvals.</p>
+              </div>
+            ) : (
+              <div className="pending-list">
+                {/* Time Entries */}
+                {pendingItems.timeEntries.map(item => (
+                  <div key={item._id} className="pending-item" onClick={() => navigate('/admin/time-entries')}>
+                    <div className="pending-icon"><Clock size={16} /></div>
+                    <div className="pending-details">
+                      <span className="pending-title">{getStaffName(item.staffId)}</span>
+                      <span className="pending-subtitle">Time Entry • {item.totalHours} hrs</span>
+                    </div>
+                    <ArrowRight size={16} className="arrow-icon" />
+                  </div>
+                ))}
+
+                {/* Overtime */}
+                {pendingItems.overtime.map(item => (
+                  <div key={item._id} className="pending-item" onClick={() => navigate('/admin/overtime')}>
+                    <div className="pending-icon"><Timer size={16} /></div>
+                    <div className="pending-details">
+                      <span className="pending-title">{getStaffName(item.staffId)}</span>
+                      <span className="pending-subtitle">Overtime • {item.otHours} hrs</span>
+                    </div>
+                    <ArrowRight size={16} className="arrow-icon" />
+                  </div>
+                ))}
+
+                {/* Leave */}
+                {pendingItems.leave.map(item => (
+                  <div key={item._id} className="pending-item" onClick={() => navigate('/admin/leave')}>
+                    <div className="pending-icon"><Calendar size={16} /></div>
+                    <div className="pending-details">
+                      <span className="pending-title">{getStaffName(item.staffId)}</span>
+                      <span className="pending-subtitle">Leave • {item.leaveType}</span>
+                    </div>
+                    <ArrowRight size={16} className="arrow-icon" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="quick-actions">
-          <button onClick={() => navigate('/admin/staff')} className="action-btn">
-            <span className="action-icon">👥</span>
-            <span className="action-label">Manage Staff</span>
-          </button>
-          <button onClick={() => navigate('/admin/time-entries')} className="action-btn">
-            <span className="action-icon">⏰</span>
-            <span className="action-label">Time Entries</span>
-          </button>
-          <button onClick={() => navigate('/admin/overtime')} className="action-btn">
-            <span className="action-icon">💼</span>
-            <span className="action-label">Overtime</span>
-          </button>
-          <button onClick={() => navigate('/admin/leave')} className="action-btn">
-            <span className="action-label">🏖️</span>
-            <span className="action-label">Leave Requests</span>
-          </button>
-          <button onClick={() => navigate('/admin/payroll')} className="action-btn">
-            <span className="action-icon">💰</span>
-            <span className="action-label">Payroll</span>
-          </button>
-          <button onClick={() => navigate('/admin/sites')} className="action-btn">
-            <span className="action-icon">🏢</span>
-            <span className="action-label">Sites/Projects</span>
-          </button>
-          <button onClick={() => navigate('/admin/settings')} className="action-btn">
-            <span className="action-icon">⚙️</span>
-            <span className="action-label">Settings</span>
-          </button>
-          <button onClick={() => navigate('/admin/audit-logs')} className="action-btn">
-            <span className="action-icon">📋</span>
-            <span className="action-label">Audit Logs</span>
-          </button>
+
+        {/* Right Column: Quick Stats / Actions */}
+        <div className="dashboard-section side-section">
+          <div className="section-header">
+            <h3>Quick Actions</h3>
+          </div>
+          <div className="card-flat custom-padding">
+            <button className="quick-action-btn" onClick={() => navigate('/admin/staff/new')}>
+              Add New Staff
+            </button>
+            <button className="quick-action-btn" onClick={() => navigate('/admin/reports')}>
+              Generate Reports
+            </button>
+            <button className="quick-action-btn" onClick={() => navigate('/admin/payroll')}>
+              Process Payroll
+            </button>
+          </div>
+
+          <div className="section-header" style={{ marginTop: '2rem' }}>
+            <h3>System Status</h3>
+          </div>
+          <div className="card-flat">
+            <div className="system-status-item">
+              <div className="status-indicator online"></div>
+              <span>All Systems Operational</span>
+            </div>
+            <div className="system-version text-muted">
+              Version 2.4.0 (Enterprise)
+            </div>
+          </div>
         </div>
       </div>
     </div>
