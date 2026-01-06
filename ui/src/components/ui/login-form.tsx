@@ -312,7 +312,7 @@ export function LoginForm({
 
             {/* Secondary Link */}
             <p className="text-center text-sm text-gray-300 leading-relaxed mt-2">
-                Don't have an account? <a href="#" className="font-semibold text-blue-400 hover:text-blue-300 transition-colors ml-1 underline decoration-blue-400/30 underline-offset-4">Sign Up</a>
+                Don't have an account? <span className="text-blue-400 font-medium ml-1">Please contact the administrator</span>
             </p>
         </div>
     );
