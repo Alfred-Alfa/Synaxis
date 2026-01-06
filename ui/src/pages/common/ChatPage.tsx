@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, Users, Bell, BellOff, Volume2, VolumeX, X, Plus, Search } from 'lucide-react';
+import { MessageCircle, Send, Users, Bell, BellOff, Volume2, VolumeX, X, Plus, Search, CheckCheck } from 'lucide-react';
 import { useChat } from '../../contexts/ChatContext';
 import {
     getEmployees,
@@ -587,6 +587,7 @@ export const ChatPage: React.FC = () => {
                                 const displayName = getRoomDisplayName(room);
                                 const lastMsg = room.lastMessage as any;
                                 const timestamp = lastMsg?.createdAt;
+                                const isTyping = room.members.some((m: any) => typingUsers.has(m._id) && m._id !== currentUser?._id);
 
                                 return (
                                     <div
@@ -657,12 +658,13 @@ export const ChatPage: React.FC = () => {
 
                                             <div style={{
                                                 fontSize: '12px',
-                                                color: '#6b7280',
+                                                color: isTyping ? '#10b981' : '#6b7280',
                                                 overflow: 'hidden',
                                                 textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap'
+                                                whiteSpace: 'nowrap',
+                                                fontWeight: isTyping ? 500 : 400
                                             }}>
-                                                {truncateMessage(getMessagePreview(room))}
+                                                {isTyping ? 'Typing...' : truncateMessage(getMessagePreview(room))}
                                             </div>
                                         </div>
 
@@ -772,13 +774,31 @@ export const ChatPage: React.FC = () => {
                                         <div className="room-title">{getRoomDisplayName(currentRoom)}</div>
                                         {currentRoom.type === 'group' ? (
                                             <div className="room-members" style={{ fontSize: '12px', color: '#6b7280' }}>
-                                                {currentRoom.members.length} members
+                                                {(() => {
+                                                    const typingMembers = currentRoom.members.filter((m: any) =>
+                                                        typingUsers.has(m._id) && m._id !== currentUser?._id
+                                                    );
+
+                                                    if (typingMembers.length > 0) {
+                                                        const names = typingMembers.map((m: any) => m.name || m.staffRef?.name || 'Someone').join(', ');
+                                                        return <span style={{ color: '#10b981', fontWeight: 500 }}>
+                                                            {typingMembers.length > 2 ? 'Several people are typing...' : `${names} is typing...`}
+                                                        </span>;
+                                                    }
+
+                                                    return `${currentRoom.members.length} members`;
+                                                })()}
                                             </div>
                                         ) : (
                                             <div style={{ fontSize: '12px', color: '#6b7280' }}>
                                                 {(() => {
-                                                    const other = currentRoom.members.find((m: any) => m._id !== currentUser._id);
+                                                    const other = currentRoom.members.find((m: any) => m._id !== currentUser?._id);
                                                     if (!other) return 'Offline';
+
+                                                    if (typingUsers.has(other._id)) {
+                                                        return <span style={{ color: '#10b981', fontWeight: 500 }}>Typing...</span>;
+                                                    }
+
                                                     const status = onlineUsers[other._id]?.status || 'offline';
                                                     return getPresenceText(status, onlineUsers[other._id]?.lastSeen);
                                                 })()}
@@ -830,6 +850,14 @@ export const ChatPage: React.FC = () => {
                                                                 hour: '2-digit',
                                                                 minute: '2-digit',
                                                             })}
+                                                            {isOwnMessage && (
+                                                                <span style={{ marginLeft: '4px', display: 'inline-flex', alignItems: 'center' }}>
+                                                                    <CheckCheck
+                                                                        size={14}
+                                                                        color={msg.readBy && msg.readBy.length > 1 ? '#3b82f6' : '#9ca3af'}
+                                                                    />
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
