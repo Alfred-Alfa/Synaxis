@@ -243,53 +243,47 @@ export function LoginForm({
 
             {/* Form Block */}
             <form onSubmit={onSubmit} className="flex flex-col gap-8">
-                <div className="flex flex-col gap-6">
-                    {/* Email Input with Boxed Style */}
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-white/5 rounded-xl border border-white/10 transition-colors group-focus-within:border-blue-500/50 group-focus-within:bg-white/10 pointer-events-none" />
+                <div className="flex flex-col gap-5">
+                    {/* Email Input - Clean Style */}
+                    <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <User size={20} />
+                        </div>
                         <input
                             type="email"
-                            id="floating_email"
                             value={email}
                             onChange={(e) => setEmail && setEmail(e.target.value)}
-                            className="block w-full px-4 pt-7 pb-3 text-white bg-transparent border-none appearance-none focus:outline-none focus:ring-0 peer text-base [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#1a202c_inset] [&:-webkit-autofill]:-webkit-text-fill-color:white rounded-xl"
-                            placeholder=" "
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-12 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 fixed-autofill-background transition-colors"
+                            placeholder="Email Address"
                             required
                         />
-                        <label
-                            htmlFor="floating_email"
-                            className="absolute left-4 text-gray-400 transition-all duration-200 transform origin-[0] pointer-events-none flex items-center gap-2
-                            peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100
-                            peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-0 peer-focus:text-blue-400
-                            peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:scale-75 peer-not-placeholder-shown:-translate-y-0"
-                        >
-                            <User size={18} />
-                            Email Address
-                        </label>
+                        {/* Custom Autofill handling via class above and global/inline styles if needed, 
+                            but using the shadow utility class directly on input is safer */}
+                        <style>{`
+                                input:-webkit-autofill,
+                                input:-webkit-autofill:hover, 
+                                input:-webkit-autofill:focus, 
+                                input:-webkit-autofill:active{
+                                    -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+                                    -webkit-text-fill-color: white !important;
+                                    transition: background-color 5000s ease-in-out 0s;
+                                }
+                            `}</style>
                     </div>
 
-                    {/* Password Input with Boxed Style */}
-                    <div className="relative group">
-                        <div className="absolute inset-0 bg-white/5 rounded-xl border border-white/10 transition-colors group-focus-within:border-blue-500/50 group-focus-within:bg-white/10 pointer-events-none" />
+                    {/* Password Input - Clean Style */}
+                    <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <Lock size={20} />
+                        </div>
                         <input
                             type="password"
-                            id="floating_password"
                             value={password}
                             onChange={(e) => setPassword && setPassword(e.target.value)}
-                            className="block w-full px-4 pt-7 pb-3 text-white bg-transparent border-none appearance-none focus:outline-none focus:ring-0 peer text-base [&:-webkit-autofill]:shadow-[0_0_0px_1000px_#1a202c_inset] [&:-webkit-autofill]:-webkit-text-fill-color:white rounded-xl"
-                            placeholder=" "
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-12 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+                            placeholder="Password"
                             required
                         />
-                        <label
-                            htmlFor="floating_password"
-                            className="absolute left-4 text-gray-400 transition-all duration-200 transform origin-[0] pointer-events-none flex items-center gap-2
-                            peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100
-                            peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-0 peer-focus:text-blue-400
-                            peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:scale-75 peer-not-placeholder-shown:-translate-y-0"
-                        >
-                            <Lock size={18} />
-                            Password
-                        </label>
                     </div>
                 </div>
 
