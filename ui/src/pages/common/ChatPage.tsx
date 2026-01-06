@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, Users, Bell, BellOff, Volume2, VolumeX, X, Plus } from 'lucide-react';
+import { MessageCircle, Send, Users, Bell, BellOff, Volume2, VolumeX, X, Plus, Search } from 'lucide-react';
 import { useChat } from '../../contexts/ChatContext';
 import {
     getEmployees,
@@ -13,6 +13,12 @@ import type {
     ChatRoom,
     Message,
 } from '../../services/chatService';
+import { UserAvatar } from '../../components/chat/UserAvatar';
+import {
+    formatChatTimestamp,
+    truncateMessage,
+    matchesSearch,
+} from '../../utils/chatHelpers';
 import './ChatPage.css';
 
 /**
@@ -45,6 +51,10 @@ export const ChatPage: React.FC = () => {
     const [groupName, setGroupName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+
+    // NEW: Search and filter state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filter, setFilter] = useState<'all' | 'unread' | 'groups'>('all');
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<number | null>(null);
@@ -297,9 +307,9 @@ export const ChatPage: React.FC = () => {
 
         // Fallback: If no other member found (e.g. self-chat or bug), try to show the first member that isn't me, or just the first member name
         if (!otherMember) {
-             // If members array is populated with objects, try to find one that doesn't match current ID string
-             const fallback = room.members.find((m: any) => String(m._id || m.id) !== currentUserId);
-             return fallback?.staffRef?.name || fallback?.email || 'Unknown User';
+            // If members array is populated with objects, try to find one that doesn't match current ID string
+            const fallback = room.members.find((m: any) => String(m._id || m.id) !== currentUserId);
+            return fallback?.staffRef?.name || fallback?.email || 'Unknown User';
         }
 
         return otherMember?.staffRef?.name || otherMember?.email || 'Unknown User';
@@ -365,24 +375,232 @@ export const ChatPage: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className="rooms-list">
-                        {rooms.map(room => (
-                            <div
-                                key={room._id}
-                                className={`room-item ${activeRoom === room._id ? 'active' : ''}`}
-                                onClick={() => openRoom(room)}
+                    {/* Search Input */}
+                    <div className="search-container" style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>
+                        <div style={{ position: 'relative' }}>
+                            <Search
+                                size={16}
+                                style={{
+                                    position: 'absolute',
+                                    left: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    color: '#9ca3af'
+                                }}
+                            />
+                            <input
+                                type="text"
+                                className="search-input"
+                                placeholder="Search chats..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.5rem 0.75rem 0.5rem 2.5rem',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    outline: 'none',
+                                    transition: 'border-color 0.2s'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+                                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Filter Buttons */}
+                    <div className="filter-buttons" style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        padding: '0.5rem 0.75rem',
+                        borderBottom: '1px solid #e5e7eb',
+                        overflowX: 'auto'
+                    }}>
+                        {(['all', 'unread', 'groups'] as const).map(f => (
+                            <button
+                                key={f}
+                                onClick={() => setFilter(f)}
+                                style={{
+                                    padding: '0.25rem 0.75rem',
+                                    borderRadius: '16px',
+                                    border: 'none',
+                                    background: filter === f ? '#3b82f6' : '#f3f4f6',
+                                    color: filter === f ? 'white' : '#6b7280',
+                                    fontSize: '12px',
+                                    fontWeight: '500',
+                                    cursor: 'pointer',
+                                    textTransform: 'capitalize',
+                                    whiteSpace: 'nowrap',
+                                    transition: 'all 0.2s'
+                                }}
                             >
-                                <div className="room-info">
-                                    <div className="room-name">{getRoomDisplayName(room)}</div>
-                                    <div className="room-preview">{getMessagePreview(room)}</div>
-                                </div>
-                                {unreadCount.unreadByRoom[room._id] > 0 && (
-                                    <div className="unread-badge">
-                                        {unreadCount.unreadByRoom[room._id]}
-                                    </div>
-                                )}
-                            </div>
+                                {f}
+                            </button>
                         ))}
+                    </div>
+
+                    {/* Rooms List */}
+                    <div className="rooms-list" style={{ flex: 1, overflowY: 'auto' }}>
+                        {rooms
+                            .filter(room => {
+                                // Search filter
+                                const roomName = getRoomDisplayName(room);
+                                if (!matchesSearch(roomName, searchQuery)) return false;
+
+                                // Type filter
+                                if (filter === 'groups' && room.type !== 'group') return false;
+                                if (filter === 'unread' && !(unreadCount.unreadByRoom[room._id] > 0)) return false;
+
+                                return true;
+                            })
+                            .map(room => {
+                                const displayName = getRoomDisplayName(room);
+                                const lastMsg = room.lastMessage as any;
+                                const timestamp = lastMsg?.createdAt;
+
+                                return (
+                                    <div
+                                        key={room._id}
+                                        className={`room-item ${activeRoom === room._id ? 'active' : ''}`}
+                                        onClick={() => openRoom(room)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '12px',
+                                            cursor: 'pointer',
+                                            borderBottom: '1px solid #f3f4f6',
+                                            background: activeRoom === room._id ? '#eff6ff' : 'transparent',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (activeRoom !== room._id) {
+                                                e.currentTarget.style.background = '#f9fafb';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (activeRoom !== room._id) {
+                                                e.currentTarget.style.background = 'transparent';
+                                            }
+                                        }}
+                                    >
+                                        {/* Avatar */}
+                                        <UserAvatar
+                                            userId={room._id}
+                                            name={displayName}
+                                            size="medium"
+                                            showOnline={false}
+                                        />
+
+                                        {/* Room Info */}
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                marginBottom: '4px'
+                                            }}>
+                                                <div style={{
+                                                    fontWeight: '500',
+                                                    fontSize: '14px',
+                                                    color: '#111827',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap'
+                                                }}>
+                                                    {displayName}
+                                                </div>
+                                                {timestamp && (
+                                                    <div style={{
+                                                        fontSize: '11px',
+                                                        color: '#9ca3af',
+                                                        flexShrink: 0,
+                                                        marginLeft: '8px'
+                                                    }}>
+                                                        {formatChatTimestamp(timestamp)}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div style={{
+                                                fontSize: '12px',
+                                                color: '#6b7280',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {truncateMessage(getMessagePreview(room))}
+                                            </div>
+                                        </div>
+
+                                        {/* Unread Badge */}
+                                        {unreadCount.unreadByRoom[room._id] > 0 && (
+                                            <div style={{
+                                                minWidth: '20px',
+                                                height: '20px',
+                                                borderRadius: '10px',
+                                                background: '#3b82f6',
+                                                color: 'white',
+                                                fontSize: '11px',
+                                                fontWeight: '600',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                padding: '0 6px'
+                                            }}>
+                                                {unreadCount.unreadByRoom[room._id] > 99
+                                                    ? '99+'
+                                                    : unreadCount.unreadByRoom[room._id]}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+
+                        {/* Empty State */}
+                        {rooms.filter(room => {
+                            const roomName = getRoomDisplayName(room);
+                            if (!matchesSearch(roomName, searchQuery)) return false;
+                            if (filter === 'groups' && room.type !== 'group') return false;
+                            if (filter === 'unread' && !(unreadCount.unreadByRoom[room._id] > 0)) return false;
+                            return true;
+                        }).length === 0 && (
+                                <div style={{
+                                    padding: '3rem 1rem',
+                                    textAlign: 'center',
+                                    color: '#6b7280'
+                                }}>
+                                    <MessageCircle size={48} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
+                                    <p style={{ fontSize: '14px', marginBottom: '0.5rem', fontWeight: '500' }}>
+                                        {searchQuery ? 'No chats found' : filter !== 'all' ? `No ${filter} chats` : 'No chats yet'}
+                                    </p>
+                                    <p style={{ fontSize: '12px', marginBottom: '1rem', color: '#9ca3af' }}>
+                                        {searchQuery ? 'Try a different search term' : 'Start a conversation to get started'}
+                                    </p>
+                                    {!searchQuery && (
+                                        <button
+                                            onClick={() => setShowEmployeeList(true)}
+                                            style={{
+                                                padding: '0.5rem 1rem',
+                                                background: '#3b82f6',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                fontSize: '14px',
+                                                fontWeight: '500',
+                                                transition: 'background 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = '#2563eb'}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = '#3b82f6'}
+                                        >
+                                            <Plus size={16} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                                            Start New Chat
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                     </div>
                 </div>
 
@@ -392,12 +610,22 @@ export const ChatPage: React.FC = () => {
                         <>
                             {/* Chat Header */}
                             <div className="chat-room-header">
-                                <div className="room-title">{getRoomDisplayName(currentRoom)}</div>
-                                {currentRoom.type === 'group' && (
-                                    <div className="room-members">
-                                        {currentRoom.members.length} members
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <UserAvatar
+                                        userId={currentRoom._id}
+                                        name={getRoomDisplayName(currentRoom)}
+                                        size="medium"
+                                        showOnline={false}
+                                    />
+                                    <div>
+                                        <div className="room-title">{getRoomDisplayName(currentRoom)}</div>
+                                        {currentRoom.type === 'group' && (
+                                            <div className="room-members" style={{ fontSize: '12px', color: '#6b7280' }}>
+                                                {currentRoom.members.length} members
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
                             </div>
 
                             {/* Messages */}
@@ -414,9 +642,24 @@ export const ChatPage: React.FC = () => {
                                                 <div
                                                     key={msg._id}
                                                     className={`message ${isOwnMessage ? 'own' : 'other'}`}
+                                                    style={{
+                                                        display: 'flex',
+                                                        gap: '8px',
+                                                        marginBottom: '12px',
+                                                        flexDirection: isOwnMessage ? 'row-reverse' : 'row',
+                                                        alignItems: 'flex-end'
+                                                    }}
                                                 >
+                                                    {!isOwnMessage && currentRoom?.type === 'group' && (
+                                                        <UserAvatar
+                                                            userId={typeof msg.senderId === 'string' ? msg.senderId : (msg.senderId as any)._id}
+                                                            name={msg.senderName}
+                                                            size="small"
+                                                        />
+                                                    )}
+
                                                     <div className="message-content">
-                                                        {!isOwnMessage && (
+                                                        {!isOwnMessage && currentRoom?.type === 'group' && (
                                                             <div className="message-sender">
                                                                 {msg.senderName}
                                                             </div>
@@ -518,7 +761,7 @@ export const ChatPage: React.FC = () => {
                                     Select at least 1 member to create a group.
                                 </p>
                             </div>
-                            
+
                             <div className="employee-list" style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
                                 {employees.map(emp => (
                                     <div
@@ -538,7 +781,7 @@ export const ChatPage: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
-                            
+
                             <div style={{ padding: '1rem', borderTop: '1px solid var(--border-color, #e0e0e0)', background: '#f9f9f9', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
                                 <button
                                     className="create-group-button"
