@@ -495,81 +495,8 @@ export const ChatPage: React.FC = () => {
     };
 
     // ----------------------------------------------------------------------
-    // CHAT MODULE - DISABLED STATE (Corporate UI)
+    // CHAT MODULE
     // ----------------------------------------------------------------------
-    const chatDisabled = true;
-    if (chatDisabled) {
-        return (
-            <div className="chat-page" style={{ 
-                height: '100%', 
-                background: '#ffffff',
-                display: 'flex',
-                flexDirection: 'column',
-                fontFamily: 'inherit'
-            }}>
-                {/* Header */}
-                <div style={{
-                    height: '60px',
-                    borderBottom: '1px solid #e5e7eb',
-                    background: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '0 24px',
-                    flexShrink: 0
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <MessageCircle size={20} style={{ color: '#9ca3af' }} />
-                        <span style={{ fontWeight: 600, fontSize: '16px', color: '#374151' }}>Chat</span>
-                    </div>
-                </div>
-
-                {/* Body */}
-                <div style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '2rem',
-                    textAlign: 'center',
-                    background: '#f9fafb'
-                }}>
-                    <div style={{
-                        marginBottom: '1.5rem',
-                        padding: '1.5rem',
-                        borderRadius: '50%',
-                        background: '#ffffff',
-                        border: '1px solid #e5e7eb',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                    }}>
-                        <MessageCircle size={48} style={{ color: '#9ca3af', opacity: 0.8 }} strokeWidth={1.5} />
-                    </div>
-                    
-                    <h2 style={{
-                        fontSize: '18px',
-                        fontWeight: '600',
-                        color: '#1f2937',
-                        marginBottom: '8px'
-                    }}>
-                        Chat module is currently disabled
-                    </h2>
-                    
-                    <p style={{
-                        fontSize: '14px',
-                        color: '#6b7280',
-                        maxWidth: '400px',
-                        lineHeight: '1.5',
-                        margin: 0
-                    }}>
-                        This section is reserved for future internal communication enhancements.
-                    </p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="chat-page">
@@ -706,6 +633,10 @@ export const ChatPage: React.FC = () => {
                                 const lastMsg = room.lastMessage as any;
                                 const timestamp = lastMsg?.createdAt;
                                 const isTyping = room.members.some((m: any) => typingUsers.has(m._id) && m._id !== currentUser?._id);
+
+                                // Calculate status
+                                const otherMember = room.members.find((m: any) => m._id !== currentUser?._id);
+                                const status = otherMember ? onlineUsers[otherMember._id]?.status || 'offline' : 'offline';
 
                                 return (
                                     <div

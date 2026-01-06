@@ -167,7 +167,7 @@ export const SettingsPage: React.FC = () => {
         <div className="page-container fade-in">
             <div className="page-header-row mb-6">
                 <div>
-                    <h1>System Settings</h1>
+                    <h1>System Settings (Updated)</h1>
                     <p className="text-muted">Configure your company profile and system preferences</p>
                 </div>
             </div>
@@ -352,7 +352,7 @@ export const SettingsPage: React.FC = () => {
                         <section className="card mb-4 section-card">
                             <div className="card-header-simple">
                                 <Globe size={20} className="section-icon" />
-                                <h3>Localization</h3>
+                                <h3>Regional & Localization</h3>
                             </div>
                             <div className="form-grid-2">
                                 <div className="form-group">
