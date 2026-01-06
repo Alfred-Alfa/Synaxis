@@ -7,6 +7,16 @@ import {
     getOrCreateDirectRoom,
     getRoomMessages,
     createGroupRoom,
+    // Chat Actions
+    archiveRoom,
+    unarchiveRoom,
+    pinRoom,
+    unpinRoom,
+    muteRoom,
+    unmuteRoom,
+    deleteRoom,
+    clearRoomHistory,
+    leaveGroup,
 } from '../../services/chatService';
 import type {
     Employee,
@@ -14,6 +24,8 @@ import type {
     Message,
 } from '../../services/chatService';
 import { UserAvatar } from '../../components/chat/UserAvatar';
+import { ChatActions } from '../../components/chat/ChatActions';
+import { ConfirmDialog } from '../../components/chat/ConfirmDialog';
 import {
     formatChatTimestamp,
     truncateMessage,
@@ -55,6 +67,12 @@ export const ChatPage: React.FC = () => {
     // NEW: Search and filter state
     const [searchQuery, setSearchQuery] = useState('');
     const [filter, setFilter] = useState<'all' | 'unread' | 'groups'>('all');
+
+    // NEW: Chat actions confirmation dialogs
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+    const [actionRoomId, setActionRoomId] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<number | null>(null);
@@ -242,6 +260,115 @@ export const ChatPage: React.FC = () => {
             console.error('Failed to create group chat:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    /**
+     * Chat Action Handlers
+     */
+    const handleArchive = async (room: ChatRoom) => {
+        try {
+            const isArchived = (room as any).isArchived;
+            if (isArchived) {
+                await unarchiveRoom(room._id);
+            } else {
+                await archiveRoom(room._id);
+            }
+            await loadRooms();
+        } catch (error) {
+            console.error('Archive error:', error);
+        }
+    };
+
+    const handlePin = async (room: ChatRoom) => {
+        try {
+            const isPinned = (room as any).isPinned;
+            if (isPinned) {
+                await unpinRoom(room._id);
+            } else {
+                await pinRoom(room._id);
+            }
+            await loadRooms();
+        } catch (error) {
+            console.error('Pin error:', error);
+        }
+    };
+
+    const handleMute = async (room: ChatRoom) => {
+        try {
+            const isMuted = (room as any).isMuted;
+            if (isMuted) {
+                await unmuteRoom(room._id);
+            } else {
+                await muteRoom(room._id);
+            }
+            await loadRooms();
+        } catch (error) {
+            console.error('Mute error:', error);
+        }
+    };
+
+    const handleDelete = (roomId: string) => {
+        setActionRoomId(roomId);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!actionRoomId) return;
+        try {
+            await deleteRoom(actionRoomId);
+            await loadRooms();
+            // Close chat if currently viewing deleted room
+            if (activeRoom === actionRoomId) {
+                setCurrentRoom(null);
+                setActiveRoom(null);
+            }
+            setShowDeleteConfirm(false);
+            setActionRoomId(null);
+        } catch (error) {
+            console.error('Delete error:', error);
+        }
+    };
+
+    const handleClear = (roomId: string) => {
+        setActionRoomId(roomId);
+        setShowClearConfirm(true);
+    };
+
+    const confirmClear = async () => {
+        if (!actionRoomId) return;
+        try {
+            await clearRoomHistory(actionRoomId);
+            // Reload messages if currently viewing this room
+            if (activeRoom === actionRoomId) {
+                await openRoom(rooms.find(r => r._id === actionRoomId)!);
+            }
+            setShowClearConfirm(false);
+            setActionRoomId(null);
+        } catch (error) {
+            console.error('Clear error:', error);
+        }
+    };
+
+    const handleLeave = (roomId: string) => {
+        setActionRoomId(roomId);
+        setShowLeaveConfirm(true);
+    };
+
+    const confirmLeave = async () => {
+        if (!actionRoomId) return;
+        try {
+            await leaveGroup(actionRoomId);
+            await loadRooms();
+            // Close chat if currently viewing left group
+            if (activeRoom === actionRoomId) {
+                setCurrentRoom(null);
+                setActiveRoom(null);
+            }
+            setShowLeaveConfirm(false);
+            setActionRoomId(null);
+        } catch (error) {
+            console.error('Leave error:', error);
         }
     };
 
@@ -547,13 +674,29 @@ export const ChatPage: React.FC = () => {
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                padding: '0 6px'
+                                                padding: '0 6px',
+                                                marginRight: '8px'
                                             }}>
                                                 {unreadCount.unreadByRoom[room._id] > 99
                                                     ? '99+'
                                                     : unreadCount.unreadByRoom[room._id]}
                                             </div>
                                         )}
+
+                                        {/* Chat Actions Menu */}
+                                        <ChatActions
+                                            roomId={room._id}
+                                            roomType={room.type}
+                                            isArchived={(room as any).isArchived || false}
+                                            isPinned={(room as any).isPinned || false}
+                                            isMuted={(room as any).isMuted || false}
+                                            onArchive={() => handleArchive(room)}
+                                            onPin={() => handlePin(room)}
+                                            onMute={() => handleMute(room)}
+                                            onDelete={() => handleDelete(room._id)}
+                                            onClear={() => handleClear(room._id)}
+                                            onLeave={room.type === 'group' ? () => handleLeave(room._id) : undefined}
+                                        />
                                     </div>
                                 );
                             })}
@@ -796,6 +939,40 @@ export const ChatPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Confirmation Dialogs */}
+            <ConfirmDialog
+                isOpen={showDeleteConfirm}
+                title="Delete Chat?"
+                message="This will remove the chat from your list. You won't see any new messages until someone messages you again."
+                confirmText="Delete"
+                cancelText="Cancel"
+                danger={true}
+                onConfirm={confirmDelete}
+                onCancel={() => setShowDeleteConfirm(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={showClearConfirm}
+                title="Clear Chat History?"
+                message="All messages will be cleared from your view. Other participants will still see them."
+                confirmText="Clear"
+                cancelText="Cancel"
+                danger={true}
+                onConfirm={confirmClear}
+                onCancel={() => setShowClearConfirm(false)}
+            />
+
+            <ConfirmDialog
+                isOpen={showLeaveConfirm}
+                title="Leave Group?"
+                message="You will be removed from this group and won't receive new messages. You'll need to be re-added to rejoin."
+                confirmText="Leave"
+                cancelText="Cancel"
+                danger={true}
+                onConfirm={confirmLeave}
+                onCancel={() => setShowLeaveConfirm(false)}
+            />
         </div>
     );
 };
