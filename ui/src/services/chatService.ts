@@ -141,3 +141,68 @@ export const getUnreadCount = async (): Promise<UnreadCount> => {
     const response = await api.get('/chat/unread-count');
     return response.data;
 };
+
+// ===== CHAT ACTIONS (PHASE 2) =====
+
+/**
+ * Archive a chat room
+ */
+export const archiveRoom = async (roomId: string): Promise<void> => {
+    await api.post(`/chat/rooms/${roomId}/archive`);
+};
+
+/**
+ * Unarchive a chat room
+ */
+export const unarchiveRoom = async (roomId: string): Promise<void> => {
+    await api.post(`/chat/rooms/${roomId}/unarchive`);
+};
+
+/**
+ * Pin a chat room
+ */
+export const pinRoom = async (roomId: string): Promise<void> => {
+    await api.post(`/chat/rooms/${roomId}/pin`);
+};
+
+/**
+ * Unpin a chat room
+ */
+export const unpinRoom = async (roomId: string): Promise<void> => {
+    await api.post(`/chat/rooms/${roomId}/unpin`);
+};
+
+/**
+ * Mute a chat room
+ */
+export const muteRoom = async (roomId: string): Promise<void> => {
+    await api.post(`/chat/rooms/${roomId}/mute`);
+};
+
+/**
+ * Unmute a chat room
+ */
+export const unmuteRoom = async (roomId: string): Promise<void> => {
+    await api.post(`/chat/rooms/${roomId}/unmute`);
+};
+
+/**
+ * Delete a chat room (soft delete)
+ */
+export const deleteRoom = async (roomId: string): Promise<void> => {
+    await api.delete(`/chat/rooms/${roomId}`);
+};
+
+/**
+ * Clear chat history
+ */
+export const clearRoomHistory = async (roomId: string): Promise<void> => {
+    await api.post(`/chat/rooms/${roomId}/clear-history`);
+};
+
+/**
+ * Leave a group chat
+ */
+export const leaveGroup = async (roomId: string): Promise<void> => {
+    await api.post(`/chat/rooms/${roomId}/leave`);
+};
