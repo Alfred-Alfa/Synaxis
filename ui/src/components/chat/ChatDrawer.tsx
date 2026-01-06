@@ -11,6 +11,8 @@ import type {
     ChatRoom,
     Message,
 } from '../../services/chatService';
+import { UserAvatar } from './UserAvatar';
+import { formatChatTimestamp, truncateMessage } from '../../utils/chatHelpers';
 import './ChatDrawer.css';
 
 interface ChatDrawerProps {
@@ -166,12 +168,6 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
         return onlineUsers[other._id]?.status || 'offline';
     };
 
-    const getStatusColor = (status: string | null) => {
-        if (status === 'online') return '#22C55E';
-        if (status === 'away') return '#FACC15';
-        return '#9CA3AF';
-    };
-
     if (!isOpen) return null;
 
     return (
@@ -215,41 +211,117 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({ isOpen, onClose }) => {
                     <div className="mini-chat-list">
                         {rooms.length === 0 ? (
                             <div className="mini-empty-state">
+                                <MessageSquare size={40} style={{ opacity: 0.3, marginBottom: '8px' }} />
                                 <p>No conversations yet.</p>
+                                <small style={{ color: '#9ca3af' }}>Start a new chat to get started</small>
                             </div>
                         ) : (
                             rooms.map(room => {
                                 const unread = unreadCount.unreadByRoom[room._id] || 0;
+                                const roomName = getRoomName(room);
+                                const lastMsg = room.lastMessage as any;
+                                const status = getRoomStatus(room);
+
                                 return (
                                     <div
                                         key={room._id}
                                         className={`mini-chat-item ${unread > 0 ? 'unread' : ''}`}
                                         onClick={() => handleRoomClick(room)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '12px',
+                                            cursor: 'pointer',
+                                            borderBottom: '1px solid #f3f4f6',
+                                            background: 'white',
+                                            transition: 'background 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
                                     >
-                                        <div className="mini-chat-info">
-                                            <h4>{getRoomName(room)}</h4>
-                                            <p className="mini-chat-preview">
-                                                {room.lastMessage
-                                                    ? (room.lastMessage as any).messageText
-                                                    : 'No messages yet'}
-                                            </p>
+                                        {/* Avatar with online indicator */}
+                                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                                            <UserAvatar
+                                                userId={room._id}
+                                                name={roomName}
+                                                size="medium"
+                                                showOnline={room.type !== 'group'}
+                                                isOnline={status === 'online' || status === 'away'}
+                                            />
                                         </div>
-                                        <div className="mini-chat-meta">
-                                            <span className="mini-time">{formatTime(room.lastMessageAt)}</span>
-                                            {unread > 0 && (
-                                                <span className="mini-unread-badge">{unread}</span>
-                                            )}
-                                            {/* Status Dot for Direct Chat */}
-                                            {room.type !== 'group' && (
-                                                <div style={{
-                                                    width: '8px',
-                                                    height: '8px',
-                                                    borderRadius: '50%',
-                                                    backgroundColor: getStatusColor(getRoomStatus(room)),
-                                                    marginTop: '4px',
-                                                    alignSelf: 'flex-end'
-                                                }} />
-                                            )}
+
+                                        {/* Chat Info */}
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                marginBottom: '4px'
+                                            }}>
+                                                <h4 style={{
+                                                    margin: 0,
+                                                    fontSize: '14px',
+                                                    fontWeight: unread > 0 ? '600' : '500',
+                                                    color: '#111827',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap'
+                                                }}>
+                                                    {roomName}
+                                                </h4>
+                                                {lastMsg?.createdAt && (
+                                                    <span style={{
+                                                        fontSize: '11px',
+                                                        color: '#9ca3af',
+                                                        flexShrink: 0,
+                                                        marginLeft: '8px'
+                                                    }}>
+                                                        {formatChatTimestamp(lastMsg.createdAt)}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center'
+                                            }}>
+                                                <p style={{
+                                                    margin: 0,
+                                                    fontSize: '12px',
+                                                    color: unread > 0 ? '#6b7280' : '#9ca3af',
+                                                    fontWeight: unread > 0 ? '500' : 'normal',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                    flex: 1
+                                                }}>
+                                                    {lastMsg?.messageText
+                                                        ? truncateMessage(lastMsg.messageText, 40)
+                                                        : 'No messages yet'}
+                                                </p>
+
+                                                {unread > 0 && (
+                                                    <div style={{
+                                                        minWidth: '18px',
+                                                        height: '18px',
+                                                        borderRadius: '9px',
+                                                        background: '#3b82f6',
+                                                        color: 'white',
+                                                        fontSize: '10px',
+                                                        fontWeight: '600',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        padding: '0 5px',
+                                                        marginLeft: '8px',
+                                                        flexShrink: 0
+                                                    }}>
+                                                        {unread > 99 ? '99+' : unread}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 );
