@@ -253,7 +253,7 @@ export function LoginForm({
                             type="email"
                             value={email}
                             onChange={(e) => setEmail && setEmail(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-12 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 fixed-autofill-background transition-colors"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-14 pr-4 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 fixed-autofill-background transition-colors"
                             placeholder="Email Address"
                             required
                         />
@@ -280,7 +280,7 @@ export function LoginForm({
                             type="password"
                             value={password}
                             onChange={(e) => setPassword && setPassword(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-12 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-14 pr-4 py-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors"
                             placeholder="Password"
                             required
                         />
