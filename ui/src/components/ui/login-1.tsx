@@ -26,13 +26,13 @@ const AppInput = (props: InputProps) => {
     return (
         <div className="w-full min-w-[200px] relative">
             {label &&
-                <label className='block mb-2 text-sm'>
+                <label className='block mb-2 text-sm font-medium text-[var(--color-text-primary)]'>
                     {label}
                 </label>
             }
-            <div className="relative w-full">
+            <div className="relative w-full group">
                 <input
-                    className="peer relative z-10 border-2 border-[var(--color-border)] h-13 w-full rounded-md bg-[var(--color-surface)] px-4 font-thin outline-none drop-shadow-sm transition-all duration-200 ease-in-out focus:bg-[var(--color-bg)] placeholder:font-medium"
+                    className="peer relative z-10 h-12 w-full rounded-xl bg-[var(--color-surface)]/50 px-4 font-normal text-[var(--color-text-primary)] outline-none transition-all duration-300 ease-in-out focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-text-primary)]/20 placeholder:text-[var(--color-text-secondary)]/50 border border-white/5 shadow-inner"
                     placeholder={placeholder}
                     onMouseMove={handleMouseMove}
                     onMouseEnter={() => setIsHovering(true)}
@@ -42,21 +42,21 @@ const AppInput = (props: InputProps) => {
                 {isHovering && (
                     <>
                         <div
-                            className="absolute pointer-events-none top-0 left-0 right-0 h-[2px] z-20 rounded-t-md overflow-hidden"
+                            className="absolute pointer-events-none top-0 left-0 right-0 h-[1px] z-20 rounded-t-xl overflow-hidden opacity-50"
                             style={{
-                                background: `radial-gradient(30px circle at ${mousePosition.x}px 0px, var(--color-text-primary) 0%, transparent 70%)`,
+                                background: `radial-gradient(40px circle at ${mousePosition.x}px 0px, var(--color-text-primary) 0%, transparent 80%)`,
                             }}
                         />
                         <div
-                            className="absolute pointer-events-none bottom-0 left-0 right-0 h-[2px] z-20 rounded-b-md overflow-hidden"
+                            className="absolute pointer-events-none bottom-0 left-0 right-0 h-[1px] z-20 rounded-b-xl overflow-hidden opacity-50"
                             style={{
-                                background: `radial-gradient(30px circle at ${mousePosition.x}px 2px, var(--color-text-primary) 0%, transparent 70%)`,
+                                background: `radial-gradient(40px circle at ${mousePosition.x}px 1px, var(--color-text-primary) 0%, transparent 80%)`,
                             }}
                         />
                     </>
                 )}
                 {icon && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 z-20">
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-[var(--color-text-secondary)]">
                         {icon}
                     </div>
                 )}
@@ -95,76 +95,38 @@ const LoginUI = ({ email, setEmail, password, setPassword, onSubmit, loading, er
         setIsHovering(false);
     };
 
-    const socialIcons = [
-        {
-            icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4zm9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8A1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5a5 5 0 0 1-5 5a5 5 0 0 1-5-5a5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3a3 3 0 0 0 3 3a3 3 0 0 0 3-3a3 3 0 0 0-3-3" /></svg>,
-            href: '#',
-            gradient: 'bg-[var(--color-bg)]',
-        },
-        {
-            icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6.94 5a2 2 0 1 1-4-.002a2 2 0 0 1 4 .002M7 8.48H3V21h4zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91z" /></svg>,
-            href: '#',
-            bg: 'bg-[var(--color-bg)]',
-        },
-        {
-            icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M9.198 21.5h4v-8.01h3.604l.396-3.98h-4V7.5a1 1 0 0 1 1-1h3v-4h-3a5 5 0 0 0-5 5v2.01h-2l-.396 3.98h2.396z" /></svg>,
-            href: '#',
-            bg: 'bg-[var(--color-bg)]',
-        }
-    ];
-
     return (
         <div className="h-screen w-[100%] bg-[var(--color-bg)] flex items-center justify-center p-4">
-            <div className='card w-[80%] lg:w-[70%] md:w-[55%] flex justify-between h-[600px]'>
+            <div className='card w-[80%] lg:w-[70%] md:w-[65%] flex justify-between h-[600px] bg-[var(--color-surface)]/20 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl'>
                 <div
-                    className='w-full lg:w-1/2 px-4 lg:px-16 left h-full relative overflow-hidden'
+                    className='w-full lg:w-1/2 px-6 lg:px-16 left h-full relative flex flex-col justify-center'
                     onMouseMove={handleMouseMove}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}>
                     <div
-                        className={`absolute pointer-events-none w-[500px] h-[500px] bg-gradient-to-r from-purple-300/30 via-blue-300/30 to-pink-300/30 rounded-full blur-3xl transition-opacity duration-200 ${isHovering ? 'opacity-100' : 'opacity-0'
+                        className={`absolute pointer-events-none w-[600px] h-[600px] bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-full blur-[100px] transition-opacity duration-500 ${isHovering ? 'opacity-100' : 'opacity-0'
                             }`}
                         style={{
-                            transform: `translate(${mousePosition.x - 250}px, ${mousePosition.y - 250}px)`,
-                            transition: 'transform 0.1s ease-out'
+                            transform: `translate(${mousePosition.x - 300}px, ${mousePosition.y - 300}px)`,
+                            transition: 'transform 0.15s ease-out'
                         }}
                     />
-                    <div className="form-container sign-in-container h-full z-10 flex flex-col justify-center">
-                        <form className='text-center py-4 grid gap-2' onSubmit={onSubmit}>
-                            <div className='grid gap-4 md:gap-6 mb-2'>
-                                <h1 className='text-3xl md:text-4xl font-extrabold' style={{ color: 'var(--text-primary)' }}>Sign in</h1>
-                                <div className="social-container">
-                                    <div className="flex items-center justify-center">
-                                        <ul className="flex gap-3 md:gap-4 p-0">
-                                            {socialIcons.map((social, index) => {
-                                                return (
-                                                    <li key={index} className="list-none">
-                                                        <a
-                                                            href={social.href}
-                                                            className={`w-[2.5rem] md:w-[3rem] h-[2.5rem] md:h-[3rem] bg-[var(--color-bg-2)] rounded-full flex justify-center items-center relative z-[1] border-3 border-[var(--color-text-primary)] overflow-hidden group`}
-                                                        >
-                                                            <div
-                                                                className={`absolute inset-0 w-full h-full ${social.gradient || social.bg
-                                                                    } scale-y-0 origin-bottom transition-transform duration-500 ease-in-out group-hover:scale-y-100`}
-                                                            />
-                                                            <span className="text-[1.5rem] text-[hsl(203,92%,8%)] transition-all duration-500 ease-in-out z-[2] group-hover:text-[var(--color-text-primary)] group-hover:rotate-y-360">
-                                                                {social.icon}
-                                                            </span>
-                                                        </a>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    </div>
-                                </div>
-                                <span className='text-sm text-gray-400'>or use your account</span>
+                    <div className="form-container relative z-10">
+                        <div className="text-center mb-10">
+                            <h1 className='text-4xl font-bold tracking-tight' style={{ color: 'var(--color-heading)' }}>Welcome back</h1>
+                            <p className="text-[var(--color-text-secondary)] mt-2">Please enter your credentials</p>
+                        </div>
+
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm py-3 px-4 rounded-xl mb-6 text-center animate-shake">
+                                {error}
                             </div>
-                            {error && (
-                                <div className="text-red-500 text-sm mb-2">{error}</div>
-                            )}
-                            <div className='grid gap-4 items-center'>
+                        )}
+
+                        <form className='grid gap-6' onSubmit={onSubmit}>
+                            <div className='grid gap-4'>
                                 <AppInput
-                                    placeholder="Email"
+                                    placeholder="Email address"
                                     type="email"
                                     value={email}
                                     onChange={(e: any) => setEmail && setEmail(e.target.value)}
@@ -178,28 +140,34 @@ const LoginUI = ({ email, setEmail, password, setPassword, onSubmit, loading, er
                                     required
                                 />
                             </div>
-                            <a href="#" className='font-light text-sm md:text-md text-gray-400 mt-2 hover:text-white transition-colors'>Forgot your password?</a>
-                            <div className='flex gap-4 justify-center items-center mt-4'>
+
+                            <div className="flex items-center justify-end">
+                                <a href="#" className='text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors'>Forgot your password?</a>
+                            </div>
+
+                            <div className='mt-2'>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="group/button relative inline-flex justify-center items-center overflow-hidden rounded-md bg-[var(--color-border)] px-8 py-2 text-sm font-normal text-white transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-[var(--color-text-primary)] cursor-pointer"
+                                    className="w-full group/button relative h-12 inline-flex justify-center items-center overflow-hidden rounded-xl bg-[var(--color-bg-2)] text-sm font-semibold text-[var(--color-bg)] transition-all duration-300 ease-in-out hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-white/5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <span className="text-sm px-2 py-1">{loading ? 'Signing In...' : 'Sign In'}</span>
-                                    <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-13deg)_translateX(-100%)] group-hover/button:duration-1000 group-hover/button:[transform:skew(-13deg)_translateX(100%)]">
-                                        <div className="relative h-full w-8 bg-white/20" />
+                                    <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
+                                    <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-15deg)_translateX(-100%)] group-hover/button:duration-700 group-hover/button:[transform:skew(-15deg)_translateX(100%)]">
+                                        <div className="relative h-full w-12 bg-white/30" />
                                     </div>
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
+
                 <div className='hidden lg:block w-1/2 right h-full overflow-hidden relative'>
                     <img
                         src='https://images.pexels.com/photos/7102037/pexels-photo-7102037.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'
-                        alt="Carousel image"
-                        className="w-full h-full object-cover transition-transform duration-300 opacity-30"
+                        alt="Background"
+                        className="w-full h-full object-cover opacity-40 hover:scale-105 transition-transform duration-[5s] ease-out"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[var(--color-surface)]/80" />
                 </div>
             </div>
         </div>
