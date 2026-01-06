@@ -243,7 +243,7 @@ export function LoginForm({
 
             {/* Form Block */}
             <form onSubmit={onSubmit} className="flex flex-col gap-8">
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-6">
                     {/* Email Input with Boxed Style */}
                     <div className="relative group">
                         <div className="absolute inset-0 bg-white/5 rounded-xl border border-white/10 transition-colors group-focus-within:border-blue-500/50 group-focus-within:bg-white/10 pointer-events-none" />
@@ -258,7 +258,10 @@ export function LoginForm({
                         />
                         <label
                             htmlFor="floating_email"
-                            className="absolute text-gray-400 duration-200 transform top-4 left-4 z-10 origin-[0] peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-not-placeholder-shown:scale-75 peer-not-placeholder-shown:-translate-y-3 pointer-events-none flex items-center gap-2"
+                            className="absolute left-4 text-gray-400 transition-all duration-200 transform origin-[0] pointer-events-none flex items-center gap-2
+                            peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100
+                            peer-focus:top-2 peer-focus:translate-y-0 peer-focus:scale-75 peer-focus:text-blue-400
+                            peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:translate-y-0 peer-not-placeholder-shown:scale-75"
                         >
                             <User size={18} />
                             Email Address
@@ -279,7 +282,10 @@ export function LoginForm({
                         />
                         <label
                             htmlFor="floating_password"
-                            className="absolute text-gray-400 duration-200 transform top-4 left-4 z-10 origin-[0] peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-not-placeholder-shown:scale-75 peer-not-placeholder-shown:-translate-y-3 pointer-events-none flex items-center gap-2"
+                            className="absolute left-4 text-gray-400 transition-all duration-200 transform origin-[0] pointer-events-none flex items-center gap-2
+                            peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:scale-100
+                            peer-focus:top-2 peer-focus:translate-y-0 peer-focus:scale-75 peer-focus:text-blue-400
+                            peer-not-placeholder-shown:top-2 peer-not-placeholder-shown:translate-y-0 peer-not-placeholder-shown:scale-75"
                         >
                             <Lock size={18} />
                             Password
@@ -314,6 +320,6 @@ export function LoginForm({
             <p className="text-center text-sm text-gray-300 leading-relaxed mt-2">
                 Don't have an account? <a href="#" className="font-semibold text-blue-400 hover:text-blue-300 transition-colors ml-1 underline decoration-blue-400/30 underline-offset-4">Sign Up</a>
             </p>
-        </div>
+        </div >
     );
 }
