@@ -227,81 +227,89 @@ export function LoginForm({
     onForgotPassword
 }: LoginFormProps) {
     return (
-        <div className="w-full max-w-md p-10 space-y-6 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl">
-            <div className="text-center">
-                <h2 className="text-4xl font-bold text-white">Welcome Back</h2>
-                <p className="mt-3 text-base text-gray-300">Sign in to continue</p>
+        <div className="w-full max-w-md px-10 py-12 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 shadow-2xl">
+            {/* Header Block */}
+            <div className="text-center mb-8">
+                <h2 className="text-4xl font-bold text-white leading-tight">Welcome Back</h2>
+                <p className="mt-3 text-base text-gray-300 leading-relaxed">Sign in to continue</p>
             </div>
 
             {/* Error Message */}
             {error && (
-                <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+                <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm leading-relaxed">
                     {error}
                 </div>
             )}
 
-            <form onSubmit={onSubmit} className="space-y-6">
-                {/* Email Input with Animated Label */}
-                <div className="relative z-0">
-                    <input
-                        type="email"
-                        id="floating_email"
-                        value={email}
-                        onChange={(e) => setEmail && setEmail(e.target.value)}
-                        className="block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
-                        placeholder=" "
-                        required
-                    />
-                    <label
-                        htmlFor="floating_email"
-                        className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-                    >
-                        <User className="inline-block mr-2 -mt-1" size={16} />
-                        Email Address
-                    </label>
+            {/* Form Block */}
+            <form onSubmit={onSubmit} className="mb-8">
+                <div className="space-y-5">
+                    {/* Email Input with Animated Label */}
+                    <div className="relative z-0 pt-1">
+                        <input
+                            type="email"
+                            id="floating_email"
+                            value={email}
+                            onChange={(e) => setEmail && setEmail(e.target.value)}
+                            className="block py-3 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+                            placeholder=" "
+                            required
+                        />
+                        <label
+                            htmlFor="floating_email"
+                            className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                        >
+                            <User className="inline-block mr-2 -mt-1" size={16} />
+                            Email Address
+                        </label>
+                    </div>
+
+                    {/* Password Input with Animated Label */}
+                    <div className="relative z-0 pt-1">
+                        <input
+                            type="password"
+                            id="floating_password"
+                            value={password}
+                            onChange={(e) => setPassword && setPassword(e.target.value)}
+                            className="block py-3 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
+                            placeholder=" "
+                            required
+                        />
+                        <label
+                            htmlFor="floating_password"
+                            className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                        >
+                            <Lock className="inline-block mr-2 -mt-1" size={16} />
+                            Password
+                        </label>
+                    </div>
                 </div>
 
-                {/* Password Input with Animated Label */}
-                <div className="relative z-0">
-                    <input
-                        type="password"
-                        id="floating_password"
-                        value={password}
-                        onChange={(e) => setPassword && setPassword(e.target.value)}
-                        className="block py-2.5 px-0 w-full text-sm text-white bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-500 peer"
-                        placeholder=" "
-                        required
-                    />
-                    <label
-                        htmlFor="floating_password"
-                        className="absolute text-sm text-gray-300 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-                    >
-                        <Lock className="inline-block mr-2 -mt-1" size={16} />
-                        Password
-                    </label>
-                </div>
+                {/* Action Block */}
+                <div className="mt-6">
+                    <div className="flex items-center justify-between mb-5">
+                        <button
+                            type="button"
+                            onClick={onForgotPassword}
+                            className="text-sm text-gray-300 hover:text-white transition leading-normal"
+                        >
+                            Forgot Password?
+                        </button>
+                    </div>
 
-                <div className="flex items-center justify-between">
                     <button
-                        type="button"
-                        onClick={onForgotPassword}
-                        className="text-xs text-gray-300 hover:text-white transition"
+                        type="submit"
+                        disabled={loading}
+                        className="group w-full flex items-center justify-center py-4 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed rounded-lg text-white text-base font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 transition-all duration-300 leading-none"
                     >
-                        Forgot Password?
+                        {loading ? 'Signing in...' : 'Sign In'}
+                        <ArrowRight className="ml-2 h-5 w-5 transform group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="group w-full flex items-center justify-center py-3.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed rounded-lg text-white text-base font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 transition-all duration-300"
-                >
-                    {loading ? 'Signing in...' : 'Sign In'}
-                    <ArrowRight className="ml-2 h-5 w-5 transform group-hover:translate-x-1 transition-transform" />
-                </button>
             </form>
 
-            <p className="text-center text-xs text-gray-400">
+            {/* Secondary Link */}
+            <p className="text-center text-sm text-gray-400 leading-relaxed pt-2">
                 Don't have an account? <a href="#" className="font-semibold text-blue-400 hover:text-blue-300 transition">Sign Up</a>
             </p>
         </div>
