@@ -123,8 +123,24 @@ export const ChatPage: React.FC = () => {
 
             if (roomId === activeRoom) {
                 setMessages(prev => {
-                    // Prevent duplicates
+                    // 1. Prevent exact ID duplicates
                     if (prev.some(m => m._id === message._id)) return prev;
+
+                    // 2. Handle Optimistic Updates: Replace temp message with real one
+                    const tempMatchIndex = prev.findIndex(m =>
+                        m._id.startsWith('temp-') &&
+                        m.messageText === message.messageText &&
+                        // Robust ID comparison for sender
+                        String(typeof m.senderId === 'object' ? (m.senderId as any)._id : m.senderId) ===
+                        String(typeof message.senderId === 'object' ? (message.senderId as any)._id : message.senderId)
+                    );
+
+                    if (tempMatchIndex !== -1) {
+                        const newMessages = [...prev];
+                        newMessages[tempMatchIndex] = message;
+                        return newMessages;
+                    }
+
                     return [...prev, message];
                 });
 
@@ -384,11 +400,30 @@ export const ChatPage: React.FC = () => {
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!messageText.trim() || !socket || !activeRoom) return;
+        if (!messageText.trim() || !socket || !activeRoom || !currentUser) return;
+
+        const text = messageText.trim();
+
+        // Optimistic Update
+        const tempId = `temp-${Date.now()}`;
+        const optimisticMessage: Message = {
+            _id: tempId,
+            roomId: activeRoom,
+            senderId: currentUser._id || currentUser.id,
+            senderName: currentUser.name || currentUser.username || currentUser.email || 'Me',
+            messageText: text,
+            messageType: 'text',
+            readBy: [],
+            isDeleted: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+
+        setMessages(prev => [...prev, optimisticMessage]);
 
         socket.emit('send_message', {
             roomId: activeRoom,
-            messageText: messageText.trim(),
+            messageText: text,
         });
 
         setMessageText('');
@@ -829,8 +864,12 @@ export const ChatPage: React.FC = () => {
                                 ) : (
                                     <>
                                         {messages.map(msg => {
-                                            const isOwnMessage = msg.senderId === currentUser?._id ||
-                                                (typeof msg.senderId === 'object' && (msg.senderId as any)._id === currentUser?._id);
+                                            // Robust ID comparison
+                                            const msgSenderId = typeof msg.senderId === 'object'
+                                                ? (msg.senderId as any)._id
+                                                : msg.senderId;
+                                            const currentUserId = currentUser?._id || currentUser?.id;
+                                            const isOwnMessage = String(msgSenderId) === String(currentUserId);
 
                                             return (
                                                 <div
