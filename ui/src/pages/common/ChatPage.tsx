@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, Users, Bell, BellOff, Volume2, VolumeX, X, Plus, Search, CheckCheck } from 'lucide-react';
+import { MessageCircle, Send, Users, Bell, BellOff, Volume2, VolumeX, X, Plus, Search, CheckCheck, CheckCircle } from 'lucide-react';
 import { useChat } from '../../contexts/ChatContext';
 import {
     getEmployees,
@@ -68,6 +68,7 @@ export const ChatPage: React.FC = () => {
 
     // NEW: Search and filter state
     const [searchQuery, setSearchQuery] = useState('');
+    const [groupSearchQuery, setGroupSearchQuery] = useState('');
     const [filter, setFilter] = useState<'all' | 'unread' | 'groups'>('all');
 
     // NEW: Chat actions confirmation dialogs
@@ -987,38 +988,100 @@ export const ChatPage: React.FC = () => {
                             </button>
                         </div>
                         <div className="group-form" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-                            <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color, #e0e0e0)' }}>
-                                <input
-                                    type="text"
-                                    className="group-name-input"
-                                    placeholder="Group name"
-                                    value={groupName}
-                                    onChange={e => setGroupName(e.target.value)}
-                                    style={{ width: '100%' }}
-                                />
-                                <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.5rem' }}>
-                                    Select at least 1 member to create a group.
-                                </p>
+                            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb', background: '#fff' }}>
+                                <div style={{ marginBottom: '16px' }}>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>Group Name</label>
+                                    <input
+                                        type="text"
+                                        className="group-name-input"
+                                        placeholder="e.g. Project Alpha Team"
+                                        value={groupName}
+                                        onChange={e => setGroupName(e.target.value)}
+                                        style={{ width: '100%', padding: '10px 12px', fontSize: '14px', borderRadius: '8px', border: '1px solid #d1d5db', outline: 'none' }}
+                                    />
+                                </div>
+
+                                {selectedEmployees.length > 0 && (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+                                        {selectedEmployees.map(id => {
+                                            const emp = employees.find(e => e._id === id);
+                                            return (
+                                                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#eff6ff', color: '#1d4ed8', padding: '4px 10px', borderRadius: '16px', fontSize: '12px', fontWeight: 500 }}>
+                                                    {emp?.name}
+                                                    <X size={12} style={{ cursor: 'pointer' }} onClick={() => setSelectedEmployees(prev => prev.filter(e => e !== id))} />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="employee-list" style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
-                                {employees.map(emp => (
-                                    <div
-                                        key={emp._id}
-                                        className={`employee-item selectable ${selectedEmployees.includes(emp._id) ? 'selected' : ''
-                                            }`}
-                                        onClick={() => {
-                                            setSelectedEmployees(prev =>
-                                                prev.includes(emp._id)
-                                                    ? prev.filter(id => id !== emp._id)
-                                                    : [...prev, emp._id]
-                                            );
-                                        }}
-                                    >
-                                        <div className="employee-name">{emp.name}</div>
-                                        <div className="employee-position">{emp.position}</div>
-                                    </div>
-                                ))}
+                            <div style={{ padding: '12px 24px', borderBottom: '1px solid #f3f4f6', background: '#fff' }}>
+                                <div style={{ position: 'relative' }}>
+                                    <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search people..."
+                                        value={groupSearchQuery}
+                                        onChange={e => setGroupSearchQuery(e.target.value)}
+                                        style={{ width: '100%', padding: '8px 12px 8px 36px', fontSize: '14px', borderRadius: '6px', border: '1px solid #e5e7eb', background: '#f9fafb', outline: 'none' }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="employee-list" style={{ flex: 1, overflowY: 'auto' }}>
+                                {employees
+                                    .filter(emp => emp.name.toLowerCase().includes(groupSearchQuery.toLowerCase()))
+                                    .map(emp => {
+                                        const isSelected = selectedEmployees.includes(emp._id);
+                                        return (
+                                            <div
+                                                key={emp._id}
+                                                onClick={() => {
+                                                    setSelectedEmployees(prev =>
+                                                        prev.includes(emp._id) ? prev.filter(id => id !== emp._id) : [...prev, emp._id]
+                                                    );
+                                                }}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '12px',
+                                                    padding: '12px 24px',
+                                                    cursor: 'pointer',
+                                                    background: isSelected ? '#f8fafc' : 'white',
+                                                    borderBottom: '1px solid #f9fafb',
+                                                    transition: 'background 0.2s'
+                                                }}
+                                                onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#f9fafb'; }}
+                                                onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = 'white'; }}
+                                            >
+                                                <div style={{ position: 'relative' }}>
+                                                    <UserAvatar userId={emp._id} name={emp.name} size="medium" />
+                                                    {isSelected && (
+                                                        <div style={{ position: 'absolute', bottom: -2, right: -2, background: 'white', borderRadius: '50%', padding: '1px' }}>
+                                                            <CheckCircle size={16} fill="#3b82f6" color="white" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 500, fontSize: '14px', color: '#111827' }}>{emp.name}</div>
+                                                    <div style={{ fontSize: '12px', color: '#6b7280' }}>{emp.position}</div>
+                                                </div>
+                                                <div style={{
+                                                    width: '20px',
+                                                    height: '20px',
+                                                    borderRadius: '50%',
+                                                    border: isSelected ? 'none' : '2px solid #e5e7eb',
+                                                    background: isSelected ? 'none' : 'transparent',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}>
+                                                    {isSelected && <CheckCircle size={20} fill="#3b82f6" color="white" />}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                             </div>
 
                             <div style={{ padding: '1rem', borderTop: '1px solid var(--border-color, #e0e0e0)', background: '#f9f9f9', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
