@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ChatBadge } from '../common/ChatBadge';
+import { settingsService } from '../../services/settingsService';
 import {
     LayoutDashboard,
     Users,
@@ -25,6 +26,24 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     const { isAdmin, user } = useAuth();
+    const [companyConfig, setCompanyConfig] = useState<{ logo: string, name: string }>({ logo: '', name: 'HRMS Pro' });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await settingsService.get();
+                if (response.data) {
+                    setCompanyConfig({
+                        logo: response.data.companyLogo || '',
+                        name: response.data.companyName || 'HRMS Pro'
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch settings", error);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const adminLinks = [
         { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -78,10 +97,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             />
             <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <div className="logo-icon">
-                        <Briefcase size={24} color="white" />
-                    </div>
-                    <span className="logo-text">HRMS Pro</span>
+                    {companyConfig.logo ? (
+                        <div className="logo-image-container">
+                            <img
+                                src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/uploads/${companyConfig.logo}`}
+                                alt={companyConfig.name}
+                                className="sidebar-logo-img"
+                            />
+                        </div>
+                    ) : (
+                        <div className="logo-icon">
+                            <Briefcase size={24} color="white" />
+                        </div>
+                    )}
+                    <span className="logo-text">{companyConfig.name}</span>
                 </div>
 
                 <nav className="sidebar-nav">
