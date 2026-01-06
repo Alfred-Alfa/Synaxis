@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ForgotPasswordModal } from '../components/auth/ForgotPasswordModal';
-import LoginUI from '../components/ui/login-1';
+import { SmokeyBackground, LoginForm } from '../components/ui/login-form';
 import './Login.css';
 
 export const Login: React.FC = () => {
@@ -42,15 +42,21 @@ export const Login: React.FC = () => {
 
     return (
         <>
-            <LoginUI
-                email={email}
-                setEmail={setEmail}
-                password={password}
-                setPassword={setPassword}
-                onSubmit={handleSubmit}
-                loading={loading}
-                error={error}
-            />
+            <main className="relative w-screen h-screen bg-gray-900">
+                <SmokeyBackground className="absolute inset-0" />
+                <div className="relative z-10 flex items-center justify-center w-full h-full p-4">
+                    <LoginForm
+                        email={email}
+                        setEmail={setEmail}
+                        password={password}
+                        setPassword={setPassword}
+                        onSubmit={handleSubmit}
+                        loading={loading}
+                        error={error}
+                        onForgotPassword={() => setShowForgotModal(true)}
+                    />
+                </div>
+            </main>
             <ForgotPasswordModal
                 isOpen={showForgotModal}
                 onClose={() => setShowForgotModal(false)}
