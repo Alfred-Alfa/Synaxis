@@ -8,8 +8,7 @@ import {
     Shield,
     Save,
     Upload,
-    Plus,
-    CreditCard
+    Plus
 } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {

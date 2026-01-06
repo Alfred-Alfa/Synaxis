@@ -11,8 +11,7 @@ import {
   Timer,
   Calendar,
   ArrowRight,
-  CheckCircle2,
-  AlertCircle
+  CheckCircle2
 } from 'lucide-react';
 import './AdminDashboard.css';
 

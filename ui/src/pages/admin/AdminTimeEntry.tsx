@@ -12,8 +12,7 @@ import {
     MapPin,
     Car,
     Calendar,
-    Filter,
-    FileText
+    Filter
 } from 'lucide-react';
 
 export const AdminTimeEntry: React.FC = () => {
@@ -232,8 +231,8 @@ export const AdminTimeEntry: React.FC = () => {
                                         </td>
                                         <td>
                                             <span className={`badge badge-${entry.status === 'Approved' ? 'success' :
-                                                    entry.status === 'Rejected' ? 'danger' :
-                                                        entry.status === 'Active' ? 'info' : 'warning'
+                                                entry.status === 'Rejected' ? 'danger' :
+                                                    entry.status === 'Active' ? 'info' : 'warning'
                                                 }`}>
                                                 {entry.status === 'Approved' && <CheckCircle size={12} />}
                                                 {entry.status === 'Rejected' && <XCircle size={12} />}
