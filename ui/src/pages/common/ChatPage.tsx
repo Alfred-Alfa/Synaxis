@@ -118,8 +118,15 @@ export const ChatPage: React.FC = () => {
         if (!socket || !activeRoom) return;
 
         const handleReceiveMessage = ({ message, roomId }: { message: Message; roomId: string }) => {
+            // Always refresh rooms to update sidebar preview and timestamp
+            loadRooms();
+
             if (roomId === activeRoom) {
-                setMessages(prev => [...prev, message]);
+                setMessages(prev => {
+                    // Prevent duplicates
+                    if (prev.some(m => m._id === message._id)) return prev;
+                    return [...prev, message];
+                });
 
                 // Mark as read
                 if (message.senderId !== currentUser?._id) {
@@ -129,9 +136,6 @@ export const ChatPage: React.FC = () => {
                     });
                     refreshUnreadCount();
                 }
-            } else {
-                // Refresh rooms to update last message
-                loadRooms();
             }
         };
 
@@ -811,7 +815,17 @@ export const ChatPage: React.FC = () => {
                             {/* Messages */}
                             <div className="messages-container">
                                 {isLoading ? (
-                                    <div className="loading">Loading messages...</div>
+                                    <div style={{ padding: '20px' }}>
+                                        {[1, 2, 3].map(i => (
+                                            <div key={i} style={{ display: 'flex', gap: '12px', marginBottom: '24px', alignItems: 'flex-start' }}>
+                                                <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#f3f4f6' }}></div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ height: 12, width: '30%', background: '#f3f4f6', marginBottom: 8, borderRadius: 4 }}></div>
+                                                    <div style={{ height: 32, width: '70%', background: '#f3f4f6', borderRadius: 8 }}></div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 ) : (
                                     <>
                                         {messages.map(msg => {
