@@ -243,41 +243,43 @@ export function LoginForm({
 
             {/* Form Block */}
             <form onSubmit={onSubmit} className="flex flex-col gap-8">
-                <div className="flex flex-col gap-6">
-                    {/* Email Input with Animated Label */}
+                <div className="flex flex-col gap-5">
+                    {/* Email Input with Boxed Style */}
                     <div className="relative group">
+                        <div className="absolute inset-0 bg-white/5 rounded-xl border border-white/10 transition-colors group-focus-within:border-blue-500/50 group-focus-within:bg-white/10 pointer-events-none" />
                         <input
                             type="email"
                             id="floating_email"
                             value={email}
                             onChange={(e) => setEmail && setEmail(e.target.value)}
-                            className="block w-full py-4 text-white bg-transparent border-0 border-b-2 border-gray-400/50 appearance-none focus:outline-none focus:ring-0 focus:border-blue-400 peer pt-6 pb-2 text-lg transition-colors"
+                            className="block w-full px-4 pt-6 pb-2 text-white bg-transparent border-none appearance-none focus:outline-none focus:ring-0 peer text-base"
                             placeholder=" "
                             required
                         />
                         <label
                             htmlFor="floating_email"
-                            className="absolute text-base text-gray-300 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:top-4 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:top-2 hover:cursor-text pointer-events-none flex items-center gap-2"
+                            className="absolute text-gray-400 duration-200 transform top-4 left-4 z-10 origin-[0] peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-not-placeholder-shown:scale-75 peer-not-placeholder-shown:-translate-y-3 pointer-events-none flex items-center gap-2"
                         >
                             <User size={18} />
                             Email Address
                         </label>
                     </div>
 
-                    {/* Password Input with Animated Label */}
+                    {/* Password Input with Boxed Style */}
                     <div className="relative group">
+                        <div className="absolute inset-0 bg-white/5 rounded-xl border border-white/10 transition-colors group-focus-within:border-blue-500/50 group-focus-within:bg-white/10 pointer-events-none" />
                         <input
                             type="password"
                             id="floating_password"
                             value={password}
                             onChange={(e) => setPassword && setPassword(e.target.value)}
-                            className="block w-full py-4 text-white bg-transparent border-0 border-b-2 border-gray-400/50 appearance-none focus:outline-none focus:ring-0 focus:border-blue-400 peer pt-6 pb-2 text-lg transition-colors"
+                            className="block w-full px-4 pt-6 pb-2 text-white bg-transparent border-none appearance-none focus:outline-none focus:ring-0 peer text-base"
                             placeholder=" "
                             required
                         />
                         <label
                             htmlFor="floating_password"
-                            className="absolute text-base text-gray-300 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:top-4 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:top-2 hover:cursor-text pointer-events-none flex items-center gap-2"
+                            className="absolute text-gray-400 duration-200 transform top-4 left-4 z-10 origin-[0] peer-focus:text-blue-400 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-not-placeholder-shown:scale-75 peer-not-placeholder-shown:-translate-y-3 pointer-events-none flex items-center gap-2"
                         >
                             <Lock size={18} />
                             Password
