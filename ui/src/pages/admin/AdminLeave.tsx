@@ -192,7 +192,7 @@ export const AdminLeave: React.FC = () => {
                                                     {leave.leaveType}
                                                 </span>
                                                 {leave.isHalfDay && (
-                                                    <div className="text-sm text-muted">Half Day</div>
+                                                    <div className="text-sm text-muted">Half Day {leave.halfDaySession ? `(${leave.halfDaySession})` : ''}</div>
                                                 )}
                                             </td>
                                             <td>

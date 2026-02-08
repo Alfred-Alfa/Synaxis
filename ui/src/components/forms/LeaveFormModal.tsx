@@ -16,6 +16,7 @@ export const LeaveFormModal: React.FC<LeaveFormModalProps> = ({ leave, onClose }
         startDate: leave?.startDate ? new Date(leave.startDate).toISOString().split('T')[0] : '',
         endDate: leave?.endDate ? new Date(leave.endDate).toISOString().split('T')[0] : '',
         isHalfDay: leave?.isHalfDay || false,
+        halfDaySession: leave?.halfDaySession || 'First Half',
         reason: leave?.reason || '',
     });
 
@@ -48,6 +49,9 @@ export const LeaveFormModal: React.FC<LeaveFormModalProps> = ({ leave, onClose }
             formDataToSend.append('startDate', formData.startDate);
             formDataToSend.append('endDate', formData.endDate);
             formDataToSend.append('isHalfDay', formData.isHalfDay.toString());
+            if (formData.isHalfDay) {
+                formDataToSend.append('halfDaySession', formData.halfDaySession);
+            }
             formDataToSend.append('reason', formData.reason);
 
             if (file) {
@@ -60,6 +64,7 @@ export const LeaveFormModal: React.FC<LeaveFormModalProps> = ({ leave, onClose }
                     startDate: formData.startDate,
                     endDate: formData.endDate,
                     isHalfDay: formData.isHalfDay,
+                    halfDaySession: formData.isHalfDay ? (formData.halfDaySession as 'First Half' | 'Second Half') : undefined,
                     reason: formData.reason,
                 };
                 await leaveService.update(leave._id, updateData);
@@ -121,6 +126,24 @@ export const LeaveFormModal: React.FC<LeaveFormModalProps> = ({ leave, onClose }
                                 <span>Half Day</span>
                             </label>
                         </div>
+
+                        {formData.isHalfDay && (
+                            <div className="form-group">
+                                <label htmlFor="halfDaySession" className="form-label">
+                                    Session *
+                                </label>
+                                <select
+                                    id="halfDaySession"
+                                    name="halfDaySession"
+                                    className="select"
+                                    value={formData.halfDaySession}
+                                    onChange={handleChange}
+                                >
+                                    <option value="First Half">First Half (AM)</option>
+                                    <option value="Second Half">Second Half (PM)</option>
+                                </select>
+                            </div>
+                        )}
 
                         <div className="form-group">
                             <label htmlFor="startDate" className="form-label">

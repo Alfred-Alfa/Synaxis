@@ -140,7 +140,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ leaves }) => {
                                                 leave.leaveType === 'Sick' ? 'warning' :
                                                     leave.leaveType === 'Casual' ? 'primary' : 'secondary'
                                                 }`}
-                                            title={`${getStaffName(leave.staffId)} - ${leave.leaveType} Leave${leave.isHalfDay ? ' (Half Day)' : ''
+                                            title={`${getStaffName(leave.staffId)} - ${leave.leaveType} Leave${leave.isHalfDay ? ` (Half Day - ${leave.halfDaySession || ''})` : ''
                                                 }`}
                                         >
                                             {getStaffName(leave.staffId).split(' ')[0]}

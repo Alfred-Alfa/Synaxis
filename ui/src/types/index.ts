@@ -131,6 +131,7 @@ export interface Leave {
     startDate: string;
     endDate: string;
     isHalfDay: boolean;
+    halfDaySession?: 'First Half' | 'Second Half';
     reason: string;
     attachment?: {
         path: string;

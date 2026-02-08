@@ -54,17 +54,20 @@ router.post('/', protect, upload.single('attachment'), async (req, res) => {
             startDate,
             endDate,
             isHalfDay,
+            halfDaySession,
             reason,
         } = req.body;
 
         const isAdminUser = req.user.role === 'Admin' || req.user.role === 'SuperAdmin';
+        const isHalfDayBool = isHalfDay === 'true' || isHalfDay === true;
 
         const leave = await Leave.create({
             staffId: req.user.staffRef,
             leaveType,
             startDate,
             endDate,
-            isHalfDay: isHalfDay === 'true' || isHalfDay === true,
+            isHalfDay: isHalfDayBool,
+            halfDaySession: isHalfDayBool ? halfDaySession : undefined,
             reason,
             attachment: req.file ? { path: req.file.path } : undefined,
             status: isAdminUser ? 'Approved' : 'Pending',

@@ -165,7 +165,7 @@ export const sendCompanyEmail = async (companyId, { to, subject, html }) => {
 
 export const sendPasswordResetEmail = async (email, resetToken, userName) => {
     const companyId = await getDefaultCompanyId();
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'https://hrms.elitecraftuk.com'}/reset-password/${resetToken}`;
 
     const html = `
         <!DOCTYPE html>
@@ -211,7 +211,7 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
 
 export const sendWelcomeEmail = async (email, tempPassword, userName, companyName = 'Webgeon') => {
     const companyId = await getDefaultCompanyId();
-    const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
+    const loginUrl = `${process.env.FRONTEND_URL || 'https://hrms.elitecraftuk.com'}/login`;
 
     const html = `
         <!DOCTYPE html>
