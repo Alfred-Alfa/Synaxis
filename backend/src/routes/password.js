@@ -83,7 +83,8 @@ router.post('/request-reset', async (req, res) => {
 
         // Send email
         const userName = user.staffRef?.fullName || user.email;
-        await sendPasswordResetEmail(user.email, resetToken, userName);
+        const origin = req.headers.origin || req.headers.referer || process.env.FRONTEND_URL;
+        await sendPasswordResetEmail(user.email, resetToken, userName, origin);
 
         // Log audit
         await logAudit({

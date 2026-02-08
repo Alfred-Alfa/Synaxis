@@ -163,9 +163,13 @@ export const sendCompanyEmail = async (companyId, { to, subject, html }) => {
 // BACKWARD COMPATIBILITY WRAPPERS
 // ==========================================
 
-export const sendPasswordResetEmail = async (email, resetToken, userName) => {
+export const sendPasswordResetEmail = async (email, resetToken, userName, origin) => {
     const companyId = await getDefaultCompanyId();
-    const resetUrl = `${process.env.FRONTEND_URL || 'https://hrms.elitecraftuk.com'}/reset-password/${resetToken}`;
+    // Use origin if provided, else fallback to env
+    const baseUrl = origin || process.env.FRONTEND_URL;
+    // Remove trailing slash if present to avoid double slash
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const resetUrl = `${cleanBaseUrl}/reset-password/${resetToken}`;
 
     const html = `
         <!DOCTYPE html>
@@ -209,9 +213,12 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
     });
 };
 
-export const sendWelcomeEmail = async (email, tempPassword, userName, companyName = 'Webgeon') => {
+export const sendWelcomeEmail = async (email, tempPassword, userName, companyName = 'Webgeon', origin) => {
     const companyId = await getDefaultCompanyId();
-    const loginUrl = `${process.env.FRONTEND_URL || 'https://hrms.elitecraftuk.com'}/login`;
+    // Use origin if provided, else fallback to env
+    const baseUrl = origin || process.env.FRONTEND_URL;
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const loginUrl = `${cleanBaseUrl}/login`;
 
     const html = `
         <!DOCTYPE html>
