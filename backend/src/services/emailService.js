@@ -16,9 +16,10 @@ export const getCompanyEmailConfig = async (companyId) => {
     try {
         if (!companyId) return null;
 
+        // Use active config first; fall back to verified config if not yet toggled active
         const config = await CompanyEmailSettings.findOne({
             company_id: companyId,
-            is_active: true
+            $or: [{ is_active: true }, { is_verified: true }]
         });
 
         if (!config) return null;
@@ -62,11 +63,13 @@ const createTransport = (config) => {
     const host = process.env.SMTP_HOST || process.env.ZEPTOMAIL_HOST || 'smtp.zeptomail.in';
     const port = parseInt(process.env.SMTP_PORT || process.env.ZEPTOMAIL_PORT || '587');
     const user = process.env.SMTP_USER || process.env.ZEPTOMAIL_USER || 'emailapikey';
-    const pass = process.env.SMTP_PASS || process.env.ZEPTOMAIL_PASS;
+    // Strip surrounding quotes if accidentally present (common .env copy-paste issue)
+    const rawPass = process.env.SMTP_PASS || process.env.ZEPTOMAIL_PASS || '';
+    const pass = rawPass.replace(/^"|"$/g, '').replace(/^'|'$/g, '');
 
     // If no env vars, fallback to Ethereal (Dev only)
     if (!pass) {
-        console.warn('⚠️  No SMTP credentials found in DB or ENV. using Ethereal.');
+        console.warn('⚠️  No SMTP credentials found in DB or ENV. Using Ethereal (emails will NOT be delivered).');
         return nodemailer.createTransport({
             host: 'smtp.ethereal.email',
             port: 587,
@@ -77,6 +80,7 @@ const createTransport = (config) => {
         });
     }
 
+    console.log(`📧 Using ENV fallback SMTP: ${host}:${port} (user: ${user})`);
     return nodemailer.createTransport({
         host,
         port,

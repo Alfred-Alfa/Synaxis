@@ -1,6 +1,7 @@
 import express from 'express';
 import Settings from '../models/Settings.js';
 import CompanyEmailSettings from '../models/CompanyEmailSettings.js';
+import EmailLog from '../models/EmailLog.js';
 import { protect } from '../middleware/auth.js';
 import { isAdmin } from '../middleware/rbac.js';
 import upload from '../config/multer.js';
@@ -282,6 +283,25 @@ router.post('/email/test', protect, isAdmin, async (req, res) => {
             success: false,
             message: 'SMTP Verification Failed: ' + error.message
         });
+    }
+});
+
+// @route   GET /api/settings/email/logs
+// @desc    Get recent email delivery logs
+// @access  Private (Admin only)
+router.get('/email/logs', protect, isAdmin, async (req, res) => {
+    try {
+        const settings = await Settings.getSingleton();
+        const logs = await EmailLog.find({ company_id: settings._id })
+            .sort({ createdAt: -1 })
+            .limit(50);
+
+        res.json({
+            success: true,
+            data: logs
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 
