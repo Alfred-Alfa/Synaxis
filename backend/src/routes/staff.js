@@ -178,7 +178,8 @@ router.post('/', protect, isAdmin, async (req, res) => {
             const settings = await Settings.getSingleton();
             const companyName = settings.companyName || 'HRMS';
 
-            const emailResult = await sendWelcomeEmail(email, tempPassword, fullName, companyName);
+            const origin = req.headers.origin || req.headers.referer;
+            const emailResult = await sendWelcomeEmail(email, tempPassword, fullName, companyName, origin);
             emailSent = !!(emailResult && emailResult.success);
         } catch (emailError) {
             console.error('Failed to send welcome email:', emailError);
@@ -445,8 +446,9 @@ router.post('/:id/reset-password', protect, isAdmin, async (req, res) => {
         user.passwordResetExpires = Date.now() + 3600000; // 1 hour
         await user.save();
 
-        // Send reset email
-        await sendPasswordResetEmail(user.email, resetToken, staff.fullName);
+        // Send reset email — derive frontend URL from the incoming request origin
+        const origin = req.headers.origin || req.headers.referer;
+        await sendPasswordResetEmail(user.email, resetToken, staff.fullName, origin);
 
         // Log audit
         await logAudit({

@@ -165,10 +165,14 @@ export const sendCompanyEmail = async (companyId, { to, subject, html }) => {
 
 export const sendPasswordResetEmail = async (email, resetToken, userName, origin) => {
     const companyId = await getDefaultCompanyId();
-    // Use origin if provided, else fallback to env
-    const baseUrl = origin || process.env.FRONTEND_URL;
+    // origin is derived from the HTTP request headers (req.headers.origin)
+    // No env variable needed — the backend reads the caller's origin dynamically
+    if (!origin) {
+        console.error('❌ No origin provided for password reset email. Cannot build reset URL.');
+        return { success: false, error: 'Unable to determine application URL from request. Please try again.' };
+    }
     // Remove trailing slash if present to avoid double slash
-    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const cleanBaseUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
     const resetUrl = `${cleanBaseUrl}/reset-password/${resetToken}`;
 
     const html = `
@@ -215,9 +219,9 @@ export const sendPasswordResetEmail = async (email, resetToken, userName, origin
 
 export const sendWelcomeEmail = async (email, tempPassword, userName, companyName = 'Webgeon', origin) => {
     const companyId = await getDefaultCompanyId();
-    // Use origin if provided, else fallback to env
-    const baseUrl = origin || process.env.FRONTEND_URL;
-    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    // origin is derived from the HTTP request headers (req.headers.origin)
+    // No env variable needed — the backend reads the caller's origin dynamically
+    const cleanBaseUrl = origin ? (origin.endsWith('/') ? origin.slice(0, -1) : origin) : '';
     const loginUrl = `${cleanBaseUrl}/login`;
 
     const html = `
