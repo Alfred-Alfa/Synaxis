@@ -206,3 +206,10 @@ export const clearRoomHistory = async (roomId: string): Promise<void> => {
 export const leaveGroup = async (roomId: string): Promise<void> => {
     await api.post(`/chat/rooms/${roomId}/leave`);
 };
+
+/**
+ * Remove member from group chat
+ */
+export const removeGroupMember = async (roomId: string, memberId: string): Promise<void> => {
+    await api.post(`/chat/rooms/${roomId}/members/${memberId}/remove`);
+};

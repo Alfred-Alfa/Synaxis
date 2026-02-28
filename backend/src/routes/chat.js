@@ -19,6 +19,7 @@ import {
     deleteRoom,
     clearRoomHistory,
     leaveGroup,
+    removeGroupMember,
 } from '../controllers/chatController.js';
 import { protect } from '../middleware/auth.js';
 
@@ -54,6 +55,7 @@ router.post('/rooms/:roomId/unmute', protect, unmuteRoom);
 router.delete('/rooms/:roomId', protect, deleteRoom); // Soft delete
 router.post('/rooms/:roomId/clear-history', protect, clearRoomHistory);
 router.post('/rooms/:roomId/leave', protect, leaveGroup); // Leave group chat
+router.post('/rooms/:roomId/members/:memberId/remove', protect, removeGroupMember); // Remove member from group
 
 // Unread count
 router.get('/unread-count', protect, getUnreadCount);

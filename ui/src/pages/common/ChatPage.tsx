@@ -17,6 +17,7 @@ import {
     deleteRoom,
     clearRoomHistory,
     leaveGroup,
+    removeGroupMember,
 } from '../../services/chatService';
 import type {
     Employee,
@@ -75,6 +76,7 @@ export const ChatPage: React.FC = () => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+    const [showMembersList, setShowMembersList] = useState(false);
     const [actionRoomId, setActionRoomId] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -393,6 +395,22 @@ export const ChatPage: React.FC = () => {
             setActionRoomId(null);
         } catch (error) {
             console.error('Leave error:', error);
+        }
+    };
+
+    const handleRemoveMember = async (memberId: string) => {
+        if (!currentRoom) return;
+        if (!window.confirm('Are you sure you want to remove this member?')) return;
+        try {
+            await removeGroupMember(currentRoom._id, memberId);
+            // Refresh rooms and current room details
+            await loadRooms();
+            const updatedRooms = await getUserRooms();
+            const updatedRoom = updatedRooms.find(r => r._id === currentRoom._id);
+            if (updatedRoom) setCurrentRoom(updatedRoom);
+        } catch (error: any) {
+            console.error('Remove member error:', error);
+            alert(error.response?.data?.message || 'Failed to remove member. Only admins can remove.');
         }
     };
 
@@ -820,7 +838,11 @@ export const ChatPage: React.FC = () => {
                                     <div>
                                         <div className="room-title">{getRoomDisplayName(currentRoom)}</div>
                                         {currentRoom.type === 'group' ? (
-                                            <div className="room-members" style={{ fontSize: '12px', color: '#6b7280' }}>
+                                            <div
+                                                className="room-members cursor-pointer hover:underline"
+                                                style={{ fontSize: '12px', color: '#6b7280', cursor: 'pointer' }}
+                                                onClick={() => setShowMembersList(true)}
+                                            >
                                                 {(() => {
                                                     const typingMembers = currentRoom.members.filter((m: any) =>
                                                         typingUsers.has(m._id) && m._id !== currentUser?._id
@@ -833,7 +855,7 @@ export const ChatPage: React.FC = () => {
                                                         </span>;
                                                     }
 
-                                                    return `${currentRoom.members.length} members`;
+                                                    return `${currentRoom.members.length} members (Click to view)`;
                                                 })()}
                                             </div>
                                         ) : (
@@ -1144,6 +1166,67 @@ export const ChatPage: React.FC = () => {
                                     Create Group ({selectedEmployees.length} selected)
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Members View Modal */}
+            {showMembersList && currentRoom && currentRoom.type === 'group' && (
+                <div className="modal-overlay" onClick={() => setShowMembersList(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Group Members</h3>
+                            <button className="close-button" onClick={() => setShowMembersList(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="employee-list" style={{ flex: 1, overflowY: 'auto' }}>
+                            {currentRoom.members.map((member: any) => {
+                                const currentUserId = currentUser?._id || currentUser?.id;
+                                const isCurrentUser = String(member._id || member.id) === String(currentUserId);
+                                const isAdmin = currentRoom.admins?.includes(currentUserId);
+                                const isMemberAdmin = currentRoom.admins?.includes(member._id);
+                                const status = onlineUsers[member._id]?.status;
+
+                                return (
+                                    <div
+                                        key={member._id}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            padding: '12px 24px',
+                                            borderBottom: '1px solid #f9fafb'
+                                        }}
+                                    >
+                                        <UserAvatar
+                                            userId={member._id}
+                                            name={member.staffRef?.name || member.name || member.email}
+                                            size="medium"
+                                            showOnline={true}
+                                            status={status}
+                                        />
+                                        <div style={{ flex: 1, marginLeft: '12px' }}>
+                                            <div style={{ fontWeight: 500, color: '#111827', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                {member.staffRef?.name || member.name || member.email}
+                                                {isCurrentUser && <span style={{ fontSize: '10px', background: '#e5e7eb', padding: '2px 6px', borderRadius: '4px' }}>You</span>}
+                                                {isMemberAdmin && <span style={{ fontSize: '10px', background: '#fee2e2', color: '#ef4444', padding: '2px 6px', borderRadius: '4px' }}>Admin</span>}
+                                            </div>
+                                            <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                                                {member.staffRef?.position || member.position || member.role}
+                                            </div>
+                                        </div>
+                                        {isAdmin && !isCurrentUser && (
+                                            <button
+                                                onClick={() => handleRemoveMember(member._id)}
+                                                style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #fee2e2', background: '#fef2f2', color: '#ef4444', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}
+                                            >
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
