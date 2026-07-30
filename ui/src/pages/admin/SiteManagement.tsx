@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { siteService } from '../../services/siteService';
 import type { Site } from '../../types';
 import { SiteFormModal } from '../../components/forms/SiteFormModal';
+import { Pagination } from '../../components/ui/Pagination';
 import './StaffManagement.css';
 
 export const SiteManagement: React.FC = () => {
@@ -11,6 +12,8 @@ export const SiteManagement: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState<'all' | 'Active' | 'Inactive'>('all');
     const [showModal, setShowModal] = useState(false);
     const [selectedSite, setSelectedSite] = useState<Site | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
 
     useEffect(() => {
         loadSites();
@@ -62,6 +65,12 @@ export const SiteManagement: React.FC = () => {
     const filteredSites = sites.filter((s) => {
         return statusFilter === 'all' || s.status === statusFilter;
     });
+
+    const paginatedSites = filteredSites.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [statusFilter]);
 
     if (loading) {
         return <div className="loading">Loading sites...</div>;
@@ -126,7 +135,7 @@ export const SiteManagement: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredSites.map((site) => (
+                                {paginatedSites.map((site) => (
                                     <tr key={site._id}>
                                         <td>
                                             <div className="staff-name">{site.name}</div>
@@ -168,6 +177,14 @@ export const SiteManagement: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
+                )}
+                {filteredSites.length > 0 && (
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalItems={filteredSites.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setCurrentPage}
+                    />
                 )}
             </div>
 

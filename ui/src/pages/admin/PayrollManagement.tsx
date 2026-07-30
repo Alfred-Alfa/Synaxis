@@ -4,7 +4,8 @@ import { staffService } from '../../services/staffService';
 import type { Payroll, Staff } from '../../types';
 import { PayrollGenerateModal } from '../../components/forms/PayrollGenerateModal';
 import { EditPayrollModal } from '../../components/forms/EditPayrollModal';
-import { Filter, Calendar, X, Download, CheckCircle, FileText, Clock, Trash2, Edit } from 'lucide-react';
+import { Filter, Calendar, X, CheckCircle, FileText, Clock, Trash2, Edit, Send, Share2 } from 'lucide-react';
+import { Pagination } from '../../components/ui/Pagination';
 import './AdminTimeEntry.css';
 import { settingsService } from '../../services/settingsService';
 
@@ -20,9 +21,12 @@ export const PayrollManagement: React.FC = () => {
     // Filter states
     const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [selectedMonth, setSelectedMonth] = useState<number | ''>('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
 
     useEffect(() => {
         loadData();
+        setCurrentPage(1);
     }, [selectedYear, selectedMonth]);
 
     const getCurrencySymbol = (currencyCode: string) => {
@@ -60,21 +64,9 @@ export const PayrollManagement: React.FC = () => {
         setShowModal(true);
     };
 
-    const handleDownloadPayslip = async (id: string) => {
-        try {
-            const blob = await payrollService.downloadPayslip(id);
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `payslip-${id}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } catch (err: any) {
-            alert(err.response?.data?.message || 'Failed to download payslip');
-        }
-    };
+
+
+
 
     const handleMarkAsPaid = async (id: string) => {
         if (!window.confirm('Mark this payroll as paid?')) {
@@ -86,6 +78,19 @@ export const PayrollManagement: React.FC = () => {
             loadData();
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to mark as paid');
+        }
+    };
+
+    const handleShareWithEmployee = async (id: string) => {
+        if (!window.confirm('Share this payslip with the employee? They will receive a notification and be able to view/download it.')) {
+            return;
+        }
+
+        try {
+            await payrollService.shareWithEmployee(id);
+            loadData();
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Failed to share payslip');
         }
     };
 
@@ -142,6 +147,8 @@ export const PayrollManagement: React.FC = () => {
         { value: 12, label: 'December' },
     ];
 
+    const paginatedPayroll = payrollRecords.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
     if (loading && !payrollRecords.length) {
         return <div className="loading">Loading payroll records...</div>;
     }
@@ -150,8 +157,8 @@ export const PayrollManagement: React.FC = () => {
         <div className="admin-time-entry fade-in">
             <div className="page-header">
                 <div>
-                    <h1>Payroll History</h1>
-                    <p className="text-muted">Manage monthly payrolls and payments</p>
+                    <h1>Payroll Management</h1>
+                    <p className="text-muted">Generate, manage and share payslips with employees</p>
                 </div>
                 <button onClick={handleGenerate} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <FileText size={18} />
@@ -242,16 +249,16 @@ export const PayrollManagement: React.FC = () => {
                                 <tr>
                                     <th>Staff Member</th>
                                     <th>Pay Period</th>
+                                    <th>Working Hours</th>
                                     <th>Breakdown</th>
-                                    <th>Total Pay</th>
+                                    <th>Net Pay</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {payrollRecords.map((payroll) => (
+                                {paginatedPayroll.map((payroll) => (
                                     <tr key={payroll._id}>
-
                                         <td>
                                             <div style={{ fontWeight: 500, color: '#0f172a' }}>{getStaffName(payroll.staffId)}</div>
                                             <div className="text-muted text-sm" style={{ fontSize: '0.85rem' }}>
@@ -268,12 +275,46 @@ export const PayrollManagement: React.FC = () => {
                                         </td>
                                         <td>
                                             <div className="text-sm">
-                                                <div>Normal: {payroll.normalHours.toFixed(1)}h</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                    <Clock size={12} style={{ color: '#3b82f6' }} />
+                                                    <span><strong>{payroll.normalHours.toFixed(1)}</strong>h regular</span>
+                                                </div>
                                                 {payroll.otHours > 0 && (
-                                                    <div style={{ color: '#d97706' }}>OT: {payroll.otHours.toFixed(1)}h ({currencySymbol}{payroll.otPay.toFixed(2)})</div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#d97706' }}>
+                                                        <Clock size={12} />
+                                                        <span><strong>{payroll.otHours.toFixed(1)}</strong>h overtime</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="text-sm">
+                                                <div style={{ fontWeight: 500 }}>
+                                                    Regular: {currencySymbol}{payroll.normalPay.toFixed(2)}
+                                                    <span className="text-muted" style={{ fontSize: '0.7rem', marginLeft: '0.25rem' }}>
+                                                        ({payroll.normalHours.toFixed(1)}h × {currencySymbol}{(payroll.normalHours > 0 ? (payroll.normalPay / payroll.normalHours).toFixed(1) : 0)}/h)
+                                                    </span>
+                                                </div>
+
+                                                {payroll.otPay > 0 && (
+                                                    <div style={{ color: '#d97706', fontWeight: 500 }}>
+                                                        OT: {currencySymbol}{payroll.otPay.toFixed(2)}
+                                                        <span style={{ fontSize: '0.7rem', marginLeft: '0.25rem', opacity: 0.8 }}>
+                                                            ({payroll.otHours.toFixed(1)}h × {currencySymbol}{(payroll.otHours > 0 ? (payroll.otPay / payroll.otHours).toFixed(1) : 0)}/h)
+                                                        </span>
+                                                    </div>
                                                 )}
                                                 {payroll.travelExpenses > 0 && (
                                                     <div style={{ color: '#059669' }}>Travel: +{currencySymbol}{payroll.travelExpenses.toFixed(2)}</div>
+                                                )}
+                                                {payroll.bonus > 0 && (
+                                                    <div style={{ color: '#059669' }}>Bonus: +{currencySymbol}{payroll.bonus.toFixed(2)}</div>
+                                                )}
+                                                {payroll.leaveDeductions > 0 && (
+                                                    <div style={{ color: '#dc2626' }}>Leave: -{currencySymbol}{payroll.leaveDeductions.toFixed(2)}</div>
+                                                )}
+                                                {(payroll.taxDeduction > 0 || payroll.taxPercentage > 0) && (
+                                                    <div style={{ color: '#7c3aed' }}>Tax ({payroll.taxPercentage}%): -{currencySymbol}{payroll.taxDeduction.toFixed(2)}</div>
                                                 )}
                                             </div>
                                         </td>
@@ -281,31 +322,43 @@ export const PayrollManagement: React.FC = () => {
                                             <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#0f172a' }}>
                                                 {currencySymbol}{payroll.totalPay.toFixed(2)}
                                             </div>
-                                            {payroll.leaveDeductions > 0 && (
-                                                <div className="text-danger text-sm">-{currencySymbol}{payroll.leaveDeductions.toFixed(2)} deductions</div>
-                                            )}
-                                        </td>
-                                        <td>
-                                            <span className={`badge badge-${payroll.isPaid ? 'success' : 'warning'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                {payroll.isPaid ? <CheckCircle size={12} /> : <Clock size={12} />}
-                                                {payroll.isPaid ? 'Paid' : 'Pending'}
-                                            </span>
-                                            {payroll.isPaid && payroll.paidAt && (
-                                                <div className="text-sm text-muted mt-1" style={{ fontSize: '0.75rem' }}>
-                                                    {new Date(payroll.paidAt).toLocaleDateString()}
+                                            {payroll.grossPay > 0 && payroll.grossPay !== payroll.totalPay && (
+                                                <div className="text-muted text-sm" style={{ fontSize: '0.75rem' }}>
+                                                    Gross: {currencySymbol}{payroll.grossPay.toFixed(2)}
                                                 </div>
                                             )}
                                         </td>
                                         <td>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                                <span className={`badge badge-${payroll.isPaid ? 'success' : 'warning'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                    {payroll.isPaid ? <CheckCircle size={12} /> : <Clock size={12} />}
+                                                    {payroll.isPaid ? 'Paid' : 'Pending'}
+                                                </span>
+                                                {payroll.isSharedWithEmployee ? (
+                                                    <span className="badge badge-info" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.7rem', background: '#dbeafe', color: '#1d4ed8' }}>
+                                                        <Share2 size={10} /> Shared
+                                                    </span>
+                                                ) : (
+                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Not shared</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>
                                             <div className="action-buttons" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                                <button
-                                                    onClick={() => handleDownloadPayslip(payroll._id)}
-                                                    className="btn btn-secondary btn-sm"
-                                                    title="Download Payslip"
-                                                    style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                                                >
-                                                    <Download size={14} />
-                                                </button>
+
+
+
+
+                                                {!payroll.isSharedWithEmployee && (
+                                                    <button
+                                                        onClick={() => handleShareWithEmployee(payroll._id)}
+                                                        className="btn btn-sm"
+                                                        title="Share with Employee"
+                                                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', padding: '0.35rem 0.6rem', cursor: 'pointer' }}
+                                                    >
+                                                        <Send size={14} />
+                                                    </button>
+                                                )}
 
                                                 <button
                                                     onClick={() => setEditingPayroll(payroll)}
@@ -334,13 +387,21 @@ export const PayrollManagement: React.FC = () => {
                                                 )}
                                             </div>
                                         </td>
-                                    </tr >
+                                    </tr>
                                 ))}
-                            </tbody >
-                        </table >
-                    </div >
+                            </tbody>
+                        </table>
+                    </div>
                 )}
-            </div >
+                {payrollRecords.length > 0 && (
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalItems={payrollRecords.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setCurrentPage}
+                    />
+                )}
+            </div>
 
             {showModal && (
                 <PayrollGenerateModal
@@ -349,15 +410,13 @@ export const PayrollManagement: React.FC = () => {
                 />
             )}
 
-            {
-                editingPayroll && (
-                    <EditPayrollModal
-                        payroll={editingPayroll}
-                        staffName={getStaffName(editingPayroll.staffId)}
-                        onClose={handleEditClose}
-                    />
-                )
-            }
-        </div >
+            {editingPayroll && (
+                <EditPayrollModal
+                    payroll={editingPayroll}
+                    staffName={getStaffName(editingPayroll.staffId)}
+                    onClose={handleEditClose}
+                />
+            )}
+        </div>
     );
 };

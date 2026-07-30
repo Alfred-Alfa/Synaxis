@@ -34,7 +34,12 @@ export const initializeSocket = (httpServer) => {
         cors: {
             origin: [
                 'http://localhost:5173',
+                'http://localhost:3000',
                 'http://localhost:5000',
+                'http://127.0.0.1:5173',
+                'http://127.0.0.1:3000',
+                'http://192.168.1.4:5173',
+                'http://192.168.1.4:3000',
                 'https://hrms.elitecraftuk.com'
             ],
             credentials: true,

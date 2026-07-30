@@ -8,9 +8,11 @@ import {
     Calendar,
     User,
     FileText,
-    Calculator
+    Calculator,
+    Percent
 } from 'lucide-react';
 import './StaffFormModal.css';
+import { settingsService } from '../../services/settingsService';
 
 interface PayrollGenerateModalProps {
     staff: Staff[];
@@ -23,10 +25,29 @@ export const PayrollGenerateModal: React.FC<PayrollGenerateModalProps> = ({ staf
         periodStart: '',
         periodEnd: '',
         notes: '',
+        taxPercentage: '0',
     });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [currencySymbol, setCurrencySymbol] = useState('$');
+
+    React.useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await settingsService.get();
+                if (res.data?.currency) {
+                    const symbols: Record<string, string> = {
+                        USD: '$', GBP: '£', EUR: '€', INR: '₹', SGD: 'S$', AUD: 'A$', CAD: 'C$', AED: 'AED '
+                    };
+                    setCurrencySymbol(symbols[res.data.currency] || res.data.currency);
+                }
+            } catch (e) {
+                console.error("Failed to fetch settings", e);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         setFormData({
@@ -46,6 +67,7 @@ export const PayrollGenerateModal: React.FC<PayrollGenerateModalProps> = ({ staf
                 periodStart: formData.periodStart,
                 periodEnd: formData.periodEnd,
                 notes: formData.notes || undefined,
+                taxPercentage: parseFloat(formData.taxPercentage) || 0,
             });
 
             onClose(true);
@@ -83,7 +105,7 @@ export const PayrollGenerateModal: React.FC<PayrollGenerateModalProps> = ({ staf
 
                 <form onSubmit={handleSubmit} className="modal-form">
                     <div className="form-scroll-area">
-                        {/* Staff & Period Section */}
+                        {/* Staff Selection */}
                         <div className="form-section">
                             <h3 className="section-title">
                                 <User size={18} />
@@ -99,13 +121,13 @@ export const PayrollGenerateModal: React.FC<PayrollGenerateModalProps> = ({ staf
                                         value={formData.staffId}
                                         onChange={handleChange}
                                         required
-                                        className="input" // Reusing input class for consistent styling
+                                        className="input"
                                         style={{ paddingLeft: '2.5rem', width: '100%' }}
                                     >
                                         <option value="">Select an employee...</option>
                                         {staff.map((s) => (
                                             <option key={s._id} value={s._id}>
-                                                {s.fullName} — ${s.hourlyRate}/hr
+                                                {s.fullName} — {currencySymbol}{s.hourlyRate}/hr
                                             </option>
                                         ))}
                                     </select>
@@ -113,6 +135,7 @@ export const PayrollGenerateModal: React.FC<PayrollGenerateModalProps> = ({ staf
                             </div>
                         </div>
 
+                        {/* Pay Period */}
                         <div className="form-section">
                             <h3 className="section-title">
                                 <Calendar size={18} />
@@ -152,7 +175,35 @@ export const PayrollGenerateModal: React.FC<PayrollGenerateModalProps> = ({ staf
                             </div>
                         </div>
 
-                        {/* Additional Info Section */}
+                        {/* Tax */}
+                        <div className="form-section">
+                            <h3 className="section-title">
+                                <Percent size={18} />
+                                Tax Deduction
+                            </h3>
+                            <div className="input-group">
+                                <label htmlFor="taxPercentage">Tax Percentage (%)</label>
+                                <div className="input-wrapper">
+                                    <Percent className="input-icon" size={18} />
+                                    <input
+                                        id="taxPercentage"
+                                        name="taxPercentage"
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        max="100"
+                                        value={formData.taxPercentage}
+                                        onChange={handleChange}
+                                        placeholder="0"
+                                    />
+                                </div>
+                                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0.25rem 0 0' }}>
+                                    Set to 0 for no tax. This will be deducted from gross pay.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Notes */}
                         <div className="form-section">
                             <h3 className="section-title">
                                 <FileText size={18} />
@@ -188,11 +239,12 @@ export const PayrollGenerateModal: React.FC<PayrollGenerateModalProps> = ({ staf
                                 <Calculator size={20} />
                             </div>
                             <div>
-                                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#1e40af', fontWeight: 600 }}>Expected Calculation</h4>
+                                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#1e40af', fontWeight: 600 }}>Calculation Breakdown</h4>
                                 <ul style={{ margin: 0, paddingLeft: '1rem', color: '#334155', fontSize: '0.85rem', lineHeight: '1.5' }}>
-                                    <li>Regular Hours × Base Rate</li>
-                                    <li>Overtime Hours × (Base Rate × OT Multiplier)</li>
-                                    <li>Approved Travel Expenses included</li>
+                                    <li><strong>Total Working Hours</strong> from approved time entries</li>
+                                    <li><strong>Overtime Hours</strong> from approved OT entries</li>
+                                    <li>Gross = (Hours × Rate) + (OT × OT Rate) + Travel − Leave Deductions</li>
+                                    <li><strong>Net Pay</strong> = Gross − Tax Deduction</li>
                                 </ul>
                             </div>
                         </div>

@@ -279,6 +279,25 @@ export const Reports: React.FC = () => {
         a.click();
     };
 
+    const exportToExcel = () => {
+        if (!reportData?.details?.length) return;
+
+        const headers = Object.keys(reportData.details[0]);
+        const rows = reportData.details.map((item: any) =>
+            headers.map(h => (item[h] ?? '').toString().replace(/\t/g, ' '))
+        );
+
+        // Build TSV then convert to XLS blob (Excel opens TSV-named .xls natively)
+        const tsv = [headers, ...rows].map(row => row.join('\t')).join('\n');
+        const blob = new Blob([`\ufeff${tsv}`], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${reportType}-report-${new Date().toISOString().split('T')[0]}.xls`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    };
+
     const exportToPDF = () => {
         if (!reportData?.details?.length) return;
 
@@ -414,6 +433,9 @@ export const Reports: React.FC = () => {
                             <button onClick={exportToCSV} className="btn btn-secondary">
                                 📥 Download CSV
                             </button>
+                            <button onClick={exportToExcel} className="btn btn-secondary" style={{ background: '#1d6f42', color: 'white', borderColor: '#1d6f42' }}>
+                                📊 Export Excel (.xls)
+                            </button>
                             <button onClick={printReport} className="btn btn-secondary">
                                 🖨️ Print
                             </button>
@@ -509,7 +531,7 @@ export const Reports: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {reportData.details?.slice(0, 50).map((row: any, idx: number) => (
+                                    {reportData.details?.map((row: any, idx: number) => (
                                         <tr key={idx}>
                                             {Object.values(row).map((val: any, i: number) => (
                                                 <td key={i}>{typeof val === 'object' ? JSON.stringify(val).slice(0, 50) : String(val).slice(0, 100)}</td>
@@ -519,11 +541,6 @@ export const Reports: React.FC = () => {
                                 </tbody>
                             </table>
                         </div>
-                        {reportData.details?.length > 50 && (
-                            <p className="text-muted text-center mt-3">
-                                Showing first 50 of {reportData.details.length} records. Export to see all data.
-                            </p>
-                        )}
                     </div>
                 </>
             )}

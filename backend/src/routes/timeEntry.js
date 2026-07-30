@@ -5,6 +5,8 @@ import { isAdmin } from '../middleware/rbac.js';
 import upload from '../config/multer.js';
 import logAudit from '../utils/auditLogger.js';
 import { sendNotification, notifyAdmins } from '../utils/notification.js';
+import Staff from '../models/Staff.js';
+import LocationRequest from '../models/LocationRequest.js';
 
 const router = express.Router();
 
@@ -33,7 +35,7 @@ router.get('/', protect, async (req, res) => {
         }
 
         const timeEntries = await TimeEntry.find(query)
-            .populate('staffId', 'fullName email')
+            .populate('staffId', 'fullName email profilePhoto')
             .populate('siteId', 'name location')
             .populate('approvedBy', 'email')
             .sort({ date: -1 });
@@ -70,9 +72,19 @@ router.post('/', protect, upload.array('attachments', 5), async (req, res) => {
 
         const isAdminUser = req.user.role === 'Admin' || req.user.role === 'SuperAdmin';
 
+        // Admin can create entry for a specific staff member
+        let targetStaffId = req.user.staffRef;
+        if (isAdminUser && req.body.adminForStaffId) {
+            const targetStaff = await Staff.findById(req.body.adminForStaffId);
+            if (!targetStaff) {
+                return res.status(400).json({ message: 'Staff member not found. Please select a valid staff member.' });
+            }
+            targetStaffId = req.body.adminForStaffId;
+        }
+
         // Create time entry
         const timeEntry = await TimeEntry.create({
-            staffId: req.user.staffRef,
+            staffId: targetStaffId,
             date,
             startTime,
             endTime,
@@ -330,7 +342,9 @@ router.get('/current/status', protect, async (req, res) => {
         const activeEntry = await TimeEntry.findOne({
             staffId: req.user.staffRef,
             status: 'Active'
-        }).populate('siteId', 'name location');
+        })
+            .populate('siteId', 'name location')
+            .populate('locationRequestId', 'locationName');
 
         res.json({
             success: true,
@@ -362,32 +376,76 @@ function deg2rad(deg) {
 }
 
 // @route   POST /api/time-entries/check-in
-// @desc    Check in to a site
+// @desc    Check in to a site or custom location with photo verification
 // @access  Private (Staff only)
-router.post('/check-in', protect, async (req, res) => {
+router.post('/check-in', protect, upload.single('photo'), async (req, res) => {
     try {
-        const { siteId, latitude, longitude } = req.body;
+        const { siteId, locationMode, locationRequestId, latitude, longitude, deviceId, deviceName } = req.body;
 
-        // Verify Geofence
-        if (latitude && longitude) {
-            const site = await Site.findById(siteId);
-            if (site && site.coordinates && site.coordinates.latitude && site.coordinates.longitude) {
-                const distance = getDistanceFromLatLonInM(
-                    parseFloat(latitude),
-                    parseFloat(longitude),
-                    site.coordinates.latitude,
-                    site.coordinates.longitude
-                );
+        const mode = locationMode || 'site';
 
-                const allowedRadius = site.radius || 100; // Default 100m if not set
+        // Verify Geofence based on mode
+        let targetLat, targetLon, allowedRadius;
 
-                if (distance > allowedRadius) {
-                    return res.status(400).json({
-                        message: `You are too far from the site location. Distance: ${Math.round(distance)}m. Allowed: ${allowedRadius}m.`
-                    });
+        const roleCheck = req.user.role;
+        const isAdminUser = roleCheck === 'Admin' || roleCheck === 'SuperAdmin';
+
+        // Admins bypass geofence; Staff must have GPS
+        if (!isAdminUser) {
+            if (!latitude || !longitude) {
+                return res.status(400).json({ message: 'GPS location is required for check-in. Please enable location services and try again.' });
+            }
+
+            if (mode === 'home') {
+                const staff = await Staff.findById(req.user.staffRef);
+                if (!staff || !staff.homeLocation || !staff.homeLocation.coordinates || !staff.homeLocation.coordinates.latitude) {
+                    return res.status(400).json({ message: 'Home location is not configured for your profile' });
                 }
+                targetLat = staff.homeLocation.coordinates.latitude;
+                targetLon = staff.homeLocation.coordinates.longitude;
+                allowedRadius = staff.homeLocation.radius || 150;
+            } else if (mode === 'request') {
+                if (!locationRequestId) {
+                    return res.status(400).json({ message: 'Location request ID is required' });
+                }
+                const request = await LocationRequest.findById(locationRequestId);
+                if (!request || request.staffId.toString() !== req.user.staffRef.toString() || request.status !== 'Approved') {
+                    return res.status(400).json({ message: 'Invalid or unapproved location request' });
+                }
+                targetLat = request.coordinates.latitude;
+                targetLon = request.coordinates.longitude;
+                allowedRadius = request.radius || 150;
+            } else {
+                // Default site mode
+                if (!siteId) {
+                    return res.status(400).json({ message: 'Site ID is required for site check-in' });
+                }
+                const site = await Site.findById(siteId);
+                if (!site) {
+                    return res.status(400).json({ message: 'Site not found' });
+                }
+                if (!site.coordinates || !site.coordinates.latitude || !site.coordinates.longitude) {
+                    return res.status(400).json({ message: `Site "${site.name}" does not have GPS coordinates configured. Please contact your admin.` });
+                }
+                targetLat = site.coordinates.latitude;
+                targetLon = site.coordinates.longitude;
+                allowedRadius = site.radius || 50;
+            }
+
+            const distance = getDistanceFromLatLonInM(
+                parseFloat(latitude),
+                parseFloat(longitude),
+                targetLat,
+                targetLon
+            );
+
+            if (distance > allowedRadius) {
+                return res.status(400).json({
+                    message: `You are ${Math.round(distance)}m away from the required location. You must be within ${allowedRadius}m to check in.`
+                });
             }
         }
+
 
         // Check if already checked in
         const existingActive = await TimeEntry.findOne({
@@ -406,13 +464,17 @@ router.post('/check-in', protect, async (req, res) => {
             staffId: req.user.staffRef,
             date: now,
             startTime,
-            siteId,
+            siteId: mode === 'site' ? siteId : undefined,
+            locationMode: mode,
+            locationRequestId: mode === 'request' ? locationRequestId : undefined,
             jobDescription: 'Checked In via Dashboard', // Default description
             status: 'Active',
             checkInLocation: (latitude && longitude) ? {
                 latitude: parseFloat(latitude),
                 longitude: parseFloat(longitude)
-            } : undefined
+            } : undefined,
+            checkInPhoto: req.file ? req.file.path : undefined,
+            deviceId: deviceId, // Store device ID for verification
         });
 
         // Log audit
@@ -425,6 +487,9 @@ router.post('/check-in', protect, async (req, res) => {
             req,
         });
 
+        await timeEntry.populate('siteId', 'name location');
+        await timeEntry.populate('locationRequestId', 'locationName');
+
         res.status(201).json({
             success: true,
             data: timeEntry,
@@ -435,9 +500,9 @@ router.post('/check-in', protect, async (req, res) => {
 });
 
 // @route   POST /api/time-entries/check-out
-// @desc    Check out from current site
+// @desc    Check out from current site with photo verification
 // @access  Private (Staff only)
-router.post('/check-out', protect, async (req, res) => {
+router.post('/check-out', protect, upload.single('photo'), async (req, res) => {
     try {
         const { latitude, longitude } = req.body; // Extract location from checkout request
 
@@ -464,13 +529,18 @@ router.post('/check-out', protect, async (req, res) => {
         activeEntry.endTime = endTime;
         activeEntry.totalHours = parseFloat(diff.toFixed(2));
         activeEntry.status = 'Pending'; // Move to Pending for approval
-        
+
         // Store checkout location
         if (latitude && longitude) {
             activeEntry.checkOutLocation = {
                 latitude: parseFloat(latitude),
                 longitude: parseFloat(longitude)
             };
+        }
+
+        // Store checkout photo
+        if (req.file) {
+            activeEntry.checkOutPhoto = req.file.path;
         }
 
         // Allow updating description on checkout if provided?

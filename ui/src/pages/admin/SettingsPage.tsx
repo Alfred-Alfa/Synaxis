@@ -8,12 +8,21 @@ import {
     Shield,
     Save,
     Upload,
+    CheckCircle2,
     Plus,
     Mail,
-    CheckCircle2
+    Trash2,
+    Users,
+    Key,
+    Crown,
+    UserPlus,
+    X
 } from 'lucide-react';
+import { adminService, type AdminUser } from '../../services/adminService';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const SettingsPage: React.FC = () => {
+    const { user, isSuperAdmin } = useAuth();
     const [formData, setFormData] = useState({
         companyName: '',
         companyEmail: '',
@@ -38,6 +47,11 @@ export const SettingsPage: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // Roles state
+    const [customRoles, setCustomRoles] = useState<{ name: string, accessLevel: 'SuperAdmin' | 'Admin' | 'Staff', description?: string }[]>([]);
+    const [showRoleModal, setShowRoleModal] = useState(false);
+    const [newRole, setNewRole] = useState<{ name: string, accessLevel: 'SuperAdmin' | 'Admin' | 'Staff', description: string }>({ name: '', accessLevel: 'Staff', description: '' });
 
     useEffect(() => {
         loadSettings();
@@ -66,6 +80,7 @@ export const SettingsPage: React.FC = () => {
                     }
                 });
                 setCompanyLogo(data.companyLogo || '');
+                setCustomRoles(data.customRoles || []);
             }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to load settings');
@@ -148,7 +163,8 @@ export const SettingsPage: React.FC = () => {
                 timezone: formData.timezone,
                 currency: formData.currency as any,
                 globalOtRate: parseFloat(formData.defaultOtRate),
-                companyAddress: formData.companyAddress
+                companyAddress: formData.companyAddress,
+                customRoles: customRoles
             });
             setSuccess('Settings updated successfully!');
             loadSettings();
@@ -167,9 +183,15 @@ export const SettingsPage: React.FC = () => {
         <div className="page-container fade-in">
             <div className="page-header-row mb-6">
                 <div>
-                    <h1>System Settings (Updated)</h1>
+                    <h1>System Settings</h1>
                     <p className="text-muted">Configure your company profile and system preferences</p>
                 </div>
+            </div>
+
+            <div className="mb-4">
+                <span className="badge badge-info" style={{ padding: '0.5rem 1rem' }}>
+                    Logged in as: <strong>{user?.email}</strong> ({user?.role})
+                </span>
             </div>
 
             {error && <div className="alert alert-error mb-4">{error}</div>}
@@ -446,7 +468,7 @@ export const SettingsPage: React.FC = () => {
                     <button
                         type="button"
                         className="btn btn-outline btn-sm icon-btn-text"
-                        onClick={() => alert('Role creation coming soon')}
+                        onClick={() => setShowRoleModal(true)}
                     >
                         <Plus size={16} />
                         New Role
@@ -506,14 +528,338 @@ export const SettingsPage: React.FC = () => {
                                     <span className="badge badge-secondary">Default</span>
                                 </td>
                             </tr>
+                            {customRoles.map((role, idx) => (
+                                <tr key={idx}>
+                                    <td>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <span className="badge badge-secondary" style={{ backgroundColor: 'var(--bg2)', color: 'var(--text)' }}>
+                                                {role.name}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="text-muted">Extends <span className="badge">{role.accessLevel}</span></td>
+                                    <td>
+                                        <span className="text-sm">{role.description || 'Custom Role'}</span>
+                                    </td>
+                                    <td className="text-right">
+                                        <button
+                                            type="button"
+                                            className="btn btn-icon btn-sm text-red"
+                                            onClick={() => setCustomRoles(customRoles.filter((_, i) => i !== idx))}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
             </section>
 
+            {/* New Role Modal */}
+            {showRoleModal && (
+                <div className="modal-overlay" onClick={() => setShowRoleModal(false)}>
+                    <div className="modal-content" style={{ maxWidth: '400px', position: 'relative' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <h3 style={{ margin: 0, paddingRight: '2rem' }}>Add Custom Role</h3>
+                            <button
+                                type="button"
+                                style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}
+                                onClick={() => setShowRoleModal(false)}
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <p className="text-muted mb-4">Create a customized role label extending a base access level.</p>
+
+                        <div className="form-group mb-3">
+                            <label className="form-label">Role Name</label>
+                            <input
+                                className="input"
+                                value={newRole.name}
+                                onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                                placeholder="e.g. HR Manager"
+                            />
+                        </div>
+
+                        <div className="form-group mb-3">
+                            <label className="form-label">Base Access Level</label>
+                            <select
+                                className="select"
+                                value={newRole.accessLevel}
+                                onChange={(e) => setNewRole({ ...newRole, accessLevel: e.target.value as any })}
+                            >
+                                <option value="Staff">Staff (Standard Access)</option>
+                                <option value="Admin">Admin (Management Access)</option>
+                                <option value="SuperAdmin">Super Admin (Full Access)</option>
+                            </select>
+                        </div>
+
+                        <div className="form-group mb-4">
+                            <label className="form-label">Description</label>
+                            <input
+                                className="input"
+                                value={newRole.description}
+                                onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                                placeholder="Role description..."
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem', alignItems: 'center' }}>
+                            <button
+                                type="button"
+                                className="btn btn-outline"
+                                style={{ padding: '0.5rem 1.25rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
+                                onClick={() => setShowRoleModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => {
+                                    if (newRole.name) {
+                                        setCustomRoles([...customRoles, newRole]);
+                                        setShowRoleModal(false);
+                                        setNewRole({ name: '', accessLevel: 'Staff', description: '' });
+                                    }
+                                }}
+                                style={{ padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: '500' }}
+                                disabled={!newRole.name}
+                            >
+                                Add Role (Remember to Save)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Administrative Users Management - Only for SuperAdmins */}
+            {isSuperAdmin && <AdminUsersSection />}
+
             {/* Email Configuration Section */}
             <EmailConfigSection />
         </div>
+    );
+};
+
+// Sub-component for Administrative Users Management
+const AdminUsersSection: React.FC = () => {
+    const [admins, setAdmins] = useState<AdminUser[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showModal, setShowModal] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [saving, setSaving] = useState(false);
+
+    const [newAdmin, setNewAdmin] = useState({
+        email: '',
+        password: '',
+        role: 'Admin' as 'Admin' | 'SuperAdmin'
+    });
+
+    useEffect(() => {
+        loadAdmins();
+    }, []);
+
+    const loadAdmins = async () => {
+        try {
+            setLoading(true);
+            const response = await adminService.getAll();
+            setAdmins(response.data || []);
+        } catch (err: any) {
+            console.error('Failed to load admins', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCreate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+        setSaving(true);
+
+        try {
+            await adminService.create(newAdmin);
+            setSuccess(`Success: ${newAdmin.role} created successfully.`);
+            setShowModal(false);
+            setNewAdmin({ email: '', password: '', role: 'Admin' });
+            loadAdmins();
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to create admin');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = async (id: string, email: string) => {
+        if (!window.confirm(`Are you sure you want to remove access for ${email}?`)) return;
+
+        try {
+            await adminService.delete(id);
+            setSuccess('Admin removed successfully');
+            loadAdmins();
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to delete admin');
+        }
+    };
+
+    if (loading && admins.length === 0) return <div className="p-4 text-center">Loading administrators...</div>;
+
+    return (
+        <section className="card mt-4 section-card">
+            <div className="card-header-row">
+                <div className="card-header-simple">
+                    <Users size={20} className="section-icon" />
+                    <div>
+                        <h3 className="m-0">System Administrators</h3>
+                        <p className="text-muted text-sm m-0">Manage users with administrative access.</p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    className="btn btn-primary btn-sm icon-btn-text"
+                    onClick={() => setShowModal(true)}
+                >
+                    <UserPlus size={16} />
+                    Add Administrator
+                </button>
+            </div>
+
+            {error && <div className="alert alert-error mt-3">{error}</div>}
+            {success && <div className="alert alert-success mt-3">{success}</div>}
+
+            <div className="table-responsive mt-3">
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th>User Email</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th className="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {admins.map((admin) => (
+                            <tr key={admin._id}>
+                                <td>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <div className="avatar-xs" style={{ background: admin.role === 'SuperAdmin' ? '#fef3c7' : '#e0e7ff', color: admin.role === 'SuperAdmin' ? '#d97706' : '#4338ca', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold' }}>
+                                            {admin.email.substring(0, 1).toUpperCase()}
+                                        </div>
+                                        <span>{admin.email}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span className={`badge ${admin.role === 'SuperAdmin' ? 'badge-primary' : 'badge-info admin-badge'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                        {admin.role === 'SuperAdmin' ? <Crown size={12} /> : <Shield size={12} />}
+                                        {admin.role}
+                                    </span>
+                                </td>
+                                <td className="text-muted text-sm">
+                                    {new Date(admin.createdAt).toLocaleDateString()}
+                                </td>
+                                <td className="text-right">
+                                    {admin.role !== 'SuperAdmin' && (
+                                        <button
+                                            className="btn btn-icon btn-sm text-red"
+                                            onClick={() => handleDelete(admin._id, admin.email)}
+                                            title="Remove Access"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {showModal && (
+                <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                    <div className="modal-content" style={{ maxWidth: '400px', position: 'relative' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <h3 style={{ margin: 0, paddingRight: '2rem' }}>Add New Administrator</h3>
+                            <button
+                                type="button"
+                                style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}
+                                onClick={() => setShowModal(false)}
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <p className="text-muted mb-4">Create a direct login for an administrative user.</p>
+
+                        <form onSubmit={handleCreate}>
+                            <div className="form-group mb-3">
+                                <label className="form-label">Email Address</label>
+                                <div style={{ position: 'relative' }}>
+                                    <Mail size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8', zIndex: 5 }} />
+                                    <input
+                                        type="email"
+                                        className="input"
+                                        style={{ paddingLeft: '38px', width: '100%' }}
+                                        value={newAdmin.email}
+                                        onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                                        placeholder="admin@company.com"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-group mb-3">
+                                <label className="form-label">Login Password</label>
+                                <div style={{ position: 'relative' }}>
+                                    <Key size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: '#94a3b8', zIndex: 5 }} />
+                                    <input
+                                        type="password"
+                                        className="input"
+                                        style={{ paddingLeft: '38px', width: '100%' }}
+                                        value={newAdmin.password}
+                                        onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                                        placeholder="Min 6 characters"
+                                        minLength={6}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-group mb-4">
+                                <label className="form-label">System Role</label>
+                                <select
+                                    className="select"
+                                    value={newAdmin.role}
+                                    onChange={(e) => setNewAdmin({ ...newAdmin, role: e.target.value as any })}
+                                >
+                                    <option value="Admin">Admin (Full Management)</option>
+                                    <option value="SuperAdmin">Super Admin (Full Access)</option>
+                                </select>
+                                <p className="helper-text mt-1 text-xs">
+                                    {newAdmin.role === 'SuperAdmin' ? 'SuperAdmins can manage other admins.' : 'Admins can manage employees and payroll.'}
+                                </p>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem', alignItems: 'center' }}>
+                                <button
+                                    type="button"
+                                    className="btn btn-outline"
+                                    style={{ padding: '0.5rem 1.25rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
+                                    onClick={() => setShowModal(false)}
+                                >
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: '500' }} disabled={saving}>
+                                    {saving ? 'Creating...' : 'Create Admin Account'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </section>
     );
 };
 
@@ -700,7 +1046,7 @@ const EmailConfigSection: React.FC = () => {
                             className="input"
                             value={config.from_email}
                             onChange={handleChange}
-                            placeholder="hrms@webgeon.com"
+                            placeholder="hrms@syntax.com"
                             required
                         />
                     </div>
@@ -728,9 +1074,18 @@ const EmailConfigSection: React.FC = () => {
 
             {/* Test Email Modal */}
             {showTestModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content" style={{ maxWidth: '400px' }}>
-                        <h3>Send Test Email</h3>
+                <div className="modal-overlay" onClick={() => setShowTestModal(false)}>
+                    <div className="modal-content" style={{ maxWidth: '400px' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h3 style={{ margin: 0 }}>Send Test Email</h3>
+                            <button
+                                type="button"
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}
+                                onClick={() => setShowTestModal(false)}
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
                         <p className="text-muted mb-4">Enter an email address to verify your SMTP configuration.</p>
 
                         <div className="form-group mb-4">
@@ -743,19 +1098,22 @@ const EmailConfigSection: React.FC = () => {
                             />
                         </div>
 
-                        <div className="d-flex justify-content-end gap-2">
-                            <button
-                                className="btn btn-outline"
-                                onClick={() => setShowTestModal(false)}
-                            >
-                                Cancel
-                            </button>
+                        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
                             <button
                                 className="btn btn-primary"
                                 onClick={handleTest}
+                                style={{ padding: '0.5rem 1.25rem', borderRadius: '8px', fontWeight: '500' }}
                                 disabled={testing || !testEmail}
                             >
                                 {testing ? 'Sending...' : 'Send Test'}
+                            </button>
+                            <button
+                                type="button"
+                                className="btn"
+                                style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '0.5rem 1.25rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
+                                onClick={() => setShowTestModal(false)}
+                            >
+                                Cancel
                             </button>
                         </div>
                     </div>

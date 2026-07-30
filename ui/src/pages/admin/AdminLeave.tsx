@@ -3,6 +3,7 @@ import { leaveService } from '../../services/leaveService';
 import type { Leave, Staff } from '../../types';
 import { LeaveCalendar } from '../../components/LeaveCalendar';
 import { ApprovalModal } from '../../components/common/ApprovalModal';
+import { Pagination } from '../../components/ui/Pagination';
 import './AdminTimeEntry.css';
 
 export const AdminLeave: React.FC = () => {
@@ -23,6 +24,9 @@ export const AdminLeave: React.FC = () => {
         itemId: '',
         title: '',
     });
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
 
     useEffect(() => {
         loadData();
@@ -89,6 +93,12 @@ export const AdminLeave: React.FC = () => {
     const filteredLeave = leaveApplications.filter((leave) => {
         return statusFilter === 'all' || leave.status === statusFilter;
     });
+
+    const paginatedLeave = filteredLeave.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [statusFilter]);
 
     const pendingCount = leaveApplications.filter(l => l.status === 'Pending').length;
 
@@ -179,7 +189,7 @@ export const AdminLeave: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredLeave.map((leave) => (
+                                    {paginatedLeave.map((leave) => (
                                         <tr key={leave._id}>
                                             <td>
                                                 <div className="staff-name">{getStaffName(leave.staffId)}</div>
@@ -250,9 +260,16 @@ export const AdminLeave: React.FC = () => {
                                 </tbody>
                             </table>
                         </div>
-                    )
-                    }
-                </div >
+                    )}
+                    {viewMode === 'list' && filteredLeave.length > 0 && (
+                        <Pagination 
+                            currentPage={currentPage}
+                            totalItems={filteredLeave.length}
+                            itemsPerPage={itemsPerPage}
+                            onPageChange={setCurrentPage}
+                        />
+                    )}
+                </div>
             )}
 
             <ApprovalModal

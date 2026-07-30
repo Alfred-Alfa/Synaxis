@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { staffService } from '../../services/staffService';
+import { settingsService } from '../../services/settingsService';
 import type { Staff } from '../../types';
 import {
     X,
@@ -20,6 +21,16 @@ import {
 import { ConfirmModal } from '../common/ConfirmModal';
 import { Toast } from '../common/Toast';
 import './StaffFormModal.css';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
+
+const getPhotoUrl = (rawPath: string | undefined | null) => {
+    if (!rawPath) return '';
+    if (rawPath.startsWith('http') || rawPath.startsWith('data:') || rawPath.startsWith('blob')) return rawPath;
+    const filename = rawPath.replace(/\\/g, '/').split('/').pop();
+    if (!filename) return '';
+    return `${API_BASE_URL}/uploads/${filename}`;
+};
 
 interface StaffFormModalProps {
     staff: Staff | null;
@@ -42,14 +53,23 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
         startDate: staff?.startDate ? new Date(staff.startDate).toISOString().split('T')[0] : '',
         password: '',
         otRate: staff?.otRate?.toString() || '',
+        leaveBalance: staff?.leaveBalance?.toString() || '',
+        standardPayableHours: staff?.standardPayableHours?.toString() || '',
         bankName: staff?.bankDetails?.bankName || '',
         accountNumber: staff?.bankDetails?.accountNumber || '',
         ifscCode: staff?.bankDetails?.ifscCode || '',
         accountHolderName: staff?.bankDetails?.accountHolderName || '',
+        homeLocationLabel: staff?.homeLocation?.label || '',
+        homeLocationLat: staff?.homeLocation?.coordinates?.latitude?.toString() || '',
+        homeLocationLng: staff?.homeLocation?.coordinates?.longitude?.toString() || '',
+        homeLocationRadius: staff?.homeLocation?.radius?.toString() || '150',
     });
+    const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(staff?.profilePhoto || null);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [currencySymbol, setCurrencySymbol] = useState('$');
     const originalRole = staff?.role || 'Staff'; // Track original role
 
     // Custom modal states
@@ -58,6 +78,29 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
     const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
     const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+    // Dynamic roles state
+    const [customRoles, setCustomRoles] = useState<{ name: string, accessLevel: 'SuperAdmin' | 'Admin' | 'Staff' }[]>([]);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await settingsService.get();
+                if (response.data?.customRoles) {
+                    setCustomRoles(response.data.customRoles);
+                }
+                if (response.data?.currency) {
+                    const symbols: Record<string, string> = {
+                        USD: '$', GBP: '£', EUR: '€', INR: '₹', SGD: 'S$', AUD: 'A$', CAD: 'C$', AED: 'AED '
+                    };
+                    setCurrencySymbol(symbols[response.data.currency] || response.data.currency);
+                }
+            } catch (err) {
+                console.error("Failed to load settings", err);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({
@@ -71,6 +114,14 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
             } else {
                 setValidationErrors(prev => ({ ...prev, employeeId: '' }));
             }
+        }
+    };
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setProfilePhoto(file);
+            setPhotoPreview(URL.createObjectURL(file));
         }
     };
 
@@ -108,16 +159,40 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
                 startDate: formData.startDate || undefined,
                 password: formData.password || 'password123',
                 otRate: formData.otRate ? parseFloat(formData.otRate) : undefined,
+                leaveBalance: formData.leaveBalance ? parseFloat(formData.leaveBalance) : 0,
+                standardPayableHours: formData.standardPayableHours ? parseFloat(formData.standardPayableHours) : 0,
                 bankDetails: (formData.bankName || formData.accountNumber) ? {
                     bankName: formData.bankName,
                     accountNumber: formData.accountNumber,
                     ifscCode: formData.ifscCode,
                     accountHolderName: formData.accountHolderName,
                 } : undefined,
+                homeLocation: (formData.homeLocationLat && formData.homeLocationLng) ? {
+                    label: formData.homeLocationLabel || 'Home',
+                    coordinates: {
+                        latitude: parseFloat(formData.homeLocationLat),
+                        longitude: parseFloat(formData.homeLocationLng)
+                    },
+                    radius: parseInt(formData.homeLocationRadius) || 150
+                } : undefined,
             };
 
+            const formDataToSend = new FormData();
+            Object.entries(data).forEach(([key, value]) => {
+                if (value === undefined) return;
+                if (typeof value === 'object') {
+                    formDataToSend.append(key, JSON.stringify(value));
+                } else {
+                    formDataToSend.append(key, value.toString());
+                }
+            });
+
+            if (profilePhoto) {
+                formDataToSend.append('profilePhoto', profilePhoto);
+            }
+
             if (isEdit) {
-                await staffService.update(staff._id, data);
+                await staffService.update(staff._id, formDataToSend);
 
                 // Show success toast for role change
                 if (isRoleChanging) {
@@ -134,7 +209,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
                     onClose(true);
                 }
             } else {
-                const response: any = await staffService.create(data);
+                const response: any = await staffService.create(formDataToSend);
 
                 // Show success toast with email status
                 const emailMessage = response.emailSent
@@ -176,8 +251,13 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
                             </p>
                         </div>
                     </div>
-                    <button onClick={() => onClose()} className="close-button" aria-label="Close">
-                        <X size={20} />
+                    <button
+                        onClick={() => onClose()}
+                        className="close-button"
+                        aria-label="Close"
+                        style={{ color: '#ef4444' }}
+                    >
+                        <X size={24} />
                     </button>
                 </div>
 
@@ -196,6 +276,28 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
                                 <User size={18} />
                                 Personal Information
                             </h3>
+                            <div className="profile-photo-upload" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                                <div className="photo-preview" style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid #e5e7eb' }}>
+                                    {photoPreview ? (
+                                        <img src={getPhotoUrl(photoPreview)} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <User size={40} color="#9ca3af" />
+                                    )}
+                                </div>
+                                <div className="photo-actions">
+                                    <label htmlFor="photo-input" style={{ display: 'inline-block', padding: '0.5rem 1rem', backgroundColor: 'var(--accent)', color: 'white', borderRadius: '6px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: '500' }}>
+                                        {photoPreview ? 'Change Photo' : 'Upload Photo'}
+                                    </label>
+                                    <input
+                                        id="photo-input"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handlePhotoChange}
+                                        style={{ display: 'none' }}
+                                    />
+                                    <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>JPG, PNG allowed. Max 5MB.</p>
+                                </div>
+                            </div>
                             <div className="grid-2">
                                 <div className="input-group">
                                     <label htmlFor="fullName">Full Name <span className="required">*</span></label>
@@ -346,6 +448,9 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
                                             <option value="Staff">Staff</option>
                                             <option value="Admin">Admin</option>
                                             <option value="SuperAdmin">Super Admin</option>
+                                            {customRoles.map((r, idx) => (
+                                                <option key={idx} value={r.name}>{r.name} (Acts as {r.accessLevel})</option>
+                                            ))}
                                         </select>
                                     </div>
                                     <p className="input-hint">System access level</p>
@@ -354,7 +459,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
 
                             <div className="grid-2">
                                 <div className="input-group">
-                                    <label htmlFor="hourlyRate">Hourly Rate ($) <span className="required">*</span></label>
+                                    <label htmlFor="hourlyRate">Hourly Rate ({currencySymbol}) <span className="required">*</span></label>
                                     <div className="input-wrapper">
                                         <DollarSign className="input-icon" size={18} />
                                         <input
@@ -389,6 +494,119 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
                                     <p className="input-hint">Standard is 1.5x hourly rate</p>
                                 </div>
                             </div>
+
+                            <div className="grid-2">
+                                <div className="input-group">
+                                    <label htmlFor="leaveBalance">Leave Balance (Days)</label>
+                                    <div className="input-wrapper">
+                                        <Calendar className="input-icon" size={18} />
+                                        <input
+                                            id="leaveBalance"
+                                            name="leaveBalance"
+                                            type="number"
+                                            step="0.5"
+                                            min="0"
+                                            placeholder="e.g. 14"
+                                            value={formData.leaveBalance}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    <p className="input-hint">Total available leave days</p>
+                                </div>
+
+                                <div className="input-group">
+                                    <label htmlFor="standardPayableHours">Standard Payable Hours / Month</label>
+                                    <div className="input-wrapper">
+                                        <Clock className="input-icon" size={18} />
+                                        <input
+                                            id="standardPayableHours"
+                                            name="standardPayableHours"
+                                            type="number"
+                                            step="1"
+                                            min="0"
+                                            placeholder="e.g. 160"
+                                            value={formData.standardPayableHours}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    <p className="input-hint">For checking monthly payroll</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Home Location Configuration Section */}
+                        <div className="form-section">
+                            <h3 className="section-title">
+                                <MapPin size={18} />
+                                Home Location Check-In
+                            </h3>
+                            <div className="grid-2">
+                                <div className="input-group">
+                                    <label htmlFor="homeLocationLabel">Label</label>
+                                    <div className="input-wrapper">
+                                        <Building2 className="input-icon" size={18} />
+                                        <input
+                                            id="homeLocationLabel"
+                                            name="homeLocationLabel"
+                                            type="text"
+                                            placeholder="e.g. Smith's Home"
+                                            value={formData.homeLocationLabel}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="input-group">
+                                    <label htmlFor="homeLocationRadius">Geofence Radius (meters)</label>
+                                    <div className="input-wrapper">
+                                        <MapPin className="input-icon" size={18} />
+                                        <input
+                                            id="homeLocationRadius"
+                                            name="homeLocationRadius"
+                                            type="number"
+                                            step="1"
+                                            min="10"
+                                            placeholder="e.g. 150"
+                                            value={formData.homeLocationRadius}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid-2">
+                                <div className="input-group">
+                                    <label htmlFor="homeLocationLat">Latitude</label>
+                                    <div className="input-wrapper">
+                                        <MapPin className="input-icon" size={18} />
+                                        <input
+                                            id="homeLocationLat"
+                                            name="homeLocationLat"
+                                            type="number"
+                                            step="any"
+                                            placeholder="e.g. 10.5893"
+                                            value={formData.homeLocationLat}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="input-group">
+                                    <label htmlFor="homeLocationLng">Longitude</label>
+                                    <div className="input-wrapper">
+                                        <MapPin className="input-icon" size={18} />
+                                        <input
+                                            id="homeLocationLng"
+                                            name="homeLocationLng"
+                                            type="number"
+                                            step="any"
+                                            placeholder="e.g. 76.093"
+                                            value={formData.homeLocationLng}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="input-hint" style={{ marginTop: '0.5rem', color: 'var(--text-secondary)' }}>
+                                Configure this to allow the employee to check in from this specific location.
+                            </p>
                         </div>
 
                         {/* Bank Details Section */}
@@ -485,11 +703,12 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
                         )}
                     </div>
 
-                    <div className="modal-footer">
+                    <div className="modal-footer" style={{ display: 'flex', flexDirection: 'row-reverse', justifyContent: 'flex-start', gap: '0.75rem', marginTop: '1.5rem', padding: '1rem 0' }}>
                         <button
                             type="button"
                             onClick={() => onClose()}
-                            className="btn-cancel"
+                            className="btn"
+                            style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '0.625rem 1.25rem', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
                             disabled={loading}
                         >
                             Cancel
@@ -497,6 +716,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({ staff, existingE
                         <button
                             type="submit"
                             className="btn-submit"
+                            style={{ padding: '0.625rem 1.25rem', borderRadius: '8px', fontWeight: '500' }}
                             disabled={loading}
                         >
                             {loading ? 'Creating Profile...' : (isEdit ? 'Save Changes' : 'Create Profile')}

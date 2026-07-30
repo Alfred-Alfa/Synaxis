@@ -1,26 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { timeEntryService } from '../../services/timeEntryService';
 import { siteService } from '../../services/siteService';
+import { staffService } from '../../services/staffService';
 import type { TimeEntry, Site, Staff } from '../../types';
 import { ApprovalModal } from '../../components/common/ApprovalModal';
 import { TimeEntryFormModal } from '../../components/forms/TimeEntryFormModal';
+import { LocationMapModal } from '../../components/common/LocationMapModal';
+import { Plus } from 'lucide-react';
+import { Pagination } from '../../components/ui/Pagination';
 import './AdminTimeEntry.css';
-import {
-    Clock,
-    CheckCircle,
-    XCircle,
-    MapPin,
-    Car,
-    Calendar,
-    Filter
-} from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
+
+const getPhotoUrl = (rawPath: string | undefined | null) => {
+    if (!rawPath) return '';
+    if (rawPath.startsWith('http') || rawPath.startsWith('data:') || rawPath.startsWith('blob')) return rawPath;
+    const filename = rawPath.replace(/\\/g, '/').split('/').pop();
+    if (!filename) return '';
+    return `${API_BASE_URL}/uploads/${filename}`;
+};
 
 export const AdminTimeEntry: React.FC = () => {
     const [entries, setEntries] = useState<TimeEntry[]>([]);
     const [sites, setSites] = useState<Site[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'Approved' | 'Rejected'>('Pending');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'Approved' | 'Rejected'>('all');
+
+    const [mapModalConfig, setMapModalConfig] = useState<{
+        isOpen: boolean;
+        coordinates: { latitude: number, longitude: number } | null | undefined;
+    }>({ isOpen: false, coordinates: null });
 
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
@@ -35,6 +45,10 @@ export const AdminTimeEntry: React.FC = () => {
     });
 
     const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [staffList, setStaffList] = useState<Staff[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
 
     useEffect(() => {
         loadData();
@@ -43,12 +57,14 @@ export const AdminTimeEntry: React.FC = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [entriesRes, sitesRes] = await Promise.all([
+            const [entriesRes, sitesRes, staffRes] = await Promise.all([
                 timeEntryService.getAll(),
                 siteService.getAll({ status: 'Active' }),
+                staffService.getAll({ status: 'Active' }),
             ]);
             setEntries(entriesRes.data || []);
             setSites(sitesRes.data || []);
+            setStaffList(staffRes.data || []);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to load data');
         } finally {
@@ -107,147 +123,215 @@ export const AdminTimeEntry: React.FC = () => {
         return 'Staff Member';
     };
 
+    const getStaffPhoto = (staffId: string | Staff | null | undefined) => {
+        if (!staffId || typeof staffId !== 'object') return null;
+        return staffId.profilePhoto;
+    };
+
     // Filter entries
     const filteredEntries = entries.filter((entry) => {
         return statusFilter === 'all' || entry.status === statusFilter;
     });
 
+    const paginatedEntries = filteredEntries.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [statusFilter]);
+
     // Count pending entries
     const pendingCount = entries.filter(e => e.status === 'Pending').length;
 
     if (loading) {
-        return <div className="loading-state">Loading time entries...</div>;
+        return <div className="loading">Loading time entries...</div>;
     }
 
     return (
-        <div className="page-container fade-in">
-            <div className="page-header-row">
+        <div className="admin-time-entry fade-in">
+            <div className="page-header">
                 <div>
-                    <h1>Time Entries</h1>
+                    <h1>Time Entry Verification</h1>
                     <p className="text-muted">Review and approve staff hours</p>
                 </div>
-                {pendingCount > 0 && (
-                    <div className="status-badge-large warning">
-                        <Clock size={20} />
-                        <span>{pendingCount} Pending</span>
-                    </div>
-                )}
-            </div>
-
-            {error && <div className="alert alert-error mb-4">{error}</div>}
-
-            <div className="card filter-card mb-4">
-                <div className="filter-row">
-                    <div className="filter-group">
-                        <Filter size={16} className="text-muted" />
-                        <span className="text-sm font-medium">Filter Status:</span>
-                        <select
-                            className="select status-select"
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as any)}
-                        >
-                            <option value="all">All Records</option>
-                            <option value="Pending">Pending Review</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
-                    </div>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {pendingCount > 0 && (
+                        <div className="pending-badge">
+                            <span className="badge badge-warning" style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
+                                {pendingCount} Pending
+                            </span>
+                        </div>
+                    )}
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="btn btn-primary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        <Plus size={16} /> Add Missing Entry
+                    </button>
                 </div>
             </div>
 
-            <div className="card table-card">
-                <div className="card-header-row">
-                    <div className="record-count">
-                        <strong>{filteredEntries.length}</strong> records found
-                    </div>
+            {error && (
+                <div className="error-alert mb-3">
+                    {error}
+                </div>
+            )}
+
+            <div className="card mb-3">
+                <div className="entry-filters">
+                    <select
+                        className="select"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value as any)}
+                        style={{ maxWidth: '200px' }}
+                    >
+                        <option value="all">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+
+            <div className="card">
+                <div className="entry-count mb-3">
+                    <strong>{filteredEntries.length}</strong> time entries found
                 </div>
 
                 {filteredEntries.length === 0 ? (
                     <div className="empty-state">
-                        <Clock size={48} className="text-muted" />
-                        <p>No time entries found matching filter.</p>
+                        <p>No time entries to review</p>
                     </div>
                 ) : (
-                    <div className="table-container">
+                    <div className="table-responsive">
                         <table className="table">
                             <thead>
                                 <tr>
-                                    <th>Staff Member</th>
-                                    <th>Date & Time</th>
-                                    <th>Site / Project</th>
+                                    <th>Photo</th>
+                                    <th>Staff Name</th>
+                                    <th>Date</th>
+                                    <th>Site/Project</th>
                                     <th>Duration</th>
                                     <th>Description</th>
-                                    <th>Travel</th>
+                                    <th>Check-in Selfie</th>
+                                    <th>Check-out Selfie</th>
                                     <th>Status</th>
-                                    <th>Action</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredEntries.map((entry) => (
+                                {paginatedEntries.map((entry) => (
                                     <tr key={entry._id}>
                                         <td>
-                                            <span className="font-medium text-primary">
-                                                {getStaffName(entry.staffId)}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="date-cell">
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar size={14} className="text-muted" />
-                                                    {new Date(entry.date).toLocaleDateString()}
-                                                </div>
-                                                {entry.startTime && entry.endTime && (
-                                                    <div className="text-xs text-muted ml-5">
-                                                        {entry.startTime} - {entry.endTime}
+                                            <div className="v-photo-wrap" style={{ width: '40px', height: '40px', borderRadius: '50%' }}>
+                                                {getStaffPhoto(entry.staffId) ? (
+                                                    <img 
+                                                        src={getPhotoUrl(getStaffPhoto(entry.staffId))} 
+                                                        alt="Staff" 
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                                    />
+                                                ) : (
+                                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', borderRadius: '50%', fontSize: '12px', color: '#64748b' }}>
+                                                        N/A
                                                     </div>
                                                 )}
                                             </div>
                                         </td>
                                         <td>
-                                            <div className="flex items-center gap-1 text-sm">
-                                                <MapPin size={14} className="text-muted" />
-                                                {getSiteName(entry.siteId)}
+                                            <div className="staff-name" style={{ fontWeight: 600 }}>{getStaffName(entry.staffId)}</div>
+                                        </td>
+                                        <td>
+                                            <div className="entry-date">
+                                                {new Date(entry.date).toLocaleDateString()}
                                             </div>
+                                            {entry.startTime && entry.endTime && (
+                                                <div className="text-muted text-sm">
+                                                    {entry.startTime} - {entry.endTime}
+                                                </div>
+                                            )}
                                         </td>
                                         <td>
-                                            <span className="font-bold text-gray-800">
-                                                {entry.totalHours ? `${entry.totalHours.toFixed(2)}h` : 'Running...'}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="description-cell" title={entry.jobDescription}>
-                                                {entry.jobDescription}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {entry.ownTransport ? (
-                                                <div className="travel-pill">
-                                                    <Car size={12} />
-                                                    <span>${entry.travelDetails?.amount || 0}</span>
+                                            {getSiteName(entry.siteId) === 'Unknown Site' && entry.checkInLocation ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    <span>Unknown Site</span>
+                                                    <a 
+                                                        href="#" 
+                                                        onClick={(e) => { 
+                                                            e.preventDefault(); 
+                                                            setMapModalConfig({ isOpen: true, coordinates: entry.checkInLocation }); 
+                                                        }}
+                                                        style={{ 
+                                                            color: '#3b82f6', 
+                                                            textDecoration: 'underline', 
+                                                            fontSize: '0.875rem',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        view site
+                                                    </a>
                                                 </div>
                                             ) : (
-                                                <span className="text-muted">-</span>
+                                                getSiteName(entry.siteId)
                                             )}
+                                        </td>
+                                        <td className="text-primary">
+                                            <strong>{entry.totalHours ? `${entry.totalHours.toFixed(2)} hrs` : 'Running...'}</strong>
+                                        </td>
+                                        <td>
+                                            <div className="entry-description">
+                                                {entry.jobDescription}
+                                                {entry.ownTransport && (
+                                                    <div className="text-xs text-muted mt-1">Travel: ${entry.travelDetails?.amount || 0}</div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="v-photo-cell">
+                                                {entry.checkInPhoto ? (
+                                                    <div className="v-photo-wrap lg" onClick={() => window.open(getPhotoUrl(entry.checkInPhoto), '_blank')}>
+                                                        <img 
+                                                            src={getPhotoUrl(entry.checkInPhoto)} 
+                                                            alt="Check-in" 
+                                                        />
+                                                    </div>
+                                                ) : <span className="text-muted text-xs">—</span>}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="v-photo-cell">
+                                                {entry.checkOutPhoto ? (
+                                                    <div className="v-photo-wrap lg" onClick={() => window.open(getPhotoUrl(entry.checkOutPhoto), '_blank')}>
+                                                        <img 
+                                                            src={getPhotoUrl(entry.checkOutPhoto)} 
+                                                            alt="Check-out" 
+                                                        />
+                                                    </div>
+                                                ) : <span className="text-muted text-xs">—</span>}
+                                            </div>
                                         </td>
                                         <td>
                                             <span className={`badge badge-${entry.status === 'Approved' ? 'success' :
                                                 entry.status === 'Rejected' ? 'danger' :
                                                     entry.status === 'Active' ? 'info' : 'warning'
                                                 }`}>
-                                                {entry.status === 'Approved' && <CheckCircle size={12} />}
-                                                {entry.status === 'Rejected' && <XCircle size={12} />}
-                                                {entry.status === 'Pending' && <Clock size={12} />}
                                                 {entry.status}
                                             </span>
+                                            {entry.status === 'Rejected' && entry.rejectionReason && (
+                                                <div className="text-sm text-danger mt-1">
+                                                    {entry.rejectionReason}
+                                                </div>
+                                            )}
                                         </td>
                                         <td>
                                             {entry.status === 'Pending' && (
-                                                <button
-                                                    onClick={() => setEditingEntry(entry)}
-                                                    className="btn btn-primary btn-xs"
-                                                >
-                                                    Review
-                                                </button>
+                                                <div className="action-buttons">
+                                                    <button
+                                                        onClick={() => setEditingEntry(entry)}
+                                                        className="btn btn-primary btn-sm"
+                                                    >
+                                                        Review
+                                                    </button>
+                                                </div>
                                             )}
                                         </td>
                                     </tr>
@@ -255,6 +339,14 @@ export const AdminTimeEntry: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
+                )}
+                {filteredEntries.length > 0 && (
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalItems={filteredEntries.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setCurrentPage}
+                    />
                 )}
             </div>
 
@@ -287,6 +379,25 @@ export const AdminTimeEntry: React.FC = () => {
                 onReject={handleReject}
                 type={modalConfig.type}
                 title={modalConfig.title}
+            />
+
+            {showAddModal && (
+                <TimeEntryFormModal
+                    entry={null}
+                    sites={sites}
+                    adminMode={true}
+                    staffList={staffList.map(s => ({ _id: s._id, fullName: s.fullName }))}
+                    onClose={(success) => {
+                        setShowAddModal(false);
+                        if (success) loadData();
+                    }}
+                />
+            )}
+
+            <LocationMapModal 
+                isOpen={mapModalConfig.isOpen}
+                coordinates={mapModalConfig.coordinates}
+                onClose={() => setMapModalConfig({ isOpen: false, coordinates: null })}
             />
         </div>
     );

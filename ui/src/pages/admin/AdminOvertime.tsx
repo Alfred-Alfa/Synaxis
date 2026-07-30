@@ -3,6 +3,7 @@ import { overtimeService } from '../../services/overtimeService';
 import { siteService } from '../../services/siteService';
 import type { Overtime, Site, Staff } from '../../types';
 import { ApprovalModal } from '../../components/common/ApprovalModal';
+import { Pagination } from '../../components/ui/Pagination';
 import './AdminTimeEntry.css';
 
 export const AdminOvertime: React.FC = () => {
@@ -23,6 +24,9 @@ export const AdminOvertime: React.FC = () => {
         itemId: '',
         title: '',
     });
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
 
     useEffect(() => {
         loadData();
@@ -97,6 +101,12 @@ export const AdminOvertime: React.FC = () => {
         return statusFilter === 'all' || ot.status === statusFilter;
     });
 
+    const paginatedOT = filteredOT.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [statusFilter]);
+
     const pendingCount = overtimeRequests.filter(ot => ot.status === 'Pending').length;
 
     if (loading) {
@@ -165,7 +175,7 @@ export const AdminOvertime: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredOT.map((ot) => (
+                                {paginatedOT.map((ot) => (
                                     <tr key={ot._id}>
                                         <td>
                                             <div className="staff-name">{getStaffName(ot.staffId)}</div>
@@ -227,6 +237,14 @@ export const AdminOvertime: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
+                )}
+                {filteredOT.length > 0 && (
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalItems={filteredOT.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setCurrentPage}
+                    />
                 )}
             </div>
 

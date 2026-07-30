@@ -16,6 +16,10 @@ const TEXT_COLOR = "#334155";
 const LIGHT_GRAY = "#f8fafc";
 const BORDER_COLOR = "#e2e8f0";
 
+// Register Custom Fonts for UTF-8 support (especially for Rupee ₹ symbol)
+const robotoRegular = path.join(__dirname, '../assets/fonts/Roboto-Regular.ttf');
+const robotoBold = path.join(__dirname, '../assets/fonts/Roboto-Bold.ttf');
+
 /**
  * Generate a Corporate Standard Payslip PDF
  */
@@ -24,6 +28,17 @@ export const generatePayslipPDF = async (payroll, staff, settings, outputPath) =
         try {
             const doc = new PDFDocument({ margin: MARGIN, size: 'A4', bufferPages: true });
             const stream = fs.createWriteStream(outputPath);
+
+            // Register fonts
+            if (fs.existsSync(robotoRegular)) {
+                doc.registerFont('Roboto', robotoRegular);
+            }
+            if (fs.existsSync(robotoBold)) {
+                doc.registerFont('Roboto-Bold', robotoBold);
+            }
+
+            const fontNormal = fs.existsSync(robotoRegular) ? 'Roboto' : 'Helvetica';
+            const fontBold = fs.existsSync(robotoBold) ? 'Roboto-Bold' : 'Helvetica-Bold';
 
             doc.pipe(stream);
 
@@ -38,17 +53,17 @@ export const generatePayslipPDF = async (payroll, staff, settings, outputPath) =
                     try {
                         doc.image(logoPath, MARGIN, y, { height: 50 });
                     } catch (e) {
-                        console.error("Logo error:", e);
+                        // Fallback if logo is invalid
                     }
                 }
             }
 
             // Company Details (Right Aligned)
-            doc.font('Helvetica-Bold').fontSize(16).fillColor(ACCENT_COLOR)
-                .text(settings.companyName || 'Company Name', MARGIN, y, { align: 'right' });
+            doc.font(fontBold).fontSize(18).fillColor(PRIMARY_COLOR)
+                .text('Synaxis', MARGIN, y, { align: 'right' });
 
-            y += 20;
-            doc.font('Helvetica').fontSize(9).fillColor(TEXT_COLOR);
+            y += 22;
+            doc.font(fontNormal).fontSize(10).fillColor(TEXT_COLOR);
 
             const addr = settings.companyAddress || {};
             const addressLines = typeof addr === 'string' ? [addr] : [
@@ -57,151 +72,167 @@ export const generatePayslipPDF = async (payroll, staff, settings, outputPath) =
                 addr.country
             ].filter(Boolean);
 
-            addressLines.forEach(line => {
-                doc.text(line, MARGIN, y, { align: 'right' });
-                y += 12;
-            });
+            if (addressLines.length === 0 && !settings.companyEmail) {
+                doc.text('Premium HR Solutions', MARGIN, y, { align: 'right' });
+            } else if (addressLines.length === 0) {
+                doc.text(settings.companyEmail, MARGIN, y, { align: 'right' });
+            } else {
+                addressLines.forEach(line => {
+                    doc.text(line, MARGIN, y, { align: 'right' });
+                    y += 13;
+                });
+            }
 
             // Separator Line
             y = Math.max(y, 110) + 10;
-            drawLine(doc, y);
+            drawLine(doc, y, PRIMARY_COLOR);
             y += 20;
 
             // --- 2. TITLE & INFO GRID ---
 
-            doc.font('Helvetica-Bold').fontSize(14).fillColor(PRIMARY_COLOR)
+            doc.font(fontBold).fontSize(16).fillColor(ACCENT_COLOR)
                 .text('PAYSLIP', MARGIN, y, { align: 'center' });
 
             y += 25;
 
             // Info Box Background
-            const infoBoxHeight = 85;
-            doc.rect(MARGIN, y, CONTENT_WIDTH, infoBoxHeight).fill(LIGHT_GRAY).stroke(BORDER_COLOR);
+            const infoBoxHeight = 100;
+            doc.rect(MARGIN, y, CONTENT_WIDTH, infoBoxHeight).fill('#f8fafc').stroke('#cbd5e1');
 
             // Left Column: Employee Info
             let leftY = y + 15;
             const leftX = MARGIN + 15;
 
-            doc.fillColor(ACCENT_COLOR).font('Helvetica-Bold').fontSize(10).text('Employee Details', leftX, leftY);
-            leftY += 15;
+            doc.fillColor(PRIMARY_COLOR).font(fontBold).fontSize(11).text('Employee Details', leftX, leftY);
+            leftY += 18;
 
             const drawLabelValue = (label, value, x, currentY) => {
-                doc.font('Helvetica').fontSize(9).fillColor(TEXT_COLOR).text(label, x, currentY);
-                doc.font('Helvetica-Bold').fillColor('#000000').text(value, x + 70, currentY);
-                return currentY + 12; // line height
+                doc.font(fontNormal).fontSize(9).fillColor(TEXT_COLOR).text(label, x, currentY);
+                doc.font(fontBold).fillColor('#1e293b').text(value, x + 85, currentY);
+                return currentY + 14;
             };
 
-            leftY = drawLabelValue('Name:', staff.fullName, leftX, leftY);
-            leftY = drawLabelValue('ID:', staff.employeeId || staff._id.toString().substring(18).toUpperCase(), leftX, leftY);
+            leftY = drawLabelValue('Employee Name:', staff.fullName, leftX, leftY);
             leftY = drawLabelValue('Designation:', staff.designation || 'N/A', leftX, leftY);
-            leftY = drawLabelValue('Department:', 'General', leftX, leftY);
-
-            if (staff.bankDetails && staff.bankDetails.bankName) {
-                leftY += 5; // Spacing
-                leftY = drawLabelValue('Bank:', staff.bankDetails.bankName, leftX, leftY);
-                leftY = drawLabelValue('Acc No:', staff.bankDetails.accountNumber || 'N/A', leftX, leftY);
-            }
+            leftY = drawLabelValue('Bank Account:', staff.bankDetails?.accountNumber || 'N/A', leftX, leftY);
+            leftY = drawLabelValue('Bank Name:', staff.bankDetails?.bankName || 'N/A', leftX, leftY);
 
             // Right Column: Pay Info
             let rightY = y + 15;
             const rightX = MARGIN + (CONTENT_WIDTH / 2) + 15;
 
-            doc.fillColor(ACCENT_COLOR).font('Helvetica-Bold').fontSize(10).text('Payment Details', rightX, rightY);
-            rightY += 15;
+            doc.fillColor(PRIMARY_COLOR).font(fontBold).fontSize(11).text('Payment Details', rightX, rightY);
+            rightY += 18;
 
-            rightY = drawLabelValue('Pay Period:', `${formatDate(payroll.periodStart)} - ${formatDate(payroll.periodEnd)}`, rightX, rightY);
-            rightY = drawLabelValue('Pay Date:', formatDate(new Date()), rightX, rightY);
-            rightY = drawLabelValue('Currency:', settings.currency, rightX, rightY);
-            rightY = drawLabelValue('Status:', payroll.isPaid ? 'PAID' : 'PENDING', rightX, rightY);
+            rightY = drawLabelValue('Period:', `${formatDate(payroll.periodStart)} to ${formatDate(payroll.periodEnd)}`, rightX, rightY);
+            rightY = drawLabelValue('Payment Date:', formatDate(payroll.paidAt || new Date()), rightX, rightY);
+            rightY = drawLabelValue('Pay Mode:', 'Bank Transfer', rightX, rightY);
+            rightY = drawLabelValue('Currency:', 'INR (Rupees)', rightX, rightY);
 
-            y += infoBoxHeight + 30;
+            y += infoBoxHeight + 35;
 
-            // --- 3. EARNINGS TABLE ---
+            // --- 3. EARNINGS & DEDUCTIONS TABLE ---
 
             // Table Header
             const col1 = MARGIN; // Description
-            const col2 = MARGIN + 250; // Rate/Hours
-            const col3 = MARGIN + 400; // Amount (Right aligned anchor)
+            const col2 = MARGIN + 220; // Details
+            const col3 = MARGIN + 380; // Amount
             const col4 = MARGIN + CONTENT_WIDTH; // Right Edge
 
-            doc.rect(MARGIN, y, CONTENT_WIDTH, 25).fill('#eeeeee');
-            doc.fillColor(ACCENT_COLOR).font('Helvetica-Bold').fontSize(10);
+            doc.rect(MARGIN, y, CONTENT_WIDTH, 28).fill(ACCENT_COLOR);
+            doc.fillColor('#ffffff').font(fontBold).fontSize(10);
 
             // Headers
-            doc.text('Description', col1 + 10, y + 8);
-            doc.text('Details', col2, y + 8);
-            doc.text('Amount', col3, y + 8, { width: col4 - col3 - 10, align: 'right' });
+            doc.text('Description', col1 + 12, y + 9);
+            doc.text('Computation Details', col2, y + 9);
+            doc.text('Amount (INR)', col3, y + 9, { width: col4 - col3 - 12, align: 'right' });
 
-            y += 25;
+            y += 28;
 
-            const currency = getCurrencySymbol(settings.currency);
+            const currency = '₹'; // Force Rupee Symbol with Roboto
 
             // Row Drawer Helper
-            const drawRow = (label, details, amount, color = '#000000') => {
-                doc.fillColor(color).font('Helvetica').fontSize(10);
+            const drawRow = (label, details, amount, color = '#0f172a', isNegative = false) => {
+                const displayAmt = isNegative ? `- ${currency}${Math.abs(amount).toFixed(2)}` : `${currency}${amount.toFixed(2)}`;
+                const textColor = isNegative ? '#dc2626' : color;
 
-                // Content
-                doc.text(label, col1 + 10, y + 8);
-                doc.text(details, col2, y + 8);
-                doc.font('Helvetica-Bold').text(`${currency}${amount.toFixed(2)}`, col3, y + 8, { width: col4 - col3 - 10, align: 'right' });
+                doc.fillColor(textColor).font(fontNormal).fontSize(10);
+                doc.text(label, col1 + 12, y + 10);
+                doc.text(details, col2, y + 10, { width: 150 });
+                doc.font(fontBold).text(displayAmt, col3, y + 10, { width: col4 - col3 - 12, align: 'right' });
 
-                // Border Bottom
-                y += 25;
+                y += 30;
                 drawLine(doc, y, '#e2e8f0');
             };
 
-            // 1. Normal Pay
-            drawRow('Basic Pay', `${payroll.normalHours.toFixed(1)} hrs @ ${currency}${staff.hourlyRate}/hr`, payroll.normalPay);
+            // 1. Regular Pay
+            const hourlyRate = payroll.normalRate || staff.hourlyRate;
+            drawRow('Regular Pay', `${payroll.normalHours.toFixed(1)} hrs @ ${currency}${hourlyRate}/hr`, payroll.normalPay);
 
-            // 2. Overtime
+            // 2. OT Pay
             if (payroll.otPay > 0 || payroll.otHours > 0) {
-                drawRow('Overtime', `${payroll.otHours.toFixed(1)} hrs overtime`, payroll.otPay);
+                const otRate = payroll.otHours > 0 ? (payroll.otPay / payroll.otHours).toFixed(2) : (hourlyRate * 1.5).toFixed(2);
+                drawRow('OT Pay', `${payroll.otHours.toFixed(1)} hrs @ ${currency}${otRate}/hr`, payroll.otPay);
             }
 
-            // 3. Travel
+            // 3. Travel Allowance
             if (payroll.travelExpenses > 0) {
-                drawRow('Travel Allowance', '-', payroll.travelExpenses, '#16a34a'); // Green
+                drawRow('Travel Allowance', 'Reimbursements and Conveyance', payroll.travelExpenses, '#059669');
             }
 
-            // 4. Deductions header if needed
-            // Actually standard payslips mix them but negative values are clear. 
-            // Or we make a separate section. Let's list deductions as rows.
-
+            // 4. Leave Deductions
             if (payroll.leaveDeductions > 0) {
-                drawRow('Leave Deductions', 'Unpaid leave', -payroll.leaveDeductions, '#dc2626'); // Red
+                drawRow('Leave Deductions', 'Unpaid leave adjustment', payroll.leaveDeductions, '#dc2626', true);
             }
 
-            y += 10;
+            // 5. Tax
+            if (payroll.taxDeduction > 0) {
+                const taxLabel = payroll.taxPercentage > 0 ? `Tax (${payroll.taxPercentage}%)` : 'Income Tax';
+                drawRow(taxLabel, 'Statutory Income Tax', payroll.taxDeduction, '#dc2626', true);
+            }
 
-            // --- 4. TOTALS SECTION ---
+            // 6. Bonus
+            if (payroll.bonus > 0) {
+                drawRow('Bonus', 'Performance / Special Bonus', payroll.bonus, '#10b981');
+            }
 
-            // Draw Totals Box (Right Aligned)
-            const totalBoxWidth = 200;
+            y += 15;
+
+            // --- 4. NET PAY SUMMARY ---
+
+            const totalBoxWidth = 240;
             const totalBoxX = MARGIN + CONTENT_WIDTH - totalBoxWidth;
 
-            // Net Pay Background
-            doc.rect(totalBoxX, y + 10, totalBoxWidth, 35).fill(PRIMARY_COLOR);
+            doc.rect(totalBoxX, y, totalBoxWidth, 45).fill(PRIMARY_COLOR);
 
-            doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(12);
-            doc.text('NET PAY', totalBoxX + 15, y + 20);
-            doc.fontSize(14);
-            doc.text(`${currency}${payroll.totalPay.toFixed(2)}`, totalBoxX, y + 20, { width: totalBoxWidth - 15, align: 'right' });
+            doc.fillColor('#ffffff').font(fontBold).fontSize(12);
+            doc.text('NET TAKE HOME', totalBoxX + 15, y + 16);
+            doc.fontSize(16);
+            doc.text(`${currency}${payroll.totalPay.toFixed(2)}`, totalBoxX, y + 16, { width: totalBoxWidth - 15, align: 'right' });
 
-            y += 60;
+            y += 75;
 
-            // --- 5. FOOTER & SIGNATURES ---
-            y = Math.max(y, 650); // Push to bottom if space allows, or at least below content
+            // --- 5. NOTES SECTION ---
+            if (payroll.notes) {
+                doc.fillColor(ACCENT_COLOR).font(fontBold).fontSize(10).text('Important Notes:', MARGIN, y);
+                y += 18;
+                doc.fillColor(TEXT_COLOR).font(fontNormal).fontSize(9).text(payroll.notes, MARGIN, y, { width: CONTENT_WIDTH, lineGap: 3 });
+                y += 45;
+            }
 
-            // Lines for signatures
-            const sigY = y;
-            drawLine(doc, sigY, '#000000', MARGIN, MARGIN + 150); // Left line
-            doc.font('Helvetica').fontSize(9).fillColor(TEXT_COLOR).text('Employer Signature', MARGIN, sigY + 5);
+            // --- 6. SIGNATURES ---
+            y = Math.max(y, 700);
 
-            drawLine(doc, sigY, '#000000', MARGIN + CONTENT_WIDTH - 150, MARGIN + CONTENT_WIDTH); // Right line
-            doc.text('Employee Signature', MARGIN + CONTENT_WIDTH - 150, sigY + 5);
+            const lineY = y;
+            const lineLen = 170;
 
-            y += 50;
-            doc.fontSize(8).fillColor('#94a3b8').text('This is a system generated document.', MARGIN, doc.page.height - 30, { align: 'center' });
+            drawLine(doc, lineY, '#475569', MARGIN, MARGIN + lineLen);
+            doc.font(fontNormal).fontSize(9).fillColor(TEXT_COLOR).text('Authorized Signatory', MARGIN, lineY + 8);
+
+            drawLine(doc, lineY, '#475569', MARGIN + CONTENT_WIDTH - lineLen, MARGIN + CONTENT_WIDTH);
+            doc.text('Employee Signature', MARGIN + CONTENT_WIDTH - lineLen, lineY + 8);
+
+            doc.fontSize(8).fillColor('#94a3b8').text('This is a computer-generated document and does not require a physical stamp.', MARGIN, doc.page.height - 35, { align: 'center' });
 
             doc.end();
             stream.on('finish', () => resolve(outputPath));
@@ -218,20 +249,18 @@ function drawLine(doc, y, color = '#e2e8f0', x1 = MARGIN, x2 = MARGIN + CONTENT_
         .moveTo(x1, y)
         .lineTo(x2, y)
         .strokeColor(color)
-        .lineWidth(1)
+        .lineWidth(0.8)
         .stroke()
         .restore();
 }
 
 function formatDate(date) {
-    return new Date(date).toLocaleDateString('en-GB');
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-const getCurrencySymbol = (currency) => {
-    const symbols = {
-        USD: '$', GBP: '£', EUR: '€', INR: '₹', SGD: 'S$', AUD: 'A$', CAD: 'C$', AED: 'AED '
-    };
-    return symbols[currency] || currency;
+export const getCurrencySymbol = (currency) => {
+    return '₹'; // Enforce Rupee as per user request
 };
 
 export default generatePayslipPDF;

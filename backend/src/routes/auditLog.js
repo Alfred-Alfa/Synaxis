@@ -1,14 +1,14 @@
 import express from 'express';
 import AuditLog from '../models/AuditLog.js';
 import { protect } from '../middleware/auth.js';
-import { isAdmin } from '../middleware/rbac.js';
+import { isSuperAdmin } from '../middleware/rbac.js';
 
 const router = express.Router();
 
 // @route   GET /api/audit-logs
 // @desc    Get audit logs with search and filters
-// @access  Private (Admin only)
-router.get('/', protect, isAdmin, async (req, res) => {
+// @access  Private (SuperAdmin only)
+router.get('/', protect, isSuperAdmin, async (req, res) => {
     try {
         const query = {};
 

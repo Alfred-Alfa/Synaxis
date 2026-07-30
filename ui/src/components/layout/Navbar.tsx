@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { notificationService } from '../../services/notificationService';
-import { Bell, Moon, Sun, LogOut, User as UserIcon, Menu } from 'lucide-react';
+import { Bell, Moon, Sun, LogOut, Menu, Settings } from 'lucide-react';
 import './Navbar.css';
 
 import { useTheme } from '../../contexts/ThemeContext';
@@ -51,57 +51,47 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
         }
     };
 
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+
     return (
-        <nav className="navbar">
-            <div className="navbar-left">
+        <nav className="topbar-v2">
+            <div className="topbar-left-v2">
                 <button
-                    className="nav-icon-btn mobile-menu-btn"
+                    className="icon-btn-v2"
                     onClick={onToggleSidebar}
                     aria-label="Toggle Sidebar"
+                    style={{ border: 'none', background: 'transparent' }}
                 >
                     <Menu size={20} />
                 </button>
+                <div className="page-title-v2">{user?.role === 'Staff' ? 'Staff Portal' : 'Admin Portal'}</div>
+                <span className="breadcrumb-sep-v2">/</span>
+                <div className="date-chip-v2">{dateStr}</div>
             </div>
 
-            <div className="navbar-actions">
+            <div className="topbar-right-v2">
+                <div className="welcome-pill-v2">👋 Welcome, {user?.email?.split('@')[0]}</div>
+
                 <button
-                    className="nav-icon-btn"
+                    className="icon-btn-v2"
                     onClick={toggleTheme}
                     title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
                 >
                     {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
                 </button>
 
-                <button
-                    className="nav-icon-btn notification-btn"
-                    onClick={goToNotifications}
-                    title="Notifications"
-                >
+                <div className="icon-btn-v2" title="Notifications" onClick={goToNotifications}>
                     <Bell size={18} />
-                    {unreadCount > 0 && (
-                        <span className="notification-badge">{unreadCount}</span>
-                    )}
-                </button>
+                    {unreadCount > 0 && <div className="notif-dot-v2"></div>}
+                </div>
 
-                <div className="divider-vertical"></div>
+                <div className="icon-btn-v2" title="Settings" onClick={() => navigate(user?.role === 'Staff' ? '/staff/profile' : '/admin/settings')}>
+                    <Settings size={18} />
+                </div>
 
-                <div className="user-profile-section">
-                    <div className="user-avatar-circle">
-                        <UserIcon size={16} color="white" />
-                    </div>
-                    <div className="user-info">
-                        <span className="user-name">{user?.email?.split('@')[0]}</span>
-                        <span className="user-role">{user?.role}</span>
-                    </div>
-
-                    <button
-                        className="nav-icon-btn logout-btn"
-                        onClick={handleLogout}
-                        title="Logout"
-                        style={{ marginLeft: '12px' }}
-                    >
-                        <LogOut size={16} />
-                    </button>
+                <div className="icon-btn-v2" title="Logout" onClick={handleLogout}>
+                    <LogOut size={18} />
                 </div>
             </div>
         </nav>

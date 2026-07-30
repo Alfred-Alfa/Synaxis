@@ -8,12 +8,12 @@ const settingsSchema = new mongoose.Schema(
         },
         currency: {
             type: String,
-            default: 'USD',
+            default: 'INR',
             enum: ['USD', 'GBP', 'EUR', 'INR', 'SGD', 'AUD', 'CAD', 'AED'],
         },
         companyName: {
             type: String,
-            default: 'Company Name',
+            default: 'SYNAXIS',
         },
         companyEmail: {
             type: String,
@@ -36,6 +36,7 @@ const settingsSchema = new mongoose.Schema(
         },
         companyLogo: {
             type: String,
+            default: '/assets/synaxis-logo.png',
             // Path to uploaded logo
         },
         workingHoursPerDay: {
@@ -63,6 +64,17 @@ const settingsSchema = new mongoose.Schema(
                 // Future: allowance per year
             },
         ],
+        customRoles: [
+            {
+                name: { type: String, required: true },
+                accessLevel: {
+                    type: String,
+                    enum: ['SuperAdmin', 'Admin', 'Staff'],
+                    default: 'Staff',
+                },
+                description: String,
+            },
+        ],
     },
     {
         timestamps: true,
@@ -80,6 +92,7 @@ settingsSchema.statics.getSingleton = async function () {
                 { name: 'Sick', isPaid: true },
                 { name: 'Casual', isPaid: true },
             ],
+            customRoles: [],
         });
     }
     return settings;

@@ -12,7 +12,7 @@ const router = express.Router();
 // @route   GET /api/reports/staff
 // @desc    Get staff report with hours, leave, and performance data
 // @access  Private (Admin)
-router.get('/staff', protect, authorize('Admin'), async (req, res) => {
+router.get('/staff', protect, authorize('SuperAdmin'), async (req, res) => {
     try {
         const { startDate, endDate, staffId } = req.query;
 
@@ -81,7 +81,7 @@ router.get('/staff', protect, authorize('Admin'), async (req, res) => {
 // @route   GET /api/reports/projects
 // @desc    Get project/site report with hours and costs
 // @access  Private (Admin)
-router.get('/projects', protect, authorize('Admin'), async (req, res) => {
+router.get('/projects', protect, authorize('SuperAdmin'), async (req, res) => {
     try {
         const { startDate, endDate, siteId } = req.query;
 
@@ -159,7 +159,7 @@ router.get('/projects', protect, authorize('Admin'), async (req, res) => {
 // @route   GET /api/reports/attendance
 // @desc    Get attendance summary report
 // @access  Private (Admin)
-router.get('/attendance', protect, authorize('Admin'), async (req, res) => {
+router.get('/attendance', protect, authorize('SuperAdmin'), async (req, res) => {
     try {
         const { startDate, endDate, staffId } = req.query;
 
@@ -233,7 +233,7 @@ router.get('/attendance', protect, authorize('Admin'), async (req, res) => {
 // @route   GET /api/reports/leave
 // @desc    Get leave summary report
 // @access  Private (Admin)
-router.get('/leave', protect, authorize('Admin'), async (req, res) => {
+router.get('/leave', protect, authorize('SuperAdmin'), async (req, res) => {
     try {
         const { startDate, endDate, staffId, leaveType } = req.query;
 
@@ -309,7 +309,7 @@ router.get('/leave', protect, authorize('Admin'), async (req, res) => {
 // @route   GET /api/reports/finance
 // @desc    Get finance report with payroll, expenses, and revenue
 // @access  Private (Admin)
-router.get('/finance', protect, authorize('Admin'), async (req, res) => {
+router.get('/finance', protect, authorize('SuperAdmin'), async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
 

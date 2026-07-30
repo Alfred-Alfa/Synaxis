@@ -3,7 +3,7 @@ import Settings from '../models/Settings.js';
 import CompanyEmailSettings from '../models/CompanyEmailSettings.js';
 import EmailLog from '../models/EmailLog.js';
 import { protect } from '../middleware/auth.js';
-import { isAdmin } from '../middleware/rbac.js';
+import { isSuperAdmin } from '../middleware/rbac.js';
 import upload from '../config/multer.js';
 import logAudit from '../utils/auditLogger.js';
 import { encrypt, decrypt } from '../utils/encryption.js';
@@ -29,7 +29,7 @@ router.get('/', protect, async (req, res) => {
 // @route   PUT /api/settings
 // @desc    Update settings
 // @access  Private (Admin only)
-router.put('/', protect, isAdmin, async (req, res) => {
+router.put('/', protect, isSuperAdmin, async (req, res) => {
     try {
         const settings = await Settings.getSingleton();
 
@@ -47,6 +47,7 @@ router.put('/', protect, isAdmin, async (req, res) => {
             'workingHoursPerDay',
             'globalOtRate',
             'leaveTypes',
+            'customRoles',
         ];
 
         allowedFields.forEach(field => {
@@ -80,7 +81,7 @@ router.put('/', protect, isAdmin, async (req, res) => {
 // @route   POST /api/settings/logo
 // @desc    Upload company logo
 // @access  Private (Admin only)
-router.post('/logo', protect, isAdmin, upload.single('logo'), async (req, res) => {
+router.post('/logo', protect, isSuperAdmin, upload.single('logo'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded' });
@@ -112,7 +113,7 @@ router.post('/logo', protect, isAdmin, upload.single('logo'), async (req, res) =
 // @route   GET /api/settings/email
 // @desc    Get email configuration
 // @access  Private (Admin only)
-router.get('/email', protect, isAdmin, async (req, res) => {
+router.get('/email', protect, isSuperAdmin, async (req, res) => {
     try {
         const settings = await Settings.getSingleton();
         const emailSettings = await CompanyEmailSettings.findOne({ company_id: settings._id });
@@ -138,7 +139,7 @@ router.get('/email', protect, isAdmin, async (req, res) => {
 // @route   PUT /api/settings/email
 // @desc    Update email configuration
 // @access  Private (Admin only)
-router.put('/email', protect, isAdmin, async (req, res) => {
+router.put('/email', protect, isSuperAdmin, async (req, res) => {
     try {
         const {
             smtp_host,
@@ -218,7 +219,7 @@ router.put('/email', protect, isAdmin, async (req, res) => {
 // @route   POST /api/settings/email/test
 // @desc    Test email configuration and verify
 // @access  Private (Admin only)
-router.post('/email/test', protect, isAdmin, async (req, res) => {
+router.post('/email/test', protect, isSuperAdmin, async (req, res) => {
     try {
         const { test_email } = req.body;
         const settings = await Settings.getSingleton();
@@ -289,7 +290,7 @@ router.post('/email/test', protect, isAdmin, async (req, res) => {
 // @route   GET /api/settings/email/logs
 // @desc    Get recent email delivery logs
 // @access  Private (Admin only)
-router.get('/email/logs', protect, isAdmin, async (req, res) => {
+router.get('/email/logs', protect, isSuperAdmin, async (req, res) => {
     try {
         const settings = await Settings.getSingleton();
         const logs = await EmailLog.find({ company_id: settings._id })

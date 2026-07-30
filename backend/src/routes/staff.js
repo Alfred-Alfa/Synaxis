@@ -109,7 +109,7 @@ router.get('/:id', protect, async (req, res) => {
 // @route   POST /api/staff
 // @desc    Create new staff
 // @access  Private (Admin only)
-router.post('/', protect, isAdmin, async (req, res) => {
+router.post('/', protect, isSuperAdmin, upload.single('profilePhoto'), async (req, res) => {
     try {
         const {
             fullName,
@@ -123,13 +123,16 @@ router.post('/', protect, isAdmin, async (req, res) => {
             password,
             otRate,
             role, // Added role
-            employeeId // Added employeeId
+            employeeId, // Added employeeId
+            leaveBalance,
+            standardPayableHours
         } = req.body;
 
         // ** DOMAIN RESTRICTION CHECK **
-        if (!email || !email.endsWith('@webgeon.com')) {
-            return res.status(400).json({ message: 'Access restricted to @webgeon.com emails only' });
-        }
+        // Removed for college project - Alfred's HRMS
+        // if (!email || !email.endsWith('@webgeon.com')) {
+        //     return res.status(400).json({ message: 'Access restricted to @webgeon.com emails only' });
+        // }
 
         // Check if staff with email already exists
         const existingStaff = await Staff.findOne({ email });
@@ -146,7 +149,7 @@ router.post('/', protect, isAdmin, async (req, res) => {
         }
 
         // Create staff
-        const staff = await Staff.create({
+        const staffData = {
             fullName,
             email,
             phone,
@@ -157,10 +160,18 @@ router.post('/', protect, isAdmin, async (req, res) => {
             bankDetails,
             otRate,
             employeeId,
-        });
+            leaveBalance,
+            standardPayableHours,
+        };
+
+        if (req.file) {
+            staffData.profilePhoto = req.file.path.replace(/\\/g, '/');
+        }
+
+        const staff = await Staff.create(staffData);
 
         // Determine user role (default to Staff)
-        const userRole = (role && ['Admin', 'Staff'].includes(role)) ? role : 'Staff';
+        const userRole = role || 'Staff';
         const tempPassword = password || 'password123';
 
         // Create user account for staff
@@ -216,7 +227,7 @@ router.post('/', protect, isAdmin, async (req, res) => {
 // @route   PUT /api/staff/:id
 // @desc    Update staff
 // @access  Private (Admin only)
-router.put('/:id', protect, isAdmin, async (req, res) => {
+router.put('/:id', protect, isSuperAdmin, upload.single('profilePhoto'), async (req, res) => {
     try {
         const staff = await Staff.findById(req.params.id);
 
@@ -250,9 +261,14 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
             }
         });
 
+        // Update profile photo if new one uploaded
+        if (req.file) {
+            staff.profilePhoto = req.file.path.replace(/\\/g, '/');
+        }
+
         await staff.save();
 
-        if (req.body.role && ['Admin', 'Staff', 'SuperAdmin'].includes(req.body.role)) {
+        if (req.body.role) {
             // Update User role
             await User.findOneAndUpdate(
                 { staffRef: staff._id },
@@ -284,7 +300,7 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
 // @route   PUT /api/staff/:id/reactivate
 // @desc    Reactivate staff
 // @access  Private (Admin only)
-router.put('/:id/reactivate', protect, isAdmin, async (req, res) => {
+router.put('/:id/reactivate', protect, isSuperAdmin, async (req, res) => {
     try {
         const staff = await Staff.findById(req.params.id);
 
@@ -328,7 +344,7 @@ router.put('/:id/reactivate', protect, isAdmin, async (req, res) => {
 // @route   DELETE /api/staff/:id
 // @desc    Deactivate staff
 // @access  Private (Admin only)
-router.delete('/:id', protect, isAdmin, async (req, res) => {
+router.delete('/:id', protect, isSuperAdmin, async (req, res) => {
     try {
         const staff = await Staff.findById(req.params.id);
 
@@ -367,7 +383,7 @@ router.delete('/:id', protect, isAdmin, async (req, res) => {
 // @route   POST /api/staff/:id/documents
 // @desc    Upload staff documents
 // @access  Private (Admin only)
-router.post('/:id/documents', protect, isAdmin, upload.single('document'), async (req, res) => {
+router.post('/:id/documents', protect, isSuperAdmin, upload.single('document'), async (req, res) => {
     try {
         const staff = await Staff.findById(req.params.id);
 
@@ -425,7 +441,7 @@ router.post('/sync-users', protect, isSuperAdmin, async (req, res) => {
 // @route   POST /api/staff/:id/reset-password
 // @desc    Admin resets staff password and sends reset email
 // @access  Private (Admin only)
-router.post('/:id/reset-password', protect, isAdmin, async (req, res) => {
+router.post('/:id/reset-password', protect, isSuperAdmin, async (req, res) => {
     try {
         const staff = await Staff.findById(req.params.id);
 

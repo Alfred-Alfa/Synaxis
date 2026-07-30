@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { timeEntryService } from '../../services/timeEntryService';
 import { overtimeService } from '../../services/overtimeService';
 import { payrollService } from '../../services/payrollService';
+import { Pagination } from '../../components/ui/Pagination';
 import './StaffReports.css';
 
 export const StaffReports: React.FC = () => {
@@ -16,10 +17,20 @@ export const StaffReports: React.FC = () => {
 
     const [hoursData, setHoursData] = useState<any>(null);
     const [paymentData, setPaymentData] = useState<any[]>([]);
+    
+    // Pagination states
+    const [entriesPage, setEntriesPage] = useState(1);
+    const [paymentsPage, setPaymentsPage] = useState(1);
+    const itemsPerPage = 15;
 
     useEffect(() => {
         loadData();
     }, [dateRange, viewMode]);
+
+    useEffect(() => {
+        setEntriesPage(1);
+        setPaymentsPage(1);
+    }, [viewMode, dateRange]);
 
     const loadData = async () => {
         setLoading(true);
@@ -181,7 +192,7 @@ export const StaffReports: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {hoursData.entries.map((entry: any) => (
+                                        {hoursData.entries.slice((entriesPage - 1) * itemsPerPage, entriesPage * itemsPerPage).map((entry: any) => (
                                             <tr key={entry._id}>
                                                 <td>{new Date(entry.date).toLocaleDateString()}</td>
                                                 <td>{typeof entry.siteId === 'object' ? entry.siteId.name : '-'}</td>
@@ -195,6 +206,14 @@ export const StaffReports: React.FC = () => {
                                     </tbody>
                                 </table>
                             </div>
+                        )}
+                        {hoursData.entries && hoursData.entries.length > 0 && (
+                            <Pagination 
+                                currentPage={entriesPage}
+                                totalItems={hoursData.entries.length}
+                                itemsPerPage={itemsPerPage}
+                                onPageChange={setEntriesPage}
+                            />
                         )}
                     </div>
                 </>
@@ -246,7 +265,7 @@ export const StaffReports: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {paymentData.map((payroll: any) => (
+                                        {paymentData.slice((paymentsPage - 1) * itemsPerPage, paymentsPage * itemsPerPage).map((payroll: any) => (
                                             <tr key={payroll._id}>
                                                 <td>
                                                     <div>{new Date(payroll.periodStart).toLocaleDateString()}</div>
@@ -280,6 +299,14 @@ export const StaffReports: React.FC = () => {
                                     </tbody>
                                 </table>
                             </div>
+                            {paymentData.length > 0 && (
+                                <Pagination 
+                                    currentPage={paymentsPage}
+                                    totalItems={paymentData.length}
+                                    itemsPerPage={itemsPerPage}
+                                    onPageChange={setPaymentsPage}
+                                />
+                            )}
                         </>
                     )}
                 </div>

@@ -58,13 +58,13 @@ const createTransport = (config) => {
         return nodemailer.createTransport(config);
     }
 
-    // Fallback to Environment Variables (Legacy/Safety)
+    // Fallback to Environment Variables (SendGrid)
     // This ensures we never break production even if DB config is missing
-    const host = process.env.SMTP_HOST || process.env.ZEPTOMAIL_HOST || 'smtp.zeptomail.in';
-    const port = parseInt(process.env.SMTP_PORT || process.env.ZEPTOMAIL_PORT || '587');
-    const user = process.env.SMTP_USER || process.env.ZEPTOMAIL_USER || 'emailapikey';
+    const host = process.env.SMTP_HOST || 'smtp.sendgrid.net';
+    const port = parseInt(process.env.SMTP_PORT || '587');
+    const user = process.env.SMTP_USER || 'apikey';
     // Strip surrounding quotes if accidentally present (common .env copy-paste issue)
-    const rawPass = process.env.SMTP_PASS || process.env.ZEPTOMAIL_PASS || '';
+    const rawPass = process.env.SMTP_PASS || '';
     const pass = rawPass.replace(/^"|"$/g, '').replace(/^'|'$/g, '');
 
     // If no env vars, fallback to Ethereal (Dev only)
@@ -103,7 +103,9 @@ const getDefaultCompanyId = async () => {
  * Get Default From Address
  */
 const getDefaultFromAddress = () => {
-    return process.env.EMAIL_FROM || '"Webgeon HRMS" <hrms@webgeon.com>';
+    const fromName = process.env.EMAIL_FROM_NAME || 'HRMS Mail';
+    const fromEmail = process.env.EMAIL_FROM || 'alfredfrancis2004@gmail.com';
+    return `"${fromName}" <${fromEmail}>`;
 };
 
 /**
@@ -111,7 +113,7 @@ const getDefaultFromAddress = () => {
  * @param {string} companyId - ID of the company (tenant)
  * @param {object} mailOptions - { to, subject, html }
  */
-export const sendCompanyEmail = async (companyId, { to, subject, html }) => {
+export const sendCompanyEmail = async (companyId, { to, subject, html, attachments }) => {
     let status = 'failure';
     let errorMessage = '';
 
@@ -131,7 +133,8 @@ export const sendCompanyEmail = async (companyId, { to, subject, html }) => {
             from,
             to,
             subject,
-            html
+            html,
+            attachments
         };
 
         const info = await transporter.sendMail(finalMailOptions);
@@ -207,7 +210,7 @@ export const sendPasswordResetEmail = async (email, resetToken, userName, origin
                     <p style="font-size: 13px; color: #666;">This link expires in 1 hour.</p>
                 </div>
                 <div class="footer">
-                    <p>© ${new Date().getFullYear()} Webgeon Results Pvt Ltd. All rights reserved.</p>
+                    <p>© ${new Date().getFullYear()} SYNTAX HRMS. All rights reserved.</p>
                 </div>
             </div>
         </body>
@@ -221,7 +224,7 @@ export const sendPasswordResetEmail = async (email, resetToken, userName, origin
     });
 };
 
-export const sendWelcomeEmail = async (email, tempPassword, userName, companyName = 'Webgeon', origin) => {
+export const sendWelcomeEmail = async (email, tempPassword, userName, companyName = 'SYNTAX HRMS', origin) => {
     const companyId = await getDefaultCompanyId();
     // origin is derived from the HTTP request headers (req.headers.origin)
     // No env variable needed — the backend reads the caller's origin dynamically

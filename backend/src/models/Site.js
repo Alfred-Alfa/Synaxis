@@ -21,7 +21,7 @@ const siteSchema = new mongoose.Schema(
         },
         radius: {
             type: Number,
-            default: 100, // meters
+            default: 50, // 50 meters for geofencing
         },
         status: {
             type: String,

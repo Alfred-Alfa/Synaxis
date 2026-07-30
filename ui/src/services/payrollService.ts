@@ -26,6 +26,7 @@ export const payrollService = {
         periodStart: string;
         periodEnd: string;
         notes?: string;
+        taxPercentage?: number;
     }): Promise<ApiResponse<Payroll>> => {
         const response = await api.post('/payroll/generate', data);
         return response.data;
@@ -39,9 +40,23 @@ export const payrollService = {
         return response.data;
     },
 
+    // Get Payslip URL for viewing
+    getPayslipUrl: async (id: string): Promise<string> => {
+        const response = await api.get(`/payroll/${id}/payslip?view=inline`, {
+            responseType: 'blob',
+        });
+        return URL.createObjectURL(response.data);
+    },
+
     // Mark as paid
     markAsPaid: async (id: string): Promise<ApiResponse<Payroll>> => {
         const response = await api.post(`/payroll/${id}/mark-paid`);
+        return response.data;
+    },
+
+    // Share payslip with employee
+    shareWithEmployee: async (id: string): Promise<ApiResponse<Payroll>> => {
+        const response = await api.post(`/payroll/${id}/share`);
         return response.data;
     },
 

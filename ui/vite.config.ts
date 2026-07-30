@@ -14,9 +14,17 @@ export default defineConfig({
     emptyOutDir: true
   },
   server: {
+    host: '0.0.0.0', // Allow network access
+    port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/socket.io': {
+        target: 'http://localhost:8000',
+        ws: true,
         changeOrigin: true,
         secure: false,
       },

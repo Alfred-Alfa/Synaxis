@@ -45,6 +45,27 @@ const payrollSchema = new mongoose.Schema(
             default: 0,
             min: 0,
         },
+        bonus: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        taxPercentage: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 100,
+        },
+        taxDeduction: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        grossPay: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
         totalPay: {
             type: Number,
             required: true,
@@ -55,6 +76,13 @@ const payrollSchema = new mongoose.Schema(
             default: false,
         },
         paidAt: {
+            type: Date,
+        },
+        isSharedWithEmployee: {
+            type: Boolean,
+            default: false,
+        },
+        sharedAt: {
             type: Date,
         },
         generatedBy: {
@@ -72,7 +100,10 @@ const payrollSchema = new mongoose.Schema(
 
 // Calculate total pay before saving
 payrollSchema.pre('save', function (next) {
-    this.totalPay = this.normalPay + this.otPay + this.travelExpenses - this.leaveDeductions;
+    this.grossPay = this.normalPay + this.otPay + this.travelExpenses + (this.bonus || 0) - this.leaveDeductions;
+    const taxAmt = (this.grossPay * (this.taxPercentage || 0)) / 100;
+    this.taxDeduction = Math.round(taxAmt * 100) / 100;
+    this.totalPay = Math.max(0, this.grossPay - this.taxDeduction);
     next();
 });
 

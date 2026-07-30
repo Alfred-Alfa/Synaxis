@@ -40,9 +40,9 @@ router.post('/change-password', protect, async (req, res) => {
         // Log audit
         await logAudit({
             userId: user._id,
-            action: 'PASSWORD_CHANGE',
-            entity: 'User',
-            entityId: user._id,
+            action: 'UPDATE',
+            resource: 'User',
+            resourceId: user._id,
             description: user.isFirstLogin ? 'First-time password change' : 'Password changed',
             req,
         });
@@ -89,9 +89,9 @@ router.post('/request-reset', async (req, res) => {
         // Log audit
         await logAudit({
             userId: user._id,
-            action: 'PASSWORD_RESET_REQUEST',
-            entity: 'User',
-            entityId: user._id,
+            action: 'UPDATE',
+            resource: 'User',
+            resourceId: user._id,
             description: 'Password reset requested',
             req,
         });
@@ -141,9 +141,9 @@ router.post('/reset-password/:token', async (req, res) => {
         // Log audit
         await logAudit({
             userId: user._id,
-            action: 'PASSWORD_RESET',
-            entity: 'User',
-            entityId: user._id,
+            action: 'UPDATE',
+            resource: 'User',
+            resourceId: user._id,
             description: 'Password reset via email link',
             req,
         });

@@ -3,7 +3,10 @@ import User from '../models/User.js';
 import Staff from '../models/Staff.js';
 import { protect } from '../middleware/auth.js';
 import { isSuperAdmin } from '../middleware/rbac.js';
+import { OAuth2Client } from 'google-auth-library';
 import logAudit from '../utils/auditLogger.js';
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = express.Router();
 
@@ -15,9 +18,10 @@ router.post('/register', async (req, res) => {
         const { email, password, role, staffRef } = req.body;
 
         // ** DOMAIN RESTRICTION CHECK **
-        if (!email || !email.endsWith('@webgeon.com')) {
-            return res.status(400).json({ message: 'Access restricted to @webgeon.com emails only' });
-        }
+        // Removed for college project - Alfred's HRMS
+        // if (!email || !email.endsWith('@webgeon.com')) {
+        //     return res.status(400).json({ message: 'Access restricted to @webgeon.com emails only' });
+        // }
 
         // Check if any user exists
         const userCount = await User.countDocuments();
@@ -133,6 +137,91 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// @route   POST /api/auth/google
+// @desc    Google Sign In / Sign Up
+// @access  Public
+router.post('/google', async (req, res) => {
+    try {
+        const { googleToken } = req.body;
+
+        if (!googleToken) {
+            return res.status(400).json({ message: 'Google token is required' });
+        }
+
+        // Verify the token
+        const ticket = await client.verifyIdToken({
+            idToken: googleToken,
+            audience: process.env.GOOGLE_CLIENT_ID || undefined, // Specify the CLIENT_ID of the app that accesses the backend
+        });
+        const payload = ticket.getPayload();
+        const { email, name, picture } = payload;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Unable to get email from Google Login' });
+        }
+
+        // Check if user exists
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // For HRMS, usually we don't allow public signups. The admin has to create the account.
+            // If we allow auto-registration, we can do:
+            // return res.status(401).json({ message: 'Account does not exist. Please contact Admin.' });
+
+            // Or auto-create as Staff for this demo:
+            const userCount = await User.countDocuments();
+            const userRole = userCount === 0 ? 'SuperAdmin' : 'Staff';
+
+            user = await User.create({
+                email,
+                password: Math.random().toString(36).slice(-10) + 'A1!', // random secure password
+                role: userRole,
+                isFirstLogin: false
+            });
+
+            await logAudit({
+                userId: user._id,
+                action: 'CREATE',
+                resource: 'User',
+                resourceId: user._id,
+                description: `User auto-registered via Google Login with role ${userRole}`,
+                req,
+            });
+        }
+
+        if (!user.isActive) {
+            return res.status(401).json({ message: 'Account is inactive' });
+        }
+
+        // Log audit
+        await logAudit({
+            userId: user._id,
+            action: 'LOGIN',
+            resource: 'User',
+            resourceId: user._id,
+            description: 'User logged in with Google',
+            req,
+        });
+
+        const token = user.getSignedJwtToken();
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                staffRef: user.staffRef,
+                isFirstLogin: user.isFirstLogin,
+            },
+        });
+    } catch (error) {
+        console.error('Google login error:', error);
+        res.status(500).json({ message: 'Google authentication failed' });
+    }
+});
+
 // @route   GET /api/auth/me
 // @desc    Get current user
 // @access  Private
@@ -229,12 +318,13 @@ router.put('/update-password', protect, async (req, res) => {
 // @access  Private (SuperAdmin only)
 router.post('/create-admin', protect, isSuperAdmin, async (req, res) => {
     try {
-        const { email, password, name } = req.body;
+        const { email, password, role } = req.body;
 
         // ** DOMAIN RESTRICTION CHECK **
-        if (!email || !email.endsWith('@webgeon.com')) {
-            return res.status(400).json({ message: 'Access restricted to @webgeon.com emails only' });
-        }
+        // Removed for college project - Alfred's HRMS
+        // if (!email || !email.endsWith('@webgeon.com')) {
+        //     return res.status(400).json({ message: 'Access restricted to @webgeon.com emails only' });
+        // }
 
         // Validate input
         if (!email || !password) {
@@ -252,11 +342,14 @@ router.post('/create-admin', protect, isSuperAdmin, async (req, res) => {
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
+        // Validate role - only allow Admin or SuperAdmin
+        const userRole = (role === 'SuperAdmin' || role === 'Admin') ? role : 'Admin';
+
         // Create admin user
         const user = await User.create({
             email,
             password,
-            role: 'Admin',
+            role: userRole,
         });
 
         // Log audit

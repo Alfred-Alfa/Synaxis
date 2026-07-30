@@ -36,14 +36,16 @@ export const timeEntryService = {
     },
 
     // direct check-in
-    checkIn: async (data: { siteId: string; latitude?: number; longitude?: number }): Promise<ApiResponse<any>> => {
-        const response = await api.post('/time-entries/check-in', data);
+    checkIn: async (data: FormData | { siteId?: string; latitude?: number; longitude?: number; [key: string]: any }): Promise<ApiResponse<any>> => {
+        const config = data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+        const response = await api.post('/time-entries/check-in', data, config);
         return response.data;
     },
 
     // direct check-out
-    checkOut: async (data: { jobDescription?: string; latitude?: number; longitude?: number }): Promise<ApiResponse<any>> => {
-        const response = await api.post('/time-entries/check-out', data);
+    checkOut: async (data: FormData | { jobDescription?: string; latitude?: number; longitude?: number; [key: string]: any }): Promise<ApiResponse<any>> => {
+        const config = data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+        const response = await api.post('/time-entries/check-out', data, config);
         return response.data;
     },
 

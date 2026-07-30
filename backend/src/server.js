@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -30,6 +30,8 @@ import auditLogRoutes from './routes/auditLog.js';
 import reportRoutes from './routes/reportRoutes.js';
 import notificationRoutes from './routes/notifications.js';
 import chatRoutes from './routes/chat.js';
+import announcementRoutes from './routes/announcementRoutes.js';
+import locationRequestRoutes from './routes/locationRequestRoutes.js';
 
 // Initialize Express
 const app = express();
@@ -48,7 +50,12 @@ connectDB().then(() => {
 app.use(cors({
     origin: [
         'http://localhost:5173',
+        'http://localhost:3000',
         'http://localhost:5000',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:3000',
+        'http://192.168.1.4:5173',
+        'http://192.168.1.4:3000',
         'https://hrms.elitecraftuk.com'
     ],
     credentials: true
@@ -73,6 +80,8 @@ app.use('/api/audit-logs', auditLogRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/location-requests', locationRequestRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -97,9 +106,13 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Start server
-const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+const PORT = process.env.PORT || 8000;
+const HOST = '0.0.0.0'; // Allow network access
+
+httpServer.listen(PORT, HOST, () => {
+    console.log(`Server running in ${process.env.NODE_ENV} mode on ${HOST}:${PORT}`);
+    console.log(`Local: http://localhost:${PORT}`);
+    console.log(`Network: http://192.168.1.4:${PORT}`);
 });
 
 export default app;

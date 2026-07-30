@@ -18,7 +18,6 @@ const userSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            enum: ['SuperAdmin', 'Admin', 'Staff'],
             default: 'Staff',
         },
         staffRef: {

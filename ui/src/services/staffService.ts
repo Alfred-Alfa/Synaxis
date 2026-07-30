@@ -15,24 +15,18 @@ export const staffService = {
     },
 
     // Create staff
-    create: async (data: {
-        fullName: string;
-        email: string;
-        phone?: string;
-        hourlyRate: number;
-        address?: string;
-        startDate?: string;
-        designation?: string;
-        password: string;
-        otRate?: number;
-    }): Promise<ApiResponse<Staff>> => {
-        const response = await api.post('/staff', data);
+    create: async (data: any): Promise<ApiResponse<Staff>> => {
+        const response = await api.post('/staff', data, {
+            headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {}
+        });
         return response.data;
     },
 
     // Update staff
-    update: async (id: string, data: Partial<Staff>): Promise<ApiResponse<Staff>> => {
-        const response = await api.put(`/staff/${id}`, data);
+    update: async (id: string, data: any): Promise<ApiResponse<Staff>> => {
+        const response = await api.put(`/staff/${id}`, data, {
+            headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {}
+        });
         return response.data;
     },
 

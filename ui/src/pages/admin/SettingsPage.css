@@ -203,3 +203,25 @@
         grid-column: auto;
     }
 }
+
+.avatar-xs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.text-red {
+    color: #ef4444;
+}
+
+.text-red:hover {
+    color: #dc2626;
+    background-color: #fef2f2;
+}
+
+.admin-badge {
+    background-color: var(--bg-info) !important;
+    color: var(--text-info) !important;
+}

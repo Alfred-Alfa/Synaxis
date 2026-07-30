@@ -29,26 +29,19 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 const getSocketUrl = () => {
     const apiUrl = import.meta.env.VITE_API_URL;
 
-    // Case 1: VITE_API_URL is not set (undefined or empty)
-    if (!apiUrl) {
-        return 'http://localhost:5000';
-    }
-
-    // Case 2: VITE_API_URL is an absolute URL (http://... or https://...)
-    if (apiUrl.startsWith('http')) {
-        // Remove trailing slash if present
+    // Use absolute URL only if VITE_API_URL is set and we're not on localhost
+    // Otherwise, use relative URL (leveraging Vite proxy in dev)
+    if (apiUrl && apiUrl.startsWith('http') && window.location.hostname !== 'localhost') {
         const cleanUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
-        // Remove /api suffix if present
         return cleanUrl.replace(/\/api$/, '');
     }
 
-    // Case 3: VITE_API_URL is a relative path (e.g. "/api")
-    // In production (same origin), the socket should connect to the root "/"
-    return '/';
+    // In local dev or if using proxy, connect to current origin
+    return window.location.origin;
 };
 
 const SOCKET_URL = getSocketUrl();
-const NOTIFICATION_SOUND_PATH = '/sounds/chat-notification.mp3';
+const NOTIFICATION_SOUND_PATH = '/sounds/buy.mp3';
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [socket, setSocket] = useState<Socket | null>(null);
@@ -74,6 +67,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const audioUnlockedRef = useRef(false);
     const currentUserIdRef = useRef<string | null>(null);
+    const activeRoomRef = useRef<string | null>(null);
+
+    // Keep ref in sync with state
+    useEffect(() => {
+        activeRoomRef.current = activeRoom;
+    }, [activeRoom]);
 
 
 
@@ -236,7 +235,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
         }
 
-        console.log('Chat: Initializing WebSocket connection...');
+        console.log(`Chat: Initializing WebSocket connection to ${SOCKET_URL}...`);
 
         const socketInstance = io(SOCKET_URL, {
             auth: { token },
@@ -280,7 +279,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             playNotificationSound();
 
             // Show browser notification if chat is not active
-            if (roomId !== activeRoom) {
+            if (roomId !== activeRoomRef.current) {
                 const messagePreview = message.messageText.length > 50
                     ? message.messageText.substring(0, 50) + '...'
                     : message.messageText;
@@ -321,7 +320,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.log('Chat: Cleaning up WebSocket connection');
             socketInstance.disconnect();
         };
-    }, [activeRoom, playNotificationSound, showBrowserNotification, refreshUnreadCount]);
+    }, [playNotificationSound, showBrowserNotification, refreshUnreadCount]);
 
     /**
      * Idle Timer Logic

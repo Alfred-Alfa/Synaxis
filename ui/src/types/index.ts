@@ -48,6 +48,17 @@ export interface Staff {
     };
     employmentStatus: 'Active' | 'Inactive';
     otRate?: number;
+    leaveBalance?: number;
+    standardPayableHours?: number;
+    homeLocation?: {
+        label?: string;
+        coordinates?: {
+            latitude: number;
+            longitude: number;
+        };
+        radius?: number;
+    };
+    profilePhoto?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -89,6 +100,11 @@ export interface TimeEntry {
         path: string;
         uploadDate: string;
     }[];
+    checkInPhoto?: string;
+    checkInLocation?: { latitude: number; longitude: number };
+    checkOutPhoto?: string;
+    checkOutLocation?: { latitude: number; longitude: number };
+    deviceId?: string;
     status: 'Pending' | 'Approved' | 'Rejected' | 'Active';
     approvedBy?: string;
     approvedAt?: string;
@@ -159,9 +175,15 @@ export interface Payroll {
     otPay: number;
     travelExpenses: number;
     leaveDeductions: number;
+    bonus: number;
+    taxPercentage: number;
+    taxDeduction: number;
+    grossPay: number;
     totalPay: number;
     isPaid: boolean;
     paidAt?: string;
+    isSharedWithEmployee: boolean;
+    sharedAt?: string;
     generatedBy?: string;
     notes?: string;
     createdAt: string;
@@ -191,6 +213,11 @@ export interface Settings {
         name: string;
         isPaid: boolean;
     }[];
+    customRoles?: {
+        name: string;
+        accessLevel: 'SuperAdmin' | 'Admin' | 'Staff';
+        description?: string;
+    }[];
     createdAt: string;
     updatedAt: string;
 }
@@ -219,4 +246,24 @@ export interface ApiResponse<T = any> {
     page?: number;
     pages?: number;
     message?: string;
+}
+
+// Location Request Type
+export interface LocationRequest {
+    _id: string;
+    staffId: string | Staff;
+    locationName: string;
+    type: 'Home' | 'Work';
+    coordinates: {
+        latitude: number;
+        longitude: number;
+    };
+    radius: number;
+    description: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
+    rejectionReason?: string;
+    approvedBy?: string;
+    approvedAt?: string;
+    createdAt: string;
+    updatedAt: string;
 }

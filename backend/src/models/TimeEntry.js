@@ -33,15 +33,35 @@ const timeEntrySchema = new mongoose.Schema(
         siteId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Site',
-            required: [true, 'Site/Project is required'],
+            required: function () {
+                return !this.locationRequestId && this.locationMode !== 'home';
+            },
+        },
+        locationRequestId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'LocationRequest',
+        },
+        locationMode: {
+            type: String,
+            enum: ['site', 'home', 'request'],
+            default: 'site',
         },
         checkInLocation: {
             latitude: Number,
             longitude: Number
         },
+        checkInPhoto: {
+            type: String, // URL/Path to check-in selfie
+        },
         checkOutLocation: {
             latitude: Number,
             longitude: Number
+        },
+        checkOutPhoto: {
+            type: String, // URL/Path to check-out selfie
+        },
+        deviceId: {
+            type: String, // Simple device fingerprint
         },
         jobDescription: {
             type: String,

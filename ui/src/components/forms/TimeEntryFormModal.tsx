@@ -10,6 +10,8 @@ interface TimeEntryFormModalProps {
     isAdminReview?: boolean;
     onApprove?: () => void;
     onReject?: () => void;
+    adminMode?: boolean; // When true, admin can pick staffId
+    staffList?: { _id: string; fullName: string }[];
 }
 
 export const TimeEntryFormModal: React.FC<TimeEntryFormModalProps> = ({
@@ -18,9 +20,12 @@ export const TimeEntryFormModal: React.FC<TimeEntryFormModalProps> = ({
     onClose,
     isAdminReview = false,
     onApprove,
-    onReject
+    onReject,
+    adminMode = false,
+    staffList = [],
 }) => {
     const isEdit = !!entry;
+    const [selectedStaffId, setSelectedStaffId] = useState(entry ? '' : '');
 
     const [formData, setFormData] = useState({
         date: entry?.date ? new Date(entry.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -104,6 +109,10 @@ export const TimeEntryFormModal: React.FC<TimeEntryFormModalProps> = ({
             files.forEach((file) => {
                 formDataToSend.append('attachments', file);
             });
+
+            if (adminMode && selectedStaffId) {
+                formDataToSend.append('adminForStaffId', selectedStaffId);
+            }
 
             if (isEdit) {
                 // For edit, we can't use FormData easily, so convert to JSON
@@ -210,6 +219,22 @@ export const TimeEntryFormModal: React.FC<TimeEntryFormModalProps> = ({
 
                 <form onSubmit={handleSubmit} className="modal-body">
                     <div className="form-grid">
+                        {adminMode && !isEdit && (
+                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                <label className="form-label">Select Staff Member *</label>
+                                <select
+                                    className="select"
+                                    value={selectedStaffId}
+                                    onChange={(e) => setSelectedStaffId(e.target.value)}
+                                    required
+                                >
+                                    <option value="">-- Select Staff --</option>
+                                    {staffList.map(s => (
+                                        <option key={s._id} value={s._id}>{s.fullName}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div className="form-group">
                             <label htmlFor="date" className="form-label">
                                 Date *

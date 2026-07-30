@@ -1,0 +1,92 @@
+.verification-photo-section {
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.photo-placeholder {
+    width: 100%;
+    max-width: 200px;
+    aspect-ratio: 1;
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.photo-placeholder:hover {
+    background: #f1f5f9;
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.camera-icon-wrap {
+    width: 60px;
+    height: 60px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+    margin-bottom: 12px;
+}
+
+.photo-placeholder span {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.photo-placeholder p {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.photo-preview-wrap {
+    width: 100%;
+    max-width: 200px;
+    aspect-ratio: 1;
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.selfie-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-photo {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    color: white;
+    border: none;
+    padding: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.remove-photo:hover {
+    background: rgba(0, 0, 0, 0.8);
+}

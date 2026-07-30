@@ -17,20 +17,14 @@ export const ChatBadge: React.FC = () => {
     return (
         <span
             style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: 'inline-block',
                 backgroundColor: '#f44336',
-                color: 'white',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                padding: '0.125rem 0.5rem',
-                borderRadius: '12px',
-                minWidth: '20px',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
                 marginLeft: '0.5rem',
             }}
-        >
-            {unreadCount.totalUnread > 99 ? '99+' : unreadCount.totalUnread}
-        </span>
+            title={`${unreadCount.totalUnread} unread messages`}
+        />
     );
 };

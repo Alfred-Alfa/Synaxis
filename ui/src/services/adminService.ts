@@ -13,6 +13,7 @@ export interface AdminUser {
 export interface CreateAdminData {
     email: string;
     password: string;
+    role?: 'Admin' | 'SuperAdmin';
 }
 
 export const adminService = {

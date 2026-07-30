@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 150">
+  <defs>
+    <linearGradient id="swoosh1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7dd3fc" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="swoosh2" x1="100%" y1="100%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7dd3fc" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Top Right Swoosh -->
+  <path d="M 230 50 C 300 10 420 10 460 35 C 470 45 440 60 410 40 C 370 15 280 20 250 50 Z" fill="url(#swoosh1)" />
+  
+  <!-- Text -->
+  <text x="250" y="100" font-family="Georgia, serif" font-size="68" font-weight="bold" fill="#0f172a" text-anchor="middle" letter-spacing="6">SYNAXIS</text>
+  
+  <!-- Bottom Left Swoosh -->
+  <path d="M 270 110 C 200 150 80 150 40 125 C 30 115 60 100 90 120 C 130 145 220 140 250 110 Z" fill="url(#swoosh2)" />
+</svg>

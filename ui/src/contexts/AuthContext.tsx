@@ -7,8 +7,10 @@ interface AuthContextType {
     token: string | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
+    loginWithGoogle: (googleToken: string) => Promise<void>;
     logout: () => void;
     isAdmin: boolean;
+    isSuperAdmin: boolean;
     isStaff: boolean;
     refreshUser: () => Promise<void>;
 }
@@ -58,6 +60,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const loginWithGoogle = async (googleToken: string) => {
+        try {
+            const response = await authService.googleLogin(googleToken);
+            setToken(response.token);
+            setUser(response.user);
+
+            localStorage.setItem('hrms_token', response.token);
+            localStorage.setItem('hrms_user', JSON.stringify(response.user));
+        } catch (error: any) {
+            throw new Error(error.response?.data?.message || 'Google Login failed');
+        }
+    };
+
     const logout = () => {
         authService.logout();
         setToken(null);
@@ -67,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const isAdmin = user?.role === 'Admin' || user?.role === 'SuperAdmin';
+    const isSuperAdmin = user?.role === 'SuperAdmin';
     const isStaff = user?.role === 'Staff';
 
     return (
@@ -76,8 +92,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 token,
                 loading,
                 login,
+                loginWithGoogle,
                 logout,
                 isAdmin,
+                isSuperAdmin,
                 isStaff,
                 refreshUser,
             }}

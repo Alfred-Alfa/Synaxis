@@ -3,7 +3,7 @@ import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { useAuth } from '../../contexts/AuthContext';
 import { ForcePasswordChangeModal } from '../auth/ForcePasswordChangeModal';
-import './Layout.css';
+import './layout-v2.css';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -28,15 +28,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     };
 
     return (
-        <div className="layout-root">
+        <div className="layout-root-v2">
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-            <div className="layout-main">
+            <div className="main-v2">
                 <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
-                <main className="layout-content">
-                    <div className="content-container">
-                        {children}
-                    </div>
+                <main className="content-v2">
+                    {children}
                 </main>
             </div>
 

@@ -20,8 +20,10 @@ import {
     clearRoomHistory,
     leaveGroup,
     removeGroupMember,
+    uploadChatFile,
 } from '../controllers/chatController.js';
 import { protect } from '../middleware/auth.js';
+import upload from '../config/multer.js';
 
 const router = express.Router();
 
@@ -59,5 +61,8 @@ router.post('/rooms/:roomId/members/:memberId/remove', protect, removeGroupMembe
 
 // Unread count
 router.get('/unread-count', protect, getUnreadCount);
+
+// File uploads
+router.post('/upload', protect, upload.single('file'), uploadChatFile);
 
 export default router;

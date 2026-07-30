@@ -10,9 +10,10 @@ import Site from '../models/Site.js';
  * @param {ObjectId} staffId - Staff ID
  * @param {Date} periodStart - Period start date
  * @param {Date} periodEnd - Period end date
+ * @param {Number} taxPercentage - Tax percentage to apply (0-100)
  * @returns {Object} Payroll calculation breakdown
  */
-export const calculatePayroll = async (staffId, periodStart, periodEnd) => {
+export const calculatePayroll = async (staffId, periodStart, periodEnd, taxPercentage = 0) => {
     try {
         // Get staff details
         const staff = await Staff.findById(staffId);
@@ -89,6 +90,16 @@ export const calculatePayroll = async (staffId, periodStart, periodEnd) => {
             // Paid leave doesn't affect salary
         }
 
+        // Calculate gross pay (before tax)
+        const grossPay = normalPay + otPay + travelExpenses - leaveDeductions;
+
+        // Calculate tax deduction
+        const taxPct = Math.min(Math.max(taxPercentage, 0), 100);
+        const taxDeduction = Math.round((grossPay * taxPct) / 100 * 100) / 100;
+
+        // Net pay
+        const totalPay = Math.max(0, grossPay - taxDeduction);
+
         return {
             normalHours,
             normalPay,
@@ -96,7 +107,11 @@ export const calculatePayroll = async (staffId, periodStart, periodEnd) => {
             otPay,
             travelExpenses,
             leaveDeductions,
-            totalPay: normalPay + otPay + travelExpenses - leaveDeductions,
+            bonus: 0,
+            taxPercentage: taxPct,
+            taxDeduction,
+            grossPay,
+            totalPay,
         };
     } catch (error) {
         throw error;

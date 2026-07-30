@@ -1,17 +1,21 @@
 import nodemailer from 'nodemailer';
 
-const transport = nodemailer.createTransport({
-    host: process.env.ZEPTOMAIL_HOST || "smtp.zeptomail.in",
-    port: process.env.ZEPTOMAIL_PORT || 587,
-    auth: {
-        user: process.env.ZEPTOMAIL_USER,
-        pass: process.env.ZEPTOMAIL_PASS
-    }
-});
-
 export const sendEmail = async (to, subject, html) => {
+    const transport = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: false,
+        auth: {
+            user: process.env.SMTP_USER || 'apikey',
+            pass: process.env.SMTP_PASS || ''
+        }
+    });
+
+    const fromName = process.env.EMAIL_FROM_NAME || 'HRMS Mail';
+    const fromEmail = process.env.EMAIL_FROM || 'alfredfrancis2004@gmail.com';
+
     const mailOptions = {
-        from: `"${process.env.EMAIL_FROM_NAME || 'HRMS Team'}" <${process.env.EMAIL_FROM_ADDRESS || 'noreply@elitecraftuk.com'}>`,
+        from: `"${fromName}" <${fromEmail}>`,
         to,
         subject,
         html,
@@ -24,7 +28,6 @@ export const sendEmail = async (to, subject, html) => {
     } catch (error) {
         console.error('Error sending email:', error);
         // We don't want to block the flow if email fails, so we just log it
-        // Or should we throw? Usually notification failure shouldn't fail the request.
         return null;
     }
 };

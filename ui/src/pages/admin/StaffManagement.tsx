@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { staffService } from '../../services/staffService';
 import type { Staff } from '../../types';
 import { StaffFormModal } from '../../components/forms/StaffFormModal';
 import { DocumentUploadModal } from '../../components/forms/DocumentUploadModal';
+import { Pagination } from '../../components/ui/Pagination';
 import './StaffManagement.css';
 import { settingsService } from '../../services/settingsService';
 import { passwordService } from '../../services/passwordService';
@@ -21,6 +23,7 @@ import {
 } from 'lucide-react';
 
 export const StaffManagement: React.FC = () => {
+    const location = useLocation();
     const [staff, setStaff] = useState<Staff[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -30,10 +33,17 @@ export const StaffManagement: React.FC = () => {
     const [showDocumentModal, setShowDocumentModal] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
     const [currencySymbol, setCurrencySymbol] = useState('$');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
 
     useEffect(() => {
         loadStaff();
-    }, []);
+        if (location.state?.action === 'new') {
+            setShowModal(true);
+            // Clear the state so it doesn't reopen on refresh
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     const getCurrencySymbol = (currencyCode: string) => {
         const symbols: Record<string, string> = {
@@ -159,6 +169,12 @@ export const StaffManagement: React.FC = () => {
         return matchesSearch && matchesStatus;
     });
 
+    const paginatedStaff = filteredStaff.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter]);
+
     if (loading) {
         return <div className="loading-state">Loading staff directory...</div>;
     }
@@ -245,7 +261,7 @@ export const StaffManagement: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredStaff.map((staffMember) => (
+                                {paginatedStaff.map((staffMember) => (
                                     <tr key={staffMember._id}>
                                         <td>
                                             <span className="mono-text">
@@ -337,6 +353,14 @@ export const StaffManagement: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
+                )}
+                {filteredStaff.length > 0 && (
+                    <Pagination 
+                        currentPage={currentPage}
+                        totalItems={filteredStaff.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={setCurrentPage}
+                    />
                 )}
             </div>
 

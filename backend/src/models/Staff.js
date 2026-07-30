@@ -82,6 +82,32 @@ const staffSchema = new mongoose.Schema(
             min: 0,
             // If set, this overrides site and global OT rates for this staff member
         },
+        leaveBalance: {
+            type: Number,
+            default: 0,
+            min: 0,
+            // Available leave balance in days
+        },
+        standardPayableHours: {
+            type: Number,
+            default: 0,
+            min: 0,
+            // Expected normal working hours per month for payroll
+        },
+        homeLocation: {
+            label: String,
+            coordinates: {
+                latitude: Number,
+                longitude: Number
+            },
+            radius: {
+                type: Number,
+                default: 150
+            }
+        },
+        profilePhoto: {
+            type: String, // URL/Path to staff profile photo
+        }
     },
     {
         timestamps: true,

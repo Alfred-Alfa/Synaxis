@@ -156,6 +156,17 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  /* Crucial: stops the browser from scrolling past 100vh */
+}
+
 body {
   font-family: var(--font-body);
   color: var(--text-primary);
@@ -168,35 +179,37 @@ body {
 }
 
 /* Typography Overrides */
-h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
+@layer base {
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 
-h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 
-h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 
-h4 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 
-h5,
-h6 {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  h5,
+  h6 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
 }
 
 /* Components */
@@ -223,6 +236,12 @@ h6 {
 }
 
 /* Table Styles - Corporate */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .table-container {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -306,6 +325,11 @@ h6 {
   justify-content: center;
   gap: 0.5rem;
   line-height: 1.25;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 12px;
 }
 
 .btn:disabled {
@@ -407,6 +431,20 @@ h6 {
   color: var(--text-primary);
   /* Flat color */
   margin: 0.5rem 0;
+}
+
+/* Pagination */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+}
+
+.pagination-controls .btn {
+  min-width: 100px;
 }
 
 /* Utilities */

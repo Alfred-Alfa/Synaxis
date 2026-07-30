@@ -721,3 +721,66 @@ export const leaveGroup = async (req, res) => {
         res.status(500).json({ message: 'Failed to leave group' });
     }
 };
+
+/**
+ * @desc    Remove member from a group chat
+ * @route   POST /api/chat/rooms/:roomId/members/:memberId/remove
+ * @access  Private
+ */
+export const removeGroupMember = async (req, res) => {
+    try {
+        const { roomId, memberId } = req.params;
+        const userId = req.user._id;
+
+        const room = await ChatRoom.findById(roomId);
+        if (!room) {
+            return res.status(404).json({ message: 'Chat room not found' });
+        }
+
+        if (room.type !== 'group') {
+            return res.status(400).json({ message: 'Can only remove from group chats' });
+        }
+
+        if (!room.admins.includes(userId)) {
+            return res.status(403).json({ message: 'Only admins can remove members' });
+        }
+
+        // Remove user from members and admins
+        await ChatRoom.findByIdAndUpdate(roomId, {
+            $pull: {
+                members: memberId,
+                admins: memberId
+            }
+        });
+
+        res.json({ message: 'Removed member successfully' });
+    } catch (error) {
+        console.error('Error removing member:', error);
+        res.status(500).json({ message: 'Failed to remove member' });
+    }
+};
+/**
+ * @desc    Upload a file for chat
+ * @route   POST /api/chat/upload
+ * @access  Private
+ */
+export const uploadChatFile = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+        const fileUrl = `${baseUrl}/uploads/${req.file.filename}`;
+
+        res.status(201).json({
+            url: fileUrl,
+            name: req.file.originalname,
+            type: req.file.mimetype,
+            size: req.file.size
+        });
+    } catch (error) {
+        console.error('Error uploading chat file:', error);
+        res.status(500).json({ message: 'Failed to upload file' });
+    }
+};

@@ -202,7 +202,7 @@ export const AdminDashboard: React.FC = () => {
             <h3>Quick Actions</h3>
           </div>
           <div className="card-flat custom-padding">
-            <button className="quick-action-btn" onClick={() => navigate('/admin/staff/new')}>
+            <button className="quick-action-btn" onClick={() => navigate('/admin/staff', { state: { action: 'new' } })}>
               Add New Staff
             </button>
             <button className="quick-action-btn" onClick={() => navigate('/admin/reports')}>
